@@ -12,6 +12,8 @@ RUN cd resources/dds/src && make && cd ~
 
 RUN mkdir -p /home/user/code
 COPY pythondds_min code/pythondds_min/
+COPY Makefile .
 RUN cp resources/dds/src/libdds.so code/pythondds_min/
 
-CMD cd code/pythondds_min/ && ./run_example.sh
+ENTRYPOINT ["make"]
+CMD ["test"]
