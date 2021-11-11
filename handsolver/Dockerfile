@@ -10,6 +10,9 @@ RUN apt-get -y update && apt-get install -y libboost-system-dev libboost-filesys
 COPY install/dds/ resources/dds/
 RUN cd resources/dds/src && make && cd ~
 
+COPY install/requirements.txt .
+RUN pip install -r requirements.txt
+
 RUN mkdir -p /home/user/code
 COPY pythondds_min code/pythondds_min/
 COPY Makefile .
