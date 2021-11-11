@@ -1,2 +1,5 @@
 test:
-	cd code/pythondds_min/ && ./run_example.sh
+	pytest
+
+daemon:
+	tail -f /dev/null

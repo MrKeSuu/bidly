@@ -1,6 +1,8 @@
-import hands
-import dds
 import ctypes
+
+from . import hands
+from . import dds
+
 
 def PrintFut(title, fut):
     print("{}\n".format(title))

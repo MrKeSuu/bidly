@@ -1,8 +1,8 @@
 #! /usr/bin/python
 import ctypes
 
-import dds
-import functions
+from . import dds
+from . import functions
 
 
 def main():
