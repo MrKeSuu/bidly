@@ -26,7 +26,7 @@ optimize_cell_width()
 #
 # This dataset can be used for the training of a neural net intended to detect/localize playing cards. It was used on the project __[Playing card detection with YOLO v3](https://youtu.be/pnntrewH0xg)__
 #
-# <img src="img/ex_generated_image.png" alt="Example of generated image "  title="Example of generated image " />
+# <img src="data-nb/img/ex_generated_image.png" alt="Example of generated image "  title="Example of generated image " />
 #
 
 # %% [markdown]
@@ -51,7 +51,7 @@ optimize_cell_width()
 # #### C.1 Measurements on the cards
 # Use a ruler to measure the dimensions as indicated in the image below. 
 # For the corner* measures, the idea is to delimit one rectangular zone that can hold every value+suit. The size of the marks may vary with the value or the suit, so take the measures on the cards with the widest, the tallest symbols, and add one or two millimeters. 
-# <img src="img/measures.png" alt="Measures" title="" />
+# <img src="data-nb/img/measures.png" alt="Measures" title="" />
 # Report the measures in mm in the cell below (and don't forget to run the cell).
 
 # %%
@@ -77,7 +77,7 @@ cornerYmax=int(cornerYmax*zoom)
 # That's what I did in the project "Playing card detection with YOLO v3", and the scripts in this notebook were written to deal with videos. A video is interesting only if you can vary the brightness and color temperature of the light during the shot. Watch [Playing card detection with YOLO v3](https://www.youtube.com/watch?v=pnntrewH0xg&t=4m10s) to have an idea. 
 # With hindsight, I am confident that you could use one picture per card instead of a video without affecting the efficiency of the neural net. The scripts could be easily adapted to deal with pictures.
 # Whether you use videos or pictures, the scene must be simple, with a uniform background behind the card, like below. This way, the extraction of the card from the scene will be easy.
-# <img src="test/scene.png" alt="Scene" title="Scene" />
+# <img src="data-nb/test/scene.png" alt="Scene" title="Scene" />
 
 # %% [markdown]
 # ## Imports
@@ -394,10 +394,10 @@ def extract_card (img, output_fn=None, min_focus=120, debug=False):
 # %%
 # Test on one image
 debug=False
-img=cv2.imread("test/scene.png")
+img=cv2.imread("data-nb/test/scene.png")
 # img=cv2.imread("data/card-photos/3h.jpg")  # because of cat hair
 display_img(img)
-valid,card=extract_card(img,"test/extracted_card.png", debug=debug)
+valid,card=extract_card(img,"data-nb/test/extracted_card.png", debug=debug)
 if valid:
     display_img(card)
 if debug:
@@ -476,7 +476,8 @@ def extract_cards_from_video(video_fn, output_dir=None, keep_ratio=5, min_focus=
 
 # %%
 # # Test card extraction from a video   
-# imgs=extract_cards_from_video("test/2c.avi",output_dir="test/2c",debug=True)
+# imgs=extract_cards_from_video(
+#     "data-nb/test/2c.avi",output_dir="data-nb/test/2c",debug=True)
 # print("Nb images extracted:",len(imgs))
 
 # %% [markdown]
@@ -516,7 +517,7 @@ display_img(cv2.imread(img_fn,cv2.IMREAD_UNCHANGED),polygons=[refCornerHL,refCor
 
 # %% [markdown]
 # # Finding the convex hulls
-# <img src="img/convex_hull.jpg" alt="Convex hull" title="Convex hull" />
+# <img src="data-nb/img/convex_hull.jpg" alt="Convex hull" title="Convex hull" />
 # This function 'find_hull' finds the convex hull in one of the corner of a card image.
 # The convex hull is the minimal convex polygon that contains both the value and the suit symbols. 
 #
@@ -890,7 +891,7 @@ _=cards.get_random(display=True)
 #
 # |Scene1|Scene2|
 # |----|----|
-# |<img src="img/gen_2_cards.jpg" alt="Generated image with 2 cards" title="Generated image with 2 cards"/>|<img src="img/gen_3_cards.jpg" alt="Generated image with 3 cards" title="Generated image with 3 cards"/>|
+# |<img src="data-nb/img/gen_2_cards.jpg" alt="Generated image with 2 cards" title="Generated image with 2 cards"/>|<img src="data-nb/img/gen_3_cards.jpg" alt="Generated image with 3 cards" title="Generated image with 3 cards"/>|
 
 # %% [markdown]
 # ### To save bounding boxes annotations in Pascal VOC format 

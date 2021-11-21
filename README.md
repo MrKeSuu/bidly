@@ -5,5 +5,5 @@ The notebook **creating_playing_cards_dataset.ipynb** is a guide through the cre
 
 This dataset can be used for the training of a neural net intended to detect/localize playing cards. It was used on the project __[Playing card detection with YOLO v3](https://youtu.be/pnntrewH0xg)__
 
-<img src="img/ex_generated_image.png" alt="Example of generated image "  title="Example of generated image " />
+<img src="data-nb/img/ex_generated_image.png" alt="Example of generated image "  title="Example of generated image " />
 
