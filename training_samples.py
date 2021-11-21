@@ -12,6 +12,13 @@
 #     name: python3
 # ---
 
+# %%
+def optimize_cell_width():
+    from IPython.core.display import display, HTML
+    display(HTML("<style>.container { width:100% !important; }</style>"))
+
+optimize_cell_width()
+
 # %% [markdown]
 # # Creating a playing cards dataset
 # This notebook is a guide through the creation of a dataset of playing cards. The cards are labeled with their name (ex: "2c" for "2 of spades", "Kh" for King for hearts) and with the bounding boxes delimiting their printed corners.
@@ -25,7 +32,7 @@
 # %% [markdown]
 # # Prerequisites 
 #
-# ### A. In addition to opencv and numpy, you need the following python packages :
+# ### A. In addition to opencv and numpy, you need the following python packages:
 # 1. **imgaug** : https://github.com/aleju/imgaug 
 # > Helps with image augmentation
 # 2. **shapely** : https://github.com/Toblerity/Shapely
@@ -122,16 +129,16 @@ def display_img(img,polygons=[],channels="bgr",size=9):
         patch=patches.Polygon(polygon,linewidth=1,edgecolor='g',facecolor='none')
         ax.add_patch(patch)
 
-def give_me_filename(dirname, suffixes, prefix=""):
+def get_filename(dirname, suffixes, prefix=""):
     """
         Function that returns a filename or a list of filenames in directory 'dirname'
         that does not exist yet. If 'suffixes' is a list, one filename per suffix in 'suffixes':
         filename = dirname + "/" + prefix + random number + "." + suffix
         Same random number for all the file name
         Ex: 
-        > give_me_filename("dir","jpg", prefix="prefix")
+        > get_filename("dir","jpg", prefix="prefix")
         'dir/prefix408290659.jpg'
-        > give_me_filename("dir",["jpg","xml"])
+        > get_filename("dir",["jpg","xml"])
         ['dir/877739594.jpg', 'dir/877739594.xml']        
     """
     if not isinstance(suffixes, list):
@@ -447,7 +454,7 @@ def extract_cards_from_video(video_fn, output_dir=None, keep_ratio=5, min_focus=
         # Work on every 'keep_ratio' frames
         if frame_nb%keep_ratio==0:
             if output_dir is not None:
-                output_fn=give_me_filename(output_dir,"png")
+                output_fn=get_filename(output_dir,"png")
             else:
                 output_fn=None
             valid,card_img = extract_card(img,output_fn,min_focus=min_focus,debug=debug)
@@ -1167,7 +1174,7 @@ class Scene:
     def res(self):
         return self.final
     def write_files(self,save_dir,display=False):
-        jpg_fn, xml_fn=give_me_filename(save_dir, ["jpg","xml"])
+        jpg_fn, xml_fn=get_filename(save_dir, ["jpg","xml"])
         plt.imsave(jpg_fn,self.final)
         if display: print("New image saved in",jpg_fn)
         create_voc_xml(xml_fn,jpg_fn, self.listbba,display=display)
