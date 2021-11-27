@@ -991,9 +991,11 @@ cardKP = ia.KeypointsOnImage([
     ia.Keypoint(x=decalX,y=decalY+cardH)
     ], shape=(imgH,imgW,3))
 
+# YL: ideally scale should be around 0.4 but that maybe too small (orig resolution too low)
+
 # imgaug transformation for one card in scenario with 2 cards
 transform_1card = iaa.Sequential([
-    iaa.Affine(scale=[0.65,1]),
+    iaa.Affine(scale=[0.55,0.9]),
     iaa.Affine(rotate=(-180,180)),
     iaa.Affine(translate_percent={"x":(-0.25,0.25),"y":(-0.25,0.25)}),
 ])
@@ -1010,7 +1012,7 @@ trans_rot2 = iaa.Sequential([
 ])
 transform_3cards = iaa.Sequential([
     iaa.Affine(translate_px={"x":decalX-decalX3,"y":decalY-decalY3}),
-    iaa.Affine(scale=[0.65,1]),
+    iaa.Affine(scale=[0.55,0.9]),
     iaa.Affine(rotate=(-180,180)),
     iaa.Affine(translate_percent={"x":(-0.2,0.2),"y":(-0.2,0.2)})   
 ])
