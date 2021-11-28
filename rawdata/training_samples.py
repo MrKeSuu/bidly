@@ -1119,7 +1119,7 @@ class Scene:
         self.img1, self.lkps1, self.bbs1 = _augmented
 
         # Randomly transform 2nd card.
-        # We want that card 2 does not partially cover a corner of 1 card.
+        # We don't want that card 2 partially(10-90%) covers any hull corner of card 1.
         # If so, we apply a new random transform to card 2
         while True:
             self.listbba = []
@@ -1140,10 +1140,10 @@ class Scene:
                 intersect = mainPoly2.intersection(smallPoly1)
                 ai = intersect.area
                 # If intersection area is small enough, we accept card 2
-                if (a-ai)/a > 1-intersect_ratio:
+                if ai/a < intersect_ratio:  # YL: curr 0.1
                     self.listbba.append(BBA(self.bbs1[i-1], class1))
                 # If intersection area is not small, but also not big enough, we want apply new transform to card 2
-                elif (a-ai)/a > intersect_ratio:
+                elif ai/a < 1 - intersect_ratio:  # YL: curr 0.9
                     invalid = True
                     break
 
