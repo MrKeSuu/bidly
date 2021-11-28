@@ -1285,8 +1285,8 @@ newimg.display()
 
 # %%
 nb_cards_to_generate=100
-save_dir="data/scenes/train"
-save_dir="data/scenes/test"
+save_dir="data/train"
+save_dir="data/test"
 
 if not os.path.isdir(save_dir):
     os.makedirs(save_dir)
@@ -1305,8 +1305,8 @@ for i in tqdm(range(nb_cards_to_generate)):
 
 # %%
 nb_cards_to_generate=100
-save_dir="data/scenes/train"
-save_dir="data/scenes/test"
+save_dir="data/train"
+save_dir="data/test"
 
 if not os.path.isdir(save_dir):
     os.makedirs(save_dir)
