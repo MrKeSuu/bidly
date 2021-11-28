@@ -256,13 +256,16 @@ class Backgrounds():
             images_this_file = pickle.load(open(fn,'rb'))
             total += len(images_this_file)
         return total
-    
+
+
+# %%
 backgrounds = Backgrounds()
 backgrounds.get_total_images()
 
 # %%
 # Test: display a random background
-_=backgrounds.get_random(display=True)
+backgrounds = Backgrounds()
+__ = backgrounds.get_random(display=True)
 
 # %% [markdown]
 # # Extraction of the cards from pictures or video 
