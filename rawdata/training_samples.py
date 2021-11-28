@@ -1304,10 +1304,10 @@ def get_n_scenes_per_card(card_name):
 # ### Generation of the 2 cards scenes
 
 # %%
-def gen_2_cards_scene(output_dir, first_card=None):
+def gen_2_cards_scene(output_dir, main_card=None):
     bg = backgrounds.get_random()
-    img1, card_val1, hulla1, hullb1 = cards.get_random(card_name=first_card)
-    img2, card_val2, hulla2, hullb2 = cards.get_random()
+    img1, card_val1, hulla1, hullb1 = cards.get_random()
+    img2, card_val2, hulla2, hullb2 = cards.get_random(card_name=main_card)
     
     newimg = Scene(
         bg,
@@ -1334,21 +1334,21 @@ for card_name in Cards.CARD_NAMES:
     n_scenes_tr = n_scenes - n_scenes_te
 
     for __ in tqdm(range(n_scenes_tr)):
-        gen_2_cards_scene(train_dir, first_card=card_name)
+        gen_2_cards_scene(train_dir, main_card=card_name)
 
     for __ in tqdm(range(n_scenes_te)):
-        gen_2_cards_scene(test_dir, first_card=card_name)
+        gen_2_cards_scene(test_dir, main_card=card_name)
 
 
 # %% [markdown]
 # ### Generation of the 3 cards scenes
 
 # %%
-def gen_3_cards_scene(output_dir, first_card=None):
+def gen_3_cards_scene(output_dir, main_card=None):
     bg = backgrounds.get_random()
-    img1, card_val1, hulla1, hullb1 = cards.get_random(card_name=first_card)
+    img1, card_val1, hulla1, hullb1 = cards.get_random()
     img2, card_val2, hulla2, hullb2 = cards.get_random()
-    img3, card_val3, hulla3, hullb3 = cards.get_random()
+    img3, card_val3, hulla3, hullb3 = cards.get_random(card_name=main_card)
     
     newimg = Scene(
         bg,
@@ -1376,10 +1376,10 @@ for card_name in Cards.CARD_NAMES:
     n_scenes_tr = n_scenes - n_scenes_te
 
     for __ in tqdm(range(n_scenes_tr)):
-        gen_3_cards_scene(train_dir, first_card=card_name)
+        gen_3_cards_scene(train_dir, main_card=card_name)
 
     for __ in tqdm(range(n_scenes_te)):
-        gen_3_cards_scene(test_dir, first_card=card_name)
+        gen_3_cards_scene(test_dir, main_card=card_name)
 
 # %% [markdown]
 # ## In case you want to train YOLO with the generated datasets
