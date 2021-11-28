@@ -1009,6 +1009,7 @@ transform_1card = iaa.Sequential([
     iaa.Affine(scale=[0.55, 0.9]),
     iaa.Affine(rotate=(-180, 180)),
     iaa.Affine(translate_percent={"x": (-0.25,0.25), "y": (-0.25,0.25)}),
+    iaa.PerspectiveTransform(),
 ])
 
 # For the 3 cards scenario, we use 3 imgaug transforms, the first 2 are for individual cards, 
@@ -1025,7 +1026,8 @@ transform_3cards = iaa.Sequential([
     iaa.Affine(translate_px={"x": decalX-decalX3, "y": decalY-decalY3}),
     iaa.Affine(scale=[0.55, 0.9]),
     iaa.Affine(rotate=(-180, 180)),
-    iaa.Affine(translate_percent={"x": (-0.2,0.2),"y": (-0.2,0.2)})
+    iaa.Affine(translate_percent={"x": (-0.2,0.2),"y": (-0.2,0.2)}),
+    iaa.PerspectiveTransform(),
 ])
 
 # imgaug transformation for the background
