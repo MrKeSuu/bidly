@@ -1280,18 +1280,20 @@ newimg.display()
 # Modify the variable 'nb_cards_to_generate' and 'save_dir' accordingly
 #
 
-# %% [markdown]
-# ### Generation of the 2 cards scenes
-
 # %%
-nb_cards_to_generate = 100
 save_dir = "data/train"
 save_dir = "data/test"
 
 if not os.path.isdir(save_dir):
     os.makedirs(save_dir)
 
-for i in tqdm(range(nb_cards_to_generate)):
+# %% [markdown]
+# ### Generation of the 2 cards scenes
+
+# %%
+nb_cards_to_generate = 100
+
+def gen_2_cards_scene():
     bg = backgrounds.get_random()
     img1, card_val1, hulla1, hullb1 = cards.get_random()
     img2, card_val2, hulla2, hullb2 = cards.get_random()
@@ -1303,18 +1305,17 @@ for i in tqdm(range(nb_cards_to_generate)):
     newimg.write_files(save_dir)
 
 
+for i in tqdm(range(nb_cards_to_generate)):
+    gen_2_cards_scene()
+
+
 # %% [markdown]
 # ### Generation of the 3 cards scenes
 
 # %%
 nb_cards_to_generate = 100
-save_dir = "data/train"
-save_dir = "data/test"
 
-if not os.path.isdir(save_dir):
-    os.makedirs(save_dir)
-
-for i in tqdm(range(nb_cards_to_generate)):
+def gen_3_cards_scene():
     bg = backgrounds.get_random()
     img1, card_val1, hulla1, hullb1 = cards.get_random()
     img2, card_val2, hulla2, hullb2 = cards.get_random()
@@ -1326,6 +1327,10 @@ for i in tqdm(range(nb_cards_to_generate)):
         img2, card_val2, hulla2, hullb2,
         img3, card_val3, hulla3, hullb3)
     newimg.write_files(save_dir)
+
+
+for i in tqdm(range(nb_cards_to_generate)):
+    gen_3_cards_scene()
 
 
 # %% [markdown]
