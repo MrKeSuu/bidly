@@ -1284,8 +1284,17 @@ newimg.display()
 train_dir = "data/train"
 test_dir = "data/test"
 
-if not os.path.isdir(save_dir):
-    os.makedirs(save_dir)
+N_SCENES_PER_CARD = 100
+TEST_SIZE = 0.25
+
+os.makedirs(train_dir, exist_ok=True)
+os.makedirs(test_dir, exist_ok=True)
+
+def get_n_scenes_per_card(card_name):
+    if card_name.startswith('A') or card_name.startswith('4'):
+        # similar so gen a bit more:
+        return N_SCENES_PER_CARD + 20
+    return N_SCENES_PER_CARD
 
 
 # %% [markdown]
@@ -1304,19 +1313,35 @@ def gen_2_cards_scene(output_dir, first_card=None):
     newimg.write_files(output_dir)
 
 
-
 # %%
+## all random
 nb_cards_to_generate = 100
 
 for i in tqdm(range(nb_cards_to_generate)):
     gen_2_cards_scene(train_dir)
 
 
+# %%
+## control # images for first card
+for card_name in Cards.CARD_NAMES:
+    print('Generating scenes for', card_name)
+
+    n_scenes = get_n_scenes_per_card(card_name)
+    n_scenes_te = int(n_scenes * TEST_SIZE)
+    n_scenes_tr = n_scenes - n_scenes_te
+
+    for __ in tqdm(range(n_scenes_tr)):
+        gen_2_cards_scene(train_dir, first_card=card_name)
+
+    for __ in tqdm(range(n_scenes_te)):
+        gen_2_cards_scene(test_dir, first_card=card_name)
+
+
 # %% [markdown]
 # ### Generation of the 3 cards scenes
 
 # %%
-def gen_3_cards_scene(output_dir, card_name=None):
+def gen_3_cards_scene(output_dir, first_card=None):
     bg = backgrounds.get_random()
     img1, card_val1, hulla1, hullb1 = cards.get_random(card_name=first_card)
     img2, card_val2, hulla2, hullb2 = cards.get_random()
@@ -1330,13 +1355,28 @@ def gen_3_cards_scene(output_dir, card_name=None):
     newimg.write_files(output_dir)
 
 
-
 # %%
+## all random
 nb_cards_to_generate = 100
 
 for i in tqdm(range(nb_cards_to_generate)):
     gen_3_cards_scene(train_dir)
 
+
+# %%
+## control # images for first card
+for card_name in Cards.CARD_NAMES:
+    print('Generating scenes for', card_name)
+
+    n_scenes = get_n_scenes_per_card(card_name)
+    n_scenes_te = int(n_scenes * TEST_SIZE)
+    n_scenes_tr = n_scenes - n_scenes_te
+
+    for __ in tqdm(range(n_scenes_tr)):
+        gen_3_cards_scene(train_dir, first_card=card_name)
+
+    for __ in tqdm(range(n_scenes_te)):
+        gen_3_cards_scene(test_dir, first_card=card_name)
 
 # %% [markdown]
 # ## In case you want to train YOLO with the generated datasets
