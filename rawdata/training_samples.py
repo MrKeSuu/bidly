@@ -1392,5 +1392,5 @@ for card_name in Cards.CARD_NAMES:
 # The script 'convert_voc_yolo.py' makes this conversion and also generates the txt file that contains all the images of the dataset
 
 # %%
-# !python convert_voc_yolo.py data/scenes/train data/cards.names data/yolo_train_list.txt
-# !python convert_voc_yolo.py data/scenes/test data/cards.names data/yolo_test_list.txt
+# !python convert_voc_yolo.py data/train data/cards.names data/yolo_train_list.txt
+# !python convert_voc_yolo.py data/test data/cards.names data/yolo_test_list.txt
