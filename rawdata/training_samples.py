@@ -1059,12 +1059,15 @@ def augment(img, list_kps, seq, restart=True):
         # Check the card bounding box stays inside the image
         valid = True
         for bb in list_bbs:
-            no_bb = bb is None
+            if bb is None:
+                valid = False
+                break
+
             too_right = int(round(bb.x2)) >= imgW
             too_left = int(bb.x1) <= 0
             too_low = int(round(bb.y2)) >= imgH
             too_high = int(bb.y1) <= 0
-            if no_bb or too_right or too_left or too_low or too_high:
+            if too_right or too_left or too_low or too_high:
                 valid = False
                 break
 
@@ -1329,7 +1332,7 @@ for i in tqdm(range(nb_cards_to_generate)):
 # %%
 ## control # images for first card
 for card_name in Cards.CARD_NAMES:
-    print('Generating scenes for', card_name)
+    print('Generating 2-card scenes for', card_name)
 
     n_scenes = get_n_scenes_per_card(card_name)
     n_scenes_te = int(n_scenes * TEST_SIZE)
@@ -1371,7 +1374,7 @@ for i in tqdm(range(nb_cards_to_generate)):
 # %%
 ## control # images for first card
 for card_name in Cards.CARD_NAMES:
-    print('Generating scenes for', card_name)
+    print('Generating 3-card scenes for', card_name)
 
     n_scenes = get_n_scenes_per_card(card_name)
     n_scenes_te = int(n_scenes * TEST_SIZE)
