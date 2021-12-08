@@ -182,8 +182,8 @@ cards_pck_fn=data_dir+"/cards-{}.pck"
 
 
 # imgW,imgH: dimensions of the generated dataset images 
-imgW=720
-imgH=720
+imgW=960
+imgH=960
 
 
 refCard=np.array([[0,0],[cardW,0],[cardW,cardH],[0,cardH]],dtype=np.float32)
@@ -932,9 +932,11 @@ xml_body_2="""</annotation>
 
 def create_voc_xml(xml_file, img_file,listbba,display=False):
     with open(xml_file,"w") as f:
-        f.write(xml_body_1.format(**{'FILENAME':os.path.basename(img_file), 'PATH':img_file,'WIDTH':imgW,'HEIGHT':imgH}))
+        f.write(xml_body_1.format(
+            **{'FILENAME':os.path.basename(img_file), 'PATH':img_file,'WIDTH':imgW,'HEIGHT':imgH}))
         for bba in listbba:            
-            f.write(xml_object.format(**{'CLASS':bba.classname,'XMIN':bba.x1,'YMIN':bba.y1,'XMAX':bba.x2,'YMAX':bba.y2}))
+            f.write(xml_object.format(
+                **{'CLASS':bba.classname,'XMIN':bba.x1,'YMIN':bba.y1,'XMAX':bba.x2,'YMAX':bba.y2}))
         f.write(xml_body_2)
         if display: print("New xml",xml_file)
         
@@ -1006,7 +1008,7 @@ cardKP = ia.KeypointsOnImage([
 
 # imgaug transformation for one card in scenario with 2 cards
 transform_1card = iaa.Sequential([
-    iaa.Affine(scale=[0.55, 0.9]),
+    iaa.Affine(scale=[0.6, 1]),
     iaa.Affine(rotate=(-180, 180)),
     iaa.Affine(translate_percent={"x": (-0.25,0.25), "y": (-0.25,0.25)}),
     iaa.PerspectiveTransform(),
@@ -1024,7 +1026,7 @@ trans_rot2 = iaa.Sequential([
 ])
 transform_3cards = iaa.Sequential([
     iaa.Affine(translate_px={"x": decalX-decalX3, "y": decalY-decalY3}),
-    iaa.Affine(scale=[0.55, 0.9]),
+    iaa.Affine(scale=[0.6, 1]),
     iaa.Affine(rotate=(-180, 180)),
     iaa.Affine(translate_percent={"x": (-0.2,0.2),"y": (-0.2,0.2)}),
     iaa.PerspectiveTransform(),
@@ -1237,7 +1239,7 @@ class Scene:
         self.final = np.where(self.mask3, self.img3[:, :, 0:3], self.final)
 
     def display(self):
-        fig, ax = plt.subplots(1, figsize=(8,8))
+        fig, ax = plt.subplots(1, figsize=(imgW/100,imgH/100), dpi=100)
         ax.imshow(self.final)
         for bb in self.listbba:
             rect = patches.Rectangle(
