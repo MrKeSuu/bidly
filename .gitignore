@@ -1,4 +1,5 @@
 dtd-r1.0.1.tar.gz
+*.ipynb
 .ipynb_checkpoints/
 *.pck
 
