@@ -1,4 +1,4 @@
-SOURCE_FILEPATH = 'obj.names'
+SOURCE_FILEPATH = 'yolo-cfg/obj.names'
 
 
 def main():
