@@ -1,12 +1,17 @@
 """Converting .json from yolo into .pbn for pythondds."""
+import json
+
+import pandas as pd
 
 
 class DealConverter:
     def __init__(self):
-        pass
+        self.card = None
 
     def read_yolo(self, path):
-        pass
+        with open(path, 'r') as f:
+            yolo_json = json.load(f)
+        self.card = pd.json_normalize(yolo_json[0]['objects'])
 
     def dedup(self):
         pass
