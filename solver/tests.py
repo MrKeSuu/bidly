@@ -42,3 +42,11 @@ class TestConverter:
         assert deal_converter.card_.shape == (41, 7)
         assert deal_converter.card_.name.value_counts().max() == 1
         assert deal_converter.card_.query('name == "5c"').confidence.iloc[0] == 0.999394
+
+    def test_report_missing_and_fp(self, deal_converter, capsys):
+        deal_converter.dedup()
+        deal_converter.report_missing_and_fp()
+
+        captrued = capsys.readouterr()
+        assert captrued.out == (
+            "Missing cards: ['2s', '6s', '9s', '3c', '10c', '4d', '5d', '10d', 'Qd', '3h', '9h']\n")
