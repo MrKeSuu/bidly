@@ -24,22 +24,21 @@ class TestConverter:
     YOLO_FILEPATH = pathlib.Path('fixtures/deal1-result-md.json')
 
     @pytest.fixture
-    def converter(self):
-        return converter.DealConverter()
+    def deal_converter(self):
+        deal_converter = converter.DealConverter()
+        deal_converter.read_yolo(self.YOLO_FILEPATH)
+        return deal_converter
 
-    def test_read_yolo(self, converter):
-        converter.read_yolo(self.YOLO_FILEPATH)
+    def test_read_yolo(self, deal_converter):
+        assert isinstance(deal_converter.card, pd.DataFrame)
+        assert deal_converter.card.shape == (51, 7)
+        assert 'name' in deal_converter.card.columns
+        assert 'relative_coordinates.center_x' in deal_converter.card.columns
 
-        assert isinstance(converter.card, pd.DataFrame)
-        assert converter.card.shape == (51, 7)
-        assert 'name' in converter.card.columns
-        assert 'relative_coordinates.center_x' in converter.card.columns
+    def test_simple_dedup(self, deal_converter):
+        deal_converter.dedup()
 
-    def test_simple_dedup(self, converter):
-        converter.read_yolo(self.YOLO_FILEPATH)
-        converter.dedup()
-
-        assert isinstance(converter.card_, pd.DataFrame)
-        assert converter.card_.shape == (41, 7)
-        assert converter.card_.name.value_counts().max() == 1
-        assert converter.card_.query('name == "5c"').confidence.iloc[0] == 0.999394
+        assert isinstance(deal_converter.card_, pd.DataFrame)
+        assert deal_converter.card_.shape == (41, 7)
+        assert deal_converter.card_.name.value_counts().max() == 1
+        assert deal_converter.card_.query('name == "5c"').confidence.iloc[0] == 0.999394
