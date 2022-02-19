@@ -8,15 +8,20 @@ import converter
 import main
 
 
+@pytest.mark.verbose
 class TestBasic:
-    def test_min_sample_run(self):
+    def test_min_sample_run(self, capsys):
         calc_ddtable_pbn.main()
+
+        captured = capsys.readouterr()
+        assert "KQJT82                  7" in captured.out
+        assert "KJ                      AQ8" in captured.out
+        assert "NT     7     7     6     6\n" in captured.out
+        assert " C     9     9     3     4\n" in captured.out
+        assert " H    13    13     0     0\n" in captured.out
 
     def test_main(self):
         main.main()
-
-
-# TODO add tests verifying ddtable output
 
 
 class TestConverter:
