@@ -19,7 +19,6 @@ class TestBasic:
 # TODO add tests verifying ddtable output
 
 
-@pytest.mark.single
 class TestConverter:
     YOLO_FILEPATH = pathlib.Path('fixtures/deal1-result-md.json')
 
