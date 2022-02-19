@@ -25,6 +25,16 @@ class DealConverter:
             yolo_json = json.load(f)
         self.card = pd.json_normalize(yolo_json[0]['objects'])  # image has one frame only
 
+    def report_missing_and_fp(self):
+        # report missing
+        detected_classes = set(self.card.name)
+        missing_classes = [name for name in CARD_CLASSES if name not in detected_classes]
+        print("Missing cards:", missing_classes)
+
+        # report FP
+        fp_classes = self.card.name.value_counts()[lambda s: s > 2].index.tolist()
+        print("FP cards:", fp_classes)
+
     def dedup(self):
         self.card_ = self._dedup_simple()
 
@@ -43,22 +53,13 @@ class DealConverter:
         #     2) the onw closer to image center, otherwise
         pass
 
-    # three cases after dedup
+    # two cases after dedup
     def assign(self):
         """Case 1: everything is perfect -> work on assigning cards to four hands"""
         pass
 
-    def report_missing_and_fp(self):
-        """Case 2: missing cards or FP cards -> report them"""
-        # report missing
-        detected_classes = set(self.card_.name)
-        missing_classes = [name for name in CARD_CLASSES if name not in detected_classes]
-        print('Missing cards:', missing_classes)
-
-        # report FP  TODO
-
     def infer_missing(self):
-        """Case 3: missing cards -> attempt to infer"""
+        """Case 2: missing cards -> attempt to infer"""
         pass  # *lower priority
 
     def write_pbn(self, path):
