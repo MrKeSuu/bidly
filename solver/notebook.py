@@ -17,6 +17,7 @@ import json
 import importlib
 import pathlib
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -25,6 +26,9 @@ importlib.reload(converter)
 
 YOLO_JSON_FILEPATH = pathlib.Path('fixtures/deal1-result-md.json')
 YOLO_JSON_FILEPATH = pathlib.Path('fixtures/deal3-result-sm.json')
+
+# %% [markdown]
+# ## `DealConverter` whiteboard
 
 # %%
 converter = converter.DealConverter()
@@ -37,12 +41,16 @@ converter.card.name.unique()
 converter.dedup()
 converter.report_missing_and_fp()
 
+
 # %% [markdown]
-# ### Dedup EDA
+# ## Dedup EDA
 
 # %%
-with open(YOLO_JSON_FILEPATH) as f:
-    res = pd.json_normalize(json.load(f)[0]['objects'], sep='__')
+def read_yolo(path):
+    with open(path) as f:
+        return pd.json_normalize(json.load(f)[0]['objects'], sep='__')
+
+res = read_yolo(YOLO_JSON_FILEPATH)
 res.shape
 
 # %%
@@ -86,5 +94,37 @@ def _euclidean_dist(x1, y1, x2, y2):
                     axis=1))
         .sort_index()
 )
+
+# %%
+
+# %% [markdown]
+# ## Plot detected cards
+
+# %%
+import pathlib
+
+FILENAME = 'deal3-manual-edit.json'
+FILENAME = 'deal1-result-md.json'
+YOLO_JSON_EDITTED_FILEPATH = pathlib.Path('fixtures') / FILENAME
+
+def locate_detected_classes(res, min_conf=0.7):
+    __, ax = plt.subplots(figsize=(10,10))
+
+    for __, row in res.iterrows():
+        if row['confidence'] < min_conf:
+            continue
+        ax.annotate(
+            row['name'],
+            (row['__relative_coordinates__center_x'],
+             1-row['__relative_coordinates__center_y']))
+
+
+# %%
+res = read_yolo(YOLO_JSON_EDITTED_FILEPATH)
+res.shape
+
+# %%
+locate_detected_classes(res)
+# manual edit looks good
 
 # %%
