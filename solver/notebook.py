@@ -24,8 +24,16 @@ import pandas as pd
 import converter
 importlib.reload(converter)
 
-YOLO_JSON_FILEPATH = pathlib.Path('fixtures/deal1-result-md.json')
-YOLO_JSON_FILEPATH = pathlib.Path('fixtures/deal3-result-sm.json')
+def optimize_cell_width():
+    from IPython.display import display, HTML
+    display(HTML("<style>.container { width:100% !important; }</style>"))
+optimize_cell_width()
+
+YOLO_JSON_FILEPATH_1M = pathlib.Path('fixtures/deal1-result-md.json')
+YOLO_JSON_FILEPATH_2M = pathlib.Path('fixtures/deal2-result-md.json')
+YOLO_JSON_FILEPATH_2S = pathlib.Path('fixtures/deal2-result-sm.json')
+YOLO_JSON_FILEPATH_3S = pathlib.Path('fixtures/deal3-result-sm.json')
+YOLO_JSON_FILEPATH_3I = pathlib.Path('fixtures/deal3-manual-edit.json')
 
 # %% [markdown]
 # ## `DealConverter` whiteboard
@@ -50,7 +58,7 @@ def read_yolo(path):
     with open(path) as f:
         return pd.json_normalize(json.load(f)[0]['objects'], sep='__')
 
-res = read_yolo(YOLO_JSON_FILEPATH)
+res = read_yolo(YOLO_JSON_FILEPATH_3S)
 res.shape
 
 # %%
@@ -74,39 +82,56 @@ def _euclidean_dist(x1, y1, x2, y2):
 
 
 # %%
-(
+pair = (
     res[['name', 'confidence',
          '__relative_coordinates__center_x', '__relative_coordinates__center_y']]
         .rename(columns=lambda s: s.split('_')[-1])
-        .query('confidence > 0.99')  # debug
+        .query('confidence >= 0.7')  # debug
         .assign(group_rank=lambda df:
                     df.groupby('name')
-                        .transform(lambda s: s.rank(method='first')).x)
+                        .transform(lambda s: s.rank(method='first'))
+                        .x)
         .assign(uniq_name=lambda df:
-                    df.name.str.cat(
-                        [df.group_rank.astype(int).astype(str)],
-                        sep='_'))
+                    df.name.str
+                        .cat([df.group_rank.astype(int).astype(str)], sep='_'))
         .drop(columns=['group_rank']).set_index('uniq_name')
         .pipe(_make_pair_wise)
         .query('name_1 == name_2').drop(columns=['name_1', 'name_2'])
-        .assign(dist=lambda df: df.apply(
-                    lambda df: _euclidean_dist(df.x_1, df.y_1, df.x_2, df.y_2),
-                    axis=1))
+        .assign(dist_=lambda df: df.apply(
+            lambda df: _euclidean_dist(df.x_1, df.y_1, df.x_2, df.y_2), axis=1))
         .sort_index()
 )
+pair.shape
 
 # %%
+X_dist = (
+    pair.query('0.1 <= dist_ <= 0.3')
+        .dist_
+        .values.reshape(-1, 1)
+)
+X_dist.shape
+
+# %%
+import sklearn.cluster
+
+# %%
+# agg_clt = sklearn.cluster.AgglomerativeClustering(n_clusters=19)
+# clt_id = agg_clt.fit(X_dist).labels_
+
+# pd.DataFrame(dict(dist_=X_dist.ravel(), clt_id_=clt_id)).sort_values('dist_')
+# # hier clt not so effective, when not filtered by dist_: 0.1 <= dist_ <= 0.3
+
+# %%
+db_clt = sklearn.cluster.DBSCAN(eps=0.01, min_samples=3)  # trial-n-error eps
+clt_id = db_clt.fit(X_dist).labels_
+
+pd.DataFrame(dict(dist_=X_dist.ravel(), clt_id_=clt_id)).sort_values('dist_')
+
 
 # %% [markdown]
 # ## Plot detected cards
 
 # %%
-import pathlib
-
-FILENAME = 'deal3-manual-edit.json'
-FILENAME = 'deal1-result-md.json'
-YOLO_JSON_EDITTED_FILEPATH = pathlib.Path('fixtures') / FILENAME
-
 def locate_detected_classes(res, min_conf=0.7):
     __, ax = plt.subplots(figsize=(10,10))
 
@@ -120,7 +145,7 @@ def locate_detected_classes(res, min_conf=0.7):
 
 
 # %%
-res = read_yolo(YOLO_JSON_EDITTED_FILEPATH)
+res = read_yolo(YOLO_JSON_FILEPATH_3I)
 res.shape
 
 # %%
