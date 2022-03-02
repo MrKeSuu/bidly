@@ -81,10 +81,10 @@ pair = (
          '__relative_coordinates__center_x', '__relative_coordinates__center_y']]
         .rename(columns=lambda s: s.split('_')[-1])
         .query('confidence >= 0.7')  # debug
+        # make uniq names for pair-wise dists
         .assign(group_rank=lambda df:
-                    df.groupby('name')
-                        .transform(lambda s: s.rank(method='first'))
-                        .x)
+                    df.groupby('name').x
+                        .transform(lambda s: s.rank(method='first')))
         .assign(uniq_name=lambda df:
                     df.name.str
                         .cat([df.group_rank.astype(int).astype(str)], sep='_'))
@@ -92,7 +92,8 @@ pair = (
         .pipe(_make_pair_wise)
         .query('name_1 == name_2').drop(columns=['name_1', 'name_2'])
         .assign(dist_=lambda df: df.apply(
-            lambda df: _euclidean_dist(df.x_1, df.y_1, df.x_2, df.y_2), axis=1))
+            lambda df: _euclidean_dist(df.x_1, df.y_1, df.x_2, df.y_2),
+            axis=1))
         .sort_index()
 )
 pair.shape
