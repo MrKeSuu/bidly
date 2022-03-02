@@ -61,10 +61,6 @@ def read_yolo(path):
 res = read_yolo(YOLO_JSON_FILEPATH_3S)
 res.shape
 
-# %%
-midx = pd.MultiIndex.from_product([res.name, res.name], names=['n1', 'n2'])
-midx
-
 
 # %%
 def _make_pair_wise(df: pd.DataFrame):
@@ -75,8 +71,6 @@ def _make_pair_wise(df: pd.DataFrame):
     return dist.loc[
         midx[midx.get_level_values(0) < midx.get_level_values(1)]]
 
-
-# %%
 def _euclidean_dist(x1, y1, x2, y2):
     return np.sqrt((x1-x2)**2 + (y1-y2)**2)
 
@@ -114,18 +108,25 @@ X_dist.shape
 # %%
 import sklearn.cluster
 
-# %%
-# agg_clt = sklearn.cluster.AgglomerativeClustering(n_clusters=19)
-# clt_id = agg_clt.fit(X_dist).labels_
+def find_densest(dists, min_size):
+    """Find densest subset of dists.
 
-# pd.DataFrame(dict(dist_=X_dist.ravel(), clt_id_=clt_id)).sort_values('dist_')
-# # hier clt not so effective, when not filtered by dist_: 0.1 <= dist_ <= 0.3
+    As part of smart dedup, the idea is to find the 'mode' of
+    all pair-wise distances, in order to filter out bad pairs.
+    - `eps` tuned for dist between two symbols on the same card
+    - only works for 1-d array currently"""
+    X = np.array(dists).reshape(-1, 1)
+    dbscan = sklearn.cluster.DBSCAN(eps=0.01, min_samples=min_size)
+    clt_id = dbscan.fit(X).labels_
 
-# %%
-db_clt = sklearn.cluster.DBSCAN(eps=0.01, min_samples=3)  # trial-n-error eps
-clt_id = db_clt.fit(X_dist).labels_
+    clustered = pd.DataFrame(dict(dist_=X.ravel(), clt_id_=clt_id))
+    if clustered.clt_id_.max() > 0:
+        print("WARNING: more than one cluster found")
+    densest = clustered.loc[clustered.clt_id_ == 0, 'dist_']
+    return densest
 
-pd.DataFrame(dict(dist_=X_dist.ravel(), clt_id_=clt_id)).sort_values('dist_')
+densest_dist = find_densest(X_dist, min_size=3)
+densest_dist.shape
 
 
 # %% [markdown]
