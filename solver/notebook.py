@@ -131,6 +131,32 @@ def find_densest(dists, min_size):
 densest_dist = find_densest(X_dist, min_size=3)
 densest_dist.shape
 
+# %%
+# good dup
+good_pair = dist.loc[dist.dist_.isin(densest_dist)].filter(regex='^(name|x|y)')
+good_dup = pd.concat([
+    good_pair.filter(regex='_1$').rename(columns=lambda s: s.replace('_1', '')),
+    good_pair.filter(regex='_2$').rename(columns=lambda s: s.replace('_2', ''))
+], ignore_index=True)
+good_dup.shape
+
+# %%
+# all dup
+all_dup = res.loc[res.name.isin(res.name.value_counts().loc[lambda s: s > 1].index)]
+all_dup.shape
+
+# %%
+res.pipe(locate_detected_classes, min_conf=0)
+
+res.sort_values('confidence').drop_duplicates('name', keep='last').append(
+    all_dup
+        .merge(good_dup.set_index(['name', 'x', 'y']),
+               left_on=['name',
+                        'relative_coordinates.center_x',
+                        'relative_coordinates.center_y'],
+               right_index=True)
+).drop_duplicates().pipe(locate_detected_classes)
+
 
 # %% [markdown]
 # ## Plot detected cards
