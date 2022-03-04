@@ -45,13 +45,25 @@ class DealConverter:
                     .drop_duplicates(subset='name', keep='last'))
 
     def _dedup_smart(self):
+        """Dedup in a smart way.
+
+        steps:  // YL: got a feeling this is to complex
+        1. find out dup pairs whose dist between a range: not too far nor too close
+        2. remove dup objs by keeping one with highest conf; could lead to removal of valid objs
+        3. append back good dups found in 1. and leave them for assign to decide
+        """
         # TODO
-        # rule:
-        # 1. find out dup pairs whose dist between a range: not too far nor too close
-        # 2. reomve from each pair:
-        #     1) the one with lower conf, if conf diff to much
-        #     2) the onw closer to image center, otherwise
-        pass
+        dist = self._calc_pair_dist()
+
+        X_dist = (
+            dist.query('0.1 <= dist_ <= 0.3')  # reasonable range of two symbol dist on same card
+                .dist_.values.reshape(-1, 1))
+        densest_dist = self._find_densest(X_dist)
+        good_dup = self._get_good_dup(self.card, dist, densest_dist)
+
+        return (self._dedup_simple()
+                    .append(good_dup)
+                    .drop_duplicates())
 
     # two cases after dedup
     def assign(self):
@@ -63,4 +75,15 @@ class DealConverter:
         pass  # *lower priority
 
     def write_pbn(self, path):
+        pass
+
+    def _calc_pair_dist(self):
+        pass
+
+    @staticmethod
+    def _find_densest(dists, min_size=3):
+        pass
+
+    @staticmethod
+    def _get_good_dup(card, dist, densest_dist):
         pass
