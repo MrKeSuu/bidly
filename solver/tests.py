@@ -47,6 +47,15 @@ class TestConverter:
         assert deal_converter.card_.name.value_counts().max() == 1
         assert deal_converter.card_.query('name == "5c"').confidence.iloc[0] == 0.999394
 
+    def test_smart_dedup(self, deal_converter):
+        deal_converter.dedup(smart=True)
+
+        assert isinstance(deal_converter.card_, pd.DataFrame)
+        assert deal_converter.card_.shape == (48, 7)
+        assert deal_converter.card_.name.value_counts().max() == 2
+        assert deal_converter.card_.query('name == "5h"').shape[0] == 1  # bad dup dropped
+        assert deal_converter.card_.query('name == "5c"').shape[0] == 2  # good dup appended back
+
     def test_report_missing_and_fp(self, deal_converter: converter.DealConverter, capsys):
         deal_converter.dedup()
         deal_converter.report_missing_and_fp()
