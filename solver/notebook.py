@@ -40,7 +40,7 @@ YOLO_JSON_FILEPATH_3I = pathlib.Path('fixtures/deal3-manual-edit.json')
 
 # %%
 converter = converter.DealConverter()
-converter.read_yolo(YOLO_JSON_FILEPATH)
+converter.read_yolo(YOLO_JSON_FILEPATH_1M)
 
 # %%
 converter.card.name.unique()
@@ -51,14 +51,15 @@ converter.report_missing_and_fp()
 
 
 # %% [markdown]
-# ## Dedup EDA
+# ## Dedup EDA & sketches
 
 # %%
 def read_yolo(path):
     with open(path) as f:
         return pd.json_normalize(json.load(f)[0]['objects'])
 
-res = read_yolo(YOLO_JSON_FILEPATH_1M)
+converter.read_yolo(YOLO_JSON_FILEPATH_1M)
+res = converter.card
 res.shape
 
 
@@ -173,13 +174,50 @@ def locate_detected_classes(res, min_conf=0.7):
             (row['relative_coordinates.center_x'],
              1-row['relative_coordinates.center_y']))
 
+    # quadrant guide lines
+    ax.plot([0, 1], [0, 1], ls='--', c='grey', alpha=0.5)
+    ax.plot([0, 1], [1, 0], ls='--', c='grey', alpha=0.5)
+
 
 # %%
-res = read_yolo(YOLO_JSON_FILEPATH_3I)
+converter.read_yolo(YOLO_JSON_FILEPATH_3I)
+res = converter.card
 res.shape
 
 # %%
 locate_detected_classes(res)
 # manual edit looks good
 
+# %% [markdown]
+# #### before/after smart dedup
+
 # %%
+# converter.read_yolo(YOLO_JSON_FILEPATH_1M)
+converter.read_yolo(YOLO_JSON_FILEPATH_2M)
+res = converter.card
+res.shape
+
+# %%
+res.pipe(locate_detected_classes, min_conf=0)
+
+# %%
+converter.dedup(smart=True)
+res_ = converter.card_
+res_.shape
+
+# %%
+res_.pipe(locate_detected_classes, min_conf=0)
+
+# %% [markdown]
+# ## Method: `assign`
+#
+# #### idea 1
+# 1. start with 'core objects' in each quadrant, from tightest quardrant
+# 2. gradually add obj with the lowest *avg linkage*, until reaching 13 cards
+#
+# ###### TODOs
+# - [ ] come up with def for 'core objects'
+#     - can see DBSCAN
+#     - can set a margin to exclude objs
+# - [ ] ignore/drop dups
+#
