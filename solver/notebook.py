@@ -49,15 +49,10 @@ converter.card.name.unique()
 converter.dedup()
 converter.report_missing_and_fp()
 
-
 # %% [markdown]
 # ## Dedup EDA & sketches
 
 # %%
-def read_yolo(path):
-    with open(path) as f:
-        return pd.json_normalize(json.load(f)[0]['objects'])
-
 converter.read_yolo(YOLO_JSON_FILEPATH_1M)
 res = converter.card
 res.shape
@@ -213,11 +208,82 @@ res_.pipe(locate_detected_classes, min_conf=0)
 #
 # #### idea 1
 # 1. start with 'core objects' in each quadrant, from tightest quardrant
-# 2. gradually add obj with the lowest *avg linkage*, until reaching 13 cards
+# 2. gradually add the obj with the lowest distance, until reaching 13 cards
+#     - distance could be *avg linkage*
+#     - distance could be *median* linkage (YL)
+#     - distance could be *triple* linkage (YL)
+#         - single linkage: shortest; triple linkage: 3 shortest
+#
+# #### idea 2
+# 1. similarly to I1, find out 'core objects' for each quadrant
+# 2. gradually add the obj with the lowest avg linkage *among all 4 quadrants*
 #
 # ###### TODOs
 # - [ ] come up with def for 'core objects'
 #     - can see DBSCAN
 #     - can set a margin to exclude objs
 # - [ ] ignore/drop dups
+#     - can be handled right after adding a non-core object to a cluster
+#         - and should be checked after finding out core objects
+# - [ ] consider giving more weights to objs further from the margin
 #
+
+# %%
+no, so, ea, we = divide_quadrants(card, margin=x)
+no_core = find_core_objs(no)
+so_core = find_core_objs(so)
+ea_core = find_core_objs(ea)
+we_core = find_core_objs(we)
+
+remaining = list_remaining_objs(card, no_core, so_core, ea_core, we_core)
+
+no_full = add_closest(no_core, remaining)
+so_full = add_closest(so_core, remaining)
+ea_full = add_closest(ea_core, remaining)
+we_full = add_closest(we_core, remaining)
+
+# %%
+converter.read_yolo(YOLO_JSON_FILEPATH_3I)
+res = converter.card
+res.pipe(locate_detected_classes)
+
+# %% [markdown]
+# #### How to calculate distance from the margin/cross?
+
+# %%
+import sympy
+
+guideline_up = sympy.Line((0, 0), (1, 1))
+guideline_down = sympy.Line((0, 1), (1, 0))
+float(guideline_up.distance((0, 1)).evalf())
+
+# %% [markdown]
+# ---
+
+# %%
+# NOT USEFUL
+# # check pairwise distance distribution
+# # calc pair dist
+# dist = (
+#     res[['name', 'confidence',
+#          'relative_coordinates.center_x', 'relative_coordinates.center_y']]
+#         .rename(columns=lambda s: s.split('_')[-1])
+#         .query('confidence >= 0.7')  # debug
+#         # make uniq names for pair-wise dists
+#         .assign(group_rank=lambda df:
+#                     df.groupby('name').x
+#                         .transform(lambda s: s.rank(method='first')))
+#         .assign(uniq_name=lambda df:
+#                     df.name.str
+#                         .cat([df.group_rank.astype(int).astype(str)], sep='_'))
+#         .drop(columns=['group_rank']).set_index('uniq_name')
+#         .pipe(_make_pair_wise)
+#         .assign(dist_=lambda df: df.apply(
+#             lambda df: _euclidean_dist(df.x_1, df.y_1, df.x_2, df.y_2),
+#             axis=1))
+#         .sort_index()
+# )
+# dist.shape
+# dist.dist_.plot(kind='hist', bins=100)
+
+# %%
