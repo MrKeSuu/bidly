@@ -49,6 +49,19 @@ class DealConverter:
         else:
             self.card_ = self._dedup_simple()
 
+    # two cases after dedup
+    def assign(self):
+        """Case 1: everything is perfect -> work on assigning cards to four hands"""
+        pass
+        # TODO test with deal3-manual-edit.json
+
+    def infer_missing(self):
+        """Case 2: missing cards -> attempt to infer"""
+        pass  # *lower priority
+
+    def write_pbn(self, path):
+        pass
+
     def _dedup_simple(self):
         """Dedup in a simple way, only keeping the one with highest confidence."""
         return (self.card
@@ -73,18 +86,6 @@ class DealConverter:
                     .append(good_dup)
                     .drop_duplicates())
 
-    # two cases after dedup
-    def assign(self):
-        """Case 1: everything is perfect -> work on assigning cards to four hands"""
-        pass
-
-    def infer_missing(self):
-        """Case 2: missing cards -> attempt to infer"""
-        pass  # *lower priority
-
-    def write_pbn(self, path):
-        pass
-
     def _calc_symbol_pair_dist(self):
         card_filtered = (
             self.card[[
@@ -108,7 +109,7 @@ class DealConverter:
                 .pipe(self._make_pair_wise)
                 .query('name_1 == name_2')
                 .assign(dist_=lambda df: df.apply(
-                    lambda df: self._euclidean_dist(df.x_1, df.y_1, df.x_2, df.y_2),
+                    lambda row: self._euclidean_dist(row.x_1, row.y_1, row.x_2, row.y_2),
                     axis=1))
         )
         return pair_dist
