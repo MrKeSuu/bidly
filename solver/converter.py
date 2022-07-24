@@ -15,6 +15,8 @@ CARD_CLASSES = [
 
 
 class DealConverter:
+    QUADRANT_MARGIN_WIDTH = 0.05
+
     card: pd.DataFrame
     card_: pd.DataFrame
 
@@ -52,8 +54,18 @@ class DealConverter:
     # two cases after dedup
     def assign(self):
         """Case 1: everything is perfect -> work on assigning cards to four hands"""
-        pass
         # TODO test with deal3-manual-edit.json
+        self._divide_to_quadrants()
+
+        self._find_core_objs()
+        self._drop_core_duplicates()
+
+        remaining = self._list_remaining_objs()
+        while not remaining.empty:
+            obj_idx, quadrant = self._find_closest_obj(remaining)
+
+            self._assign_one_obj(obj_idx, quadrant)
+            remaining = self._drop_assigned(obj_idx, remaining)
 
     def infer_missing(self):
         """Case 2: missing cards -> attempt to infer"""
@@ -71,7 +83,7 @@ class DealConverter:
     def _dedup_smart(self):
         """Dedup in a smart way.
 
-        steps:  // YL: got a feeling this is to complex
+        steps:  # YL: got a feeling this is to complex
         1. find out dup pairs whose dist between a range: not too far nor too close
         2. remove dup objs by keeping one with highest conf; could lead to removal of valid objs
         3. append back good dups found in 1. and leave them for assign to decide
@@ -85,6 +97,27 @@ class DealConverter:
         return (self._dedup_simple()
                     .append(good_dup)
                     .drop_duplicates())
+
+    def _divide_to_quadrants(self):
+        pass
+
+    def _find_core_objs(self):
+        pass
+
+    def _drop_core_duplicates(self):
+        pass
+
+    def _list_remaining_objs(self) -> pd.DataFrame:
+        pass
+
+    def _find_closest_obj(self, remaining):
+        pass
+
+    def _assign_one_obj(self, obj_idx, quadrant):
+        pass
+
+    def _drop_assigned(self, obj_idx, remaining) -> pd.DataFrame:
+        pass
 
     def _calc_symbol_pair_dist(self):
         card_filtered = (
