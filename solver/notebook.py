@@ -39,22 +39,22 @@ YOLO_JSON_FILEPATH_3I = pathlib.Path('fixtures/deal3-manual-edit.json')
 # ## `DealConverter` whiteboard
 
 # %%
-converter = converter.DealConverter()
-converter.read_yolo(YOLO_JSON_FILEPATH_1M)
+dconv = converter.DealConverter()
+dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
 
 # %%
-converter.card.name.unique()
+dconv.card.name.unique()
 
 # %%
-converter.dedup()
-converter.report_missing_and_fp()
+dconv.dedup()
+dconv.report_missing_and_fp()
 
 # %% [markdown]
 # ## Dedup EDA & sketches
 
 # %%
-converter.read_yolo(YOLO_JSON_FILEPATH_1M)
-res = converter.card
+dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
+res = dconv.card
 res.shape
 
 
@@ -175,8 +175,8 @@ def locate_detected_classes(res, min_conf=0.7):
 
 
 # %%
-converter.read_yolo(YOLO_JSON_FILEPATH_3I)
-res = converter.card
+dconv.read_yolo(YOLO_JSON_FILEPATH_3I)
+res = dconv.card
 res.shape
 
 # %%
@@ -187,17 +187,17 @@ locate_detected_classes(res)
 # #### before/after smart dedup
 
 # %%
-# converter.read_yolo(YOLO_JSON_FILEPATH_1M)
-converter.read_yolo(YOLO_JSON_FILEPATH_2M)
-res = converter.card
+# dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
+dconv.read_yolo(YOLO_JSON_FILEPATH_2M)
+res = dconv.card
 res.shape
 
 # %%
 res.pipe(locate_detected_classes, min_conf=0)
 
 # %%
-converter.dedup(smart=True)
-res_ = converter.card_
+dconv.dedup(smart=True)
+res_ = dconv.card_
 res_.shape
 
 # %%
@@ -243,8 +243,8 @@ ea_full = add_closest(ea_core, remaining)
 we_full = add_closest(we_core, remaining)
 
 # %%
-converter.read_yolo(YOLO_JSON_FILEPATH_3I)
-res = converter.card
+dconv.read_yolo(YOLO_JSON_FILEPATH_3I)
+res = dconv.card
 res.pipe(locate_detected_classes)
 
 # %% [markdown]
