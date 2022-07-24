@@ -25,7 +25,13 @@ class DealConverter:
     def read_yolo(self, path):
         with open(path, 'r') as f:
             yolo_json = json.load(f)
-        self.card = pd.json_normalize(yolo_json[0]['objects'])  # image has one frame only
+        self.card = (
+            pd.json_normalize(yolo_json[0]['objects'])  # image has one frame only
+                .rename(columns={"relative_coordinates.center_x": "center_x",
+                                 "relative_coordinates.center_y": "center_y",
+                                 "relative_coordinates.width": "width",
+                                 "relative_coordinates.height" :"height"})
+        )
 
     def report_missing_and_fp(self):
         # report missing

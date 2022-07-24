@@ -74,8 +74,7 @@ def _euclidean_dist(x1, y1, x2, y2):
 # %%
 # calc pair dist
 dist = (
-    res[['name', 'confidence',
-         'relative_coordinates.center_x', 'relative_coordinates.center_y']]
+    res[['name', 'confidence', 'center_x', 'center_y']]
         .rename(columns=lambda s: s.split('_')[-1])
         .query('confidence >= 0.7')  # debug
         # make uniq names for pair-wise dists
@@ -147,9 +146,7 @@ res.pipe(locate_detected_classes, min_conf=0)
 res.sort_values('confidence').drop_duplicates('name', keep='last').append(
     all_dup
         .merge(good_dup.set_index(['name', 'x', 'y']),
-               left_on=['name',
-                        'relative_coordinates.center_x',
-                        'relative_coordinates.center_y'],
+               left_on=['name', 'center_x', 'center_y'],
                right_index=True)
 ).drop_duplicates().pipe(locate_detected_classes)
 
@@ -164,10 +161,7 @@ def locate_detected_classes(res, min_conf=0.7):
     for __, row in res.iterrows():
         if row['confidence'] < min_conf:
             continue
-        ax.annotate(
-            row['name'],
-            (row['relative_coordinates.center_x'],
-             1-row['relative_coordinates.center_y']))
+        ax.annotate(row['name'], (row['center_x'], 1-row['center_y']))
 
     # quadrant guide lines
     ax.plot([0, 1], [0, 1], ls='--', c='grey', alpha=0.5)
@@ -266,7 +260,7 @@ float(guideline_up.distance((0, 1)).evalf())
 # # calc pair dist
 # dist = (
 #     res[['name', 'confidence',
-#          'relative_coordinates.center_x', 'relative_coordinates.center_y']]
+#          'center_x', 'center_y']]
 #         .rename(columns=lambda s: s.split('_')[-1])
 #         .query('confidence >= 0.7')  # debug
 #         # make uniq names for pair-wise dists
