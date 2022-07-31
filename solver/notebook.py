@@ -20,6 +20,7 @@ import pathlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import sympy
 
 import converter
 importlib.reload(converter)
@@ -221,35 +222,73 @@ res_.pipe(locate_detected_classes, min_conf=0)
 #         - and should be checked after finding out core objects
 # - [ ] consider giving more weights to objs further from the margin
 #
+#
+# #### Example code
+# ```
+# no, so, ea, we = divide_quadrants(card, margin=x)
+# no_core = find_core_objs(no)
+# so_core = find_core_objs(so)
+# ea_core = find_core_objs(ea)
+# we_core = find_core_objs(we)
+#
+# remaining = list_remaining_objs(card, no_core, so_core, ea_core, we_core)
+#
+# no_full = add_closest(no_core, remaining)
+# so_full = add_closest(so_core, remaining)
+# ea_full = add_closest(ea_core, remaining)
+# we_full = add_closest(we_core, remaining)
+# ```
 
 # %%
-no, so, ea, we = divide_quadrants(card, margin=x)
-no_core = find_core_objs(no)
-so_core = find_core_objs(so)
-ea_core = find_core_objs(ea)
-we_core = find_core_objs(we)
-
-remaining = list_remaining_objs(card, no_core, so_core, ea_core, we_core)
-
-no_full = add_closest(no_core, remaining)
-so_full = add_closest(so_core, remaining)
-ea_full = add_closest(ea_core, remaining)
-we_full = add_closest(we_core, remaining)
-
-# %%
-dconv.read_yolo(YOLO_JSON_FILEPATH_3I)
+dconv = converter.DealConverter()
+# dconv.read_yolo(YOLO_JSON_FILEPATH_3I)
+dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
 res = dconv.card
 res.pipe(locate_detected_classes)
 
-# %% [markdown]
-# #### How to calculate distance from the margin/cross?
 
 # %%
-import sympy
+def mark_marginal(card: pd.DataFrame, margin):
+    """Mark a card as marginal.
 
-guideline_up = sympy.Line((0, 0), (1, 1))
-guideline_down = sympy.Line((0, 1), (1, 0))
-float(guideline_up.distance((0, 1)).evalf())
+    OK to ignore the top-left positioned origin, due to symmetricity.
+    """
+    line_up = sympy.Line((0, 0), (1, 1))
+    line_dn = sympy.Line((0, 1), (1, 0))
+
+    def _calc_dist_to_border(row: pd.Series):
+        dist1 = float(line_up.distance((row.center_x, row.center_y)).evalf())
+        dist2 = float(line_dn.distance((row.center_x, row.center_y)).evalf())
+        return min(dist1, dist2)
+
+    return (card.assign(_dist_to_border=card.apply(_calc_dist_to_border, axis=1))
+                .assign(is_marginal=lambda df: df._dist_to_border <= margin)
+                .drop(columns="_dist_to_border"))
+
+
+def divide_quardrants(card: pd.DataFrame, margin=0):
+    card = card.copy()
+
+    card = mark_marginal(card, margin)
+    card_ = card[~card.is_marginal]
+
+    # Note: origin is at top left corner, instead of bottom left
+    is_s = (card_.center_y > card_.center_x) & (1 - card_.center_y < card_.center_x)
+    is_n = (card_.center_y < card_.center_x) & (1 - card_.center_y > card_.center_x)
+    is_e = (card_.center_y < card_.center_x) & (1 - card_.center_y < card_.center_x)
+    is_w = (card_.center_y > card_.center_x) & (1 - card_.center_y > card_.center_x)
+    return card_[is_s], card_[is_n], card_[is_e], card_[is_w]
+
+
+# %%
+card_s, card_n, card_e, card_w = divide_quardrants(res, margin=0.05)
+card_n.pipe(locate_detected_classes)
+
+# TODO use this as test case
+
+# %%
+
+# %%
 
 # %% [markdown]
 # ---
