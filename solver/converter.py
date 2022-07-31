@@ -58,7 +58,7 @@ class DealConverter:
         # TODO test `assign` with deal3-manual-edit.json
         self._divide_to_quadrants()
 
-        self._find_core_objs()
+        self._mark_core_objs()
         self._drop_core_duplicates()
 
         remaining = self._list_remaining_objs()
@@ -107,22 +107,29 @@ class DealConverter:
                 .assign(quadrant=lambda df: df.apply(self._calc_quadrant, axis=1))
         )
 
-    def _find_core_objs(self):
+    def _mark_core_objs(self):
+        """Find core objects for all four quadrants by adding col 'is_core'."""
         pass
 
     def _drop_core_duplicates(self):
+        """Drop objects duplicated with core objects."""
         pass
 
     def _list_remaining_objs(self) -> pd.DataFrame:
         pass
 
     def _find_closest_obj(self, remaining):
+        """Find the closest obj to any of the *qualifying hands*.
+
+        Qualification: each hand can have 13 objects at most."""
         pass
 
     def _assign_one_obj(self, obj_idx, quadrant):
+        """Assign the object to a hand indicated by `quadrant`, by adding col 'hand'."""
         pass
 
     def _drop_assigned(self, obj_idx, remaining) -> pd.DataFrame:
+        """Drop assigned object from `remaining`."""
         pass
 
     def _calc_symbol_pair_dist(self):
