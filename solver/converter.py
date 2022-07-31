@@ -55,7 +55,7 @@ class DealConverter:
     # two cases after dedup
     def assign(self):
         """Case 1: everything is perfect -> work on assigning cards to four hands"""
-        # TODO test with deal3-manual-edit.json
+        # TODO test `assign` with deal3-manual-edit.json
         self._divide_to_quadrants()
 
         self._find_core_objs()

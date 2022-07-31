@@ -36,8 +36,12 @@ class TestConverter:
     def test_read_yolo(self, deal_converter):
         assert isinstance(deal_converter.card, pd.DataFrame)
         assert deal_converter.card.shape == (51, 7)
-        assert 'name' in deal_converter.card.columns
-        assert 'center_x' in deal_converter.card.columns
+        assert set(deal_converter.card.columns) == {
+            'center_x', 'center_y',
+            'height', 'width',
+            'class_id', 'name',
+            'confidence',
+        }
 
     def test_simple_dedup(self, deal_converter):
         deal_converter.dedup()
