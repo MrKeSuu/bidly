@@ -4,6 +4,7 @@ import json
 import numpy as np
 import pandas as pd
 import sklearn.cluster
+import sympy
 
 
 CARD_CLASSES = [
@@ -99,7 +100,12 @@ class DealConverter:
                     .drop_duplicates())
 
     def _divide_to_quadrants(self):
-        pass
+        """Divide cards to four quadrants before finding the core objs in each."""
+        self.card_ = (
+            self.card_
+                .pipe(self._mark_marginal, width=self.QUADRANT_MARGIN_WIDTH)
+                .assign(quadrant=lambda df: df.apply(self._calc_quadrant, axis=1))
+        )
 
     def _find_core_objs(self):
         pass
@@ -121,9 +127,7 @@ class DealConverter:
 
     def _calc_symbol_pair_dist(self):
         card_filtered = (
-            self.card[[
-                    'name', 'confidence',
-                    'relative_coordinates.center_x', 'relative_coordinates.center_y']]
+            self.card[['name', 'confidence', 'center_x', 'center_y']]
                 .rename(columns=lambda s: s.split('_')[-1])
                 .query('confidence >= 0.7')  # debug
         )
@@ -178,9 +182,7 @@ class DealConverter:
 
         return (all_dup
                     .merge(is_good_dup.set_index(['name', 'x', 'y']),
-                           left_on=['name',
-                                    'relative_coordinates.center_x',
-                                    'relative_coordinates.center_y'],
+                           left_on=['name', 'center_x', 'center_y'],
                            right_index=True))
 
     @staticmethod
@@ -197,3 +199,37 @@ class DealConverter:
     @staticmethod
     def _euclidean_dist(x1, y1, x2, y2):
         return np.sqrt((x1-x2)**2 + (y1-y2)**2)
+
+    @staticmethod
+    def _mark_marginal(card: pd.DataFrame, width) -> pd.DataFrame:
+        """Mark a card as marginal based on (x, y).
+
+        OK to ignore the top-left positioned origin, due to symmetricity.
+        """
+        line_up = sympy.Line((0, 0), (1, 1))
+        line_dn = sympy.Line((0, 1), (1, 0))
+
+        def _calc_dist_to_border(row: pd.Series):
+            dist1 = float(line_up.distance((row.center_x, row.center_y)).evalf())
+            dist2 = float(line_dn.distance((row.center_x, row.center_y)).evalf())
+            return min(dist1, dist2)
+
+        return (card.assign(_dist_to_border=card.apply(_calc_dist_to_border, axis=1))
+                    .assign(is_marginal=lambda df: df._dist_to_border <= width)
+                    .drop(columns="_dist_to_border"))
+
+    @staticmethod
+    def _calc_quadrant(c: pd.Series):
+        """Determine quadrant of cards based on (x, y) and whether marginal."""
+        if c.is_marginal:
+            return "margin"
+
+        # Note: origin is at top left corner, instead of bottom left
+        if c.center_y > c.center_x and 1 - c.center_y < c.center_x:
+            return "bottom"
+        if c.center_y < c.center_x and 1 - c.center_y > c.center_x:
+            return "top"
+        if c.center_y < c.center_x and 1 - c.center_y < c.center_x:
+            return "right"
+        if c.center_y > c.center_x and 1 - c.center_y > c.center_x:
+            return "left"

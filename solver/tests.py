@@ -37,7 +37,7 @@ class TestConverter:
         assert isinstance(deal_converter.card, pd.DataFrame)
         assert deal_converter.card.shape == (51, 7)
         assert 'name' in deal_converter.card.columns
-        assert 'relative_coordinates.center_x' in deal_converter.card.columns
+        assert 'center_x' in deal_converter.card.columns
 
     def test_simple_dedup(self, deal_converter):
         deal_converter.dedup()
@@ -64,3 +64,19 @@ class TestConverter:
         assert captrued.out == (
             "Missing cards: ['2s', '6s', '9s', '3c', '10c', '4d', '5d', '10d', 'Qd', '3h', '9h']\n"
             "FP cards: ['5c']\n")
+
+    def test_divide_quadrants_basic(self, deal_converter: converter.DealConverter):
+        deal_converter.dedup(smart=True)
+        deal_converter._divide_to_quadrants()
+
+        expected_north_cards = {'3d', '7c', '5s', '6c', '6h'}
+        actual_quadrants = deal_converter.card_.loc[
+            lambda df: df.name.isin(expected_north_cards),
+            'quadrant']
+        assert actual_quadrants.eq('top').all()
+
+        expected_marginal_cards = {"8c", "Jc"}
+        actual_quadrants = deal_converter.card_.loc[
+            lambda df: df.name.isin(expected_marginal_cards),
+            'quadrant']
+        assert actual_quadrants.eq('margin').all()
