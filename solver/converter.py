@@ -14,6 +14,12 @@ CARD_CLASSES = [
     '2h', '3h', '4h', '5h', '6h', '7h', '8h', '9h', '10h', 'Jh', 'Qh', 'Kh', 'Ah'
 ]
 
+QUADRANT_TOP = "top"
+QUADRANT_BOTTOM = "bottom"
+QUADRANT_LEFT = "left"
+QUADRANT_RIGHT = "right"
+MARGIN = "margin"
+
 
 class DealConverter:
     QUADRANT_MARGIN_WIDTH = 0.05
@@ -229,14 +235,14 @@ class DealConverter:
     def _calc_quadrant(c: pd.Series):
         """Determine quadrant of cards based on (x, y) and whether marginal."""
         if c.is_marginal:
-            return "margin"
+            return MARGIN
 
         # Note: origin is at top left corner, instead of bottom left
         if c.center_y > c.center_x and 1 - c.center_y < c.center_x:
-            return "bottom"
+            return QUADRANT_BOTTOM
         if c.center_y < c.center_x and 1 - c.center_y > c.center_x:
-            return "top"
+            return QUADRANT_TOP
         if c.center_y < c.center_x and 1 - c.center_y < c.center_x:
-            return "right"
+            return QUADRANT_RIGHT
         if c.center_y > c.center_x and 1 - c.center_y > c.center_x:
-            return "left"
+            return QUADRANT_LEFT
