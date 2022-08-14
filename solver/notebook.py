@@ -13,6 +13,9 @@
 # ---
 
 # %%
+# %load_ext autoreload
+# %autoreload 2
+
 import json
 import importlib
 import pathlib
@@ -40,7 +43,8 @@ YOLO_JSON_FILEPATH_3I = pathlib.Path('fixtures/deal3-manual-edit.json')
 # ## `DealConverter` whiteboard
 
 # %%
-dconv = converter.DealConverter()
+dbscan = converter.CoreFinderDbscan()
+dconv = converter.DealConverter(dbscan)
 dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
 
 # %%
@@ -240,14 +244,17 @@ res_.pipe(locate_detected_classes, min_conf=0)
 # ```
 
 # %%
-dconv = converter.DealConverter()
+dbscan = converter.CoreFinderDbscan()
+dconv = converter.DealConverter(dbscan)
 # dconv.read_yolo(YOLO_JSON_FILEPATH_3I)
 dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
-res = dconv.card
+dconv.dedup(smart=True)
+res = dconv.card_
 res.pipe(locate_detected_classes)
 
 
 # %%
+## Obsolete
 def mark_marginal(card: pd.DataFrame, margin):
     """Mark a card as marginal.
 
@@ -279,14 +286,18 @@ def divide_quardrants(card: pd.DataFrame, margin=0):
     is_w = (card_.center_y > card_.center_x) & (1 - card_.center_y > card_.center_x)
     return card_[is_s], card_[is_n], card_[is_e], card_[is_w]
 
-
-# %%
 card_s, card_n, card_e, card_w = divide_quardrants(res, margin=0.05)
 card_n.pipe(locate_detected_classes)
 
 # TODO use this as test case
 
+# %% [markdown]
+# #### find core objs
+
 # %%
+dconv._divide_to_quadrants()
+dconv._mark_core_objs()
+dconv.card_
 
 # %%
 

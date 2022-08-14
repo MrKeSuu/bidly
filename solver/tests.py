@@ -28,8 +28,12 @@ class TestConverter:
     YOLO_FILEPATH = pathlib.Path('fixtures/deal1-result-md.json')
 
     @pytest.fixture
-    def deal_converter(self):
-        deal_converter = converter.DealConverter()
+    def core_finder(self):
+        return converter.CoreFinderDbscan()
+
+    @pytest.fixture
+    def deal_converter(self, core_finder: converter.ICoreFinder):
+        deal_converter = converter.DealConverter(core_finder)
         deal_converter.read_yolo(self.YOLO_FILEPATH)
         return deal_converter
 
@@ -69,7 +73,7 @@ class TestConverter:
             "Missing cards: ['2s', '6s', '9s', '3c', '10c', '4d', '5d', '10d', 'Qd', '3h', '9h']\n"
             "FP cards: ['5c']\n")
 
-    def test_divide_quadrants_basic(self, deal_converter: converter.DealConverter):
+    def test_divide_to_quadrants_basic(self, deal_converter: converter.DealConverter):
         deal_converter.dedup(smart=True)
         deal_converter._divide_to_quadrants()
 
@@ -84,3 +88,11 @@ class TestConverter:
             lambda df: df.name.isin(expected_marginal_cards),
             'quadrant']
         assert actual_quadrants.eq('margin').all()
+
+    def test_mark_core_objs(self, deal_converter: converter.DealConverter):
+        deal_converter.dedup(smart=True)
+        deal_converter._divide_to_quadrants()
+        deal_converter._mark_core_objs()
+
+        assert "is_core" in deal_converter.card_.columns
+        assert deal_converter.card_["is_core"].notna().all()

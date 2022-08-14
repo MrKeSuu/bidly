@@ -1,5 +1,7 @@
 """Converting .json from yolo into .pbn for pythondds."""
+import abc
 import json
+from typing import Iterable
 
 import numpy as np
 import pandas as pd
@@ -21,14 +23,24 @@ QUADRANT_RIGHT = "right"
 MARGIN = "margin"
 
 
+class ICoreFinder(abc.ABC):
+
+    @abc.abstractmethod
+    def find_core(records: Iterable):
+        """Find core objects on 2-D plane represented by (YOLO) relative coordinates."""
+        pass
+
+
 class DealConverter:
     QUADRANT_MARGIN_WIDTH = 0.05
 
     card: pd.DataFrame
     card_: pd.DataFrame
 
-    def __init__(self):
+    def __init__(self, core_finder: ICoreFinder):
         self.card = None
+        self.core_finder = core_finder
+
         self.card_ = None
 
     def read_yolo(self, path):
@@ -115,7 +127,15 @@ class DealConverter:
 
     def _mark_core_objs(self):
         """Find core objects for all four quadrants by adding col 'is_core'."""
-        pass
+        core_objs_t = self._find_quadrant_core_objs(QUADRANT_TOP)
+        core_objs_b = self._find_quadrant_core_objs(QUADRANT_BOTTOM)
+        core_objs_l = self._find_quadrant_core_objs(QUADRANT_LEFT)
+        core_objs_r = self._find_quadrant_core_objs(QUADRANT_RIGHT)
+
+        self.card_["is_core"] = (
+            pd.concat([core_objs_t, core_objs_b, core_objs_l, core_objs_r])
+                .reindex(self.card_.index, fill_value=False)  # for marginal objs
+        )
 
     def _drop_core_duplicates(self):
         """Drop objects duplicated with core objects."""
@@ -246,3 +266,20 @@ class DealConverter:
             return QUADRANT_RIGHT
         if c.center_y > c.center_x and 1 - c.center_y > c.center_x:
             return QUADRANT_LEFT
+
+    def _find_quadrant_core_objs(self, quadrant) -> pd.Series:
+        """Find core objects for a specific quadrant"""
+        #  a method: list Top Q objs; transform to records; core_finder function call; transform to series with the right index
+        subframe = self.card_.loc[lambda df: df.quadrant == quadrant, ["center_x", "center_y"]]
+
+        _obj_records = subframe.itertuples(index=False)
+        bool_seq = self.core_finder.find_core(_obj_records)
+
+        return pd.Series(bool_seq, index=subframe.index)
+
+
+class CoreFinderDbscan(ICoreFinder):
+
+    @staticmethod
+    def find_core(records: Iterable):
+        return [False for x, y in records]
