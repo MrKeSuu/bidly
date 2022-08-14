@@ -101,8 +101,8 @@ class DealConverter:
         densest_dist = self._find_densest(dist.query('0.1 <= dist_ <= 0.3').dist_)
         good_dup = self._get_good_dup(self.card, dist, densest_dist)
 
-        return (self._dedup_simple()
-                    .append(good_dup)
+        return (pd.concat([self._dedup_simple(),
+                           good_dup])
                     .drop_duplicates())
 
     def _divide_to_quadrants(self):
