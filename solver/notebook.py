@@ -251,7 +251,7 @@ dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
 dconv.dedup(smart=True)
 res = dconv.card_
 res.pipe(locate_detected_classes)
-
+# hard obj: the 5c close to E hand
 
 # %%
 ## Obsolete
@@ -297,7 +297,12 @@ card_n.pipe(locate_detected_classes)
 # %%
 dconv._divide_to_quadrants()
 dconv._mark_core_objs()
-dconv.card_
+
+# %%
+dconv.card_.query("quadrant == 'left'")
+
+# %%
+card_w.pipe(locate_detected_classes)
 
 # %%
 

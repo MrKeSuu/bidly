@@ -77,17 +77,17 @@ class TestConverter:
         deal_converter.dedup(smart=True)
         deal_converter._divide_to_quadrants()
 
-        expected_north_cards = {'3d', '7c', '5s', '6c', '6h'}
+        expected_north_cards = {'3d', '7c', '5s', '6c', '6h', 'Jh'}
         actual_quadrants = deal_converter.card_.loc[
             lambda df: df.name.isin(expected_north_cards),
             'quadrant']
-        assert actual_quadrants.eq('top').all()
+        assert actual_quadrants.to_list() == ['top'] * 6
 
         expected_marginal_cards = {"8c", "Jc"}
         actual_quadrants = deal_converter.card_.loc[
             lambda df: df.name.isin(expected_marginal_cards),
             'quadrant']
-        assert actual_quadrants.eq('margin').all()
+        assert actual_quadrants.to_list() == ['margin'] * 2
 
     def test_mark_core_objs(self, deal_converter: converter.DealConverter):
         deal_converter.dedup(smart=True)
@@ -96,3 +96,9 @@ class TestConverter:
 
         assert "is_core" in deal_converter.card_.columns
         assert deal_converter.card_["is_core"].notna().all()
+
+        expected_north_core_cards = {'3d', '7c', '5s', '6c', '6h'}
+        actual_mark = deal_converter.card_.loc[
+            lambda df: df.name.isin(expected_north_core_cards),
+            'is_core']
+        assert actual_mark.to_list() == [True] * 5

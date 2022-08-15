@@ -279,7 +279,21 @@ class DealConverter:
 
 
 class CoreFinderDbscan(ICoreFinder):
+    """CoreFinder with DBSCAN clutering."""
+    EPS = 0.1  # assumes records in relative coords valued in (0, 1)
+    MIN_SAMPLES = 3
 
-    @staticmethod
-    def find_core(records: Iterable):
-        return [False for x, y in records]
+    DBSCAN_NOISY_LABEL = -1
+
+    def __init__(self):
+        self.dbscan = sklearn.cluster.DBSCAN(
+            eps=self.EPS,
+            min_samples=self.MIN_SAMPLES,
+        )
+
+    def find_core(self, records: Iterable):
+        self.dbscan.fit(list(records))
+
+        _labels = self.dbscan.labels_
+        is_core = [label != self.DBSCAN_NOISY_LABEL for label in _labels]
+        return is_core
