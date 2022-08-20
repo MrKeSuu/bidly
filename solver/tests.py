@@ -116,3 +116,16 @@ class TestConverter:
         assert card.query("name == '6d' and is_core == True").shape[0] == 1
         assert card.query("name == 'Qc'").shape[0] == 1
         assert card.query("name == 'Js' and quadrant == 'margin'").empty
+
+    def test_assign_core_objs(self, deal_converter: converter.DealConverter):
+        deal_converter.dedup(smart=True)
+        deal_converter._divide_to_quadrants()
+        deal_converter._mark_core_objs()
+        deal_converter._drop_core_duplicates()
+        deal_converter._assign_core_objs()
+
+        card = deal_converter.card_
+        assert "hand" in card
+        assert card.query("name == 'As'").hand.to_list() == ["west"]
+        assert card.query("name == '6h'").hand.to_list() == ["north"]
+        assert card.query("quadrant == 'margin'").hand.isna().all()

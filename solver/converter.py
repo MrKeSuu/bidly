@@ -24,6 +24,16 @@ QUADRANT_BOTTOM = "bottom"
 QUADRANT_LEFT = "left"
 QUADRANT_RIGHT = "right"
 MARGIN = "margin"
+HAND_N = 'north'
+HAND_S = 'south'
+HAND_W = 'west'
+HAND_E = 'east'
+HAND_MAP = {
+    QUADRANT_TOP: HAND_N,
+    QUADRANT_BOTTOM: HAND_S,
+    QUADRANT_LEFT: HAND_W,
+    QUADRANT_RIGHT: HAND_E,
+}
 
 util.setup_basic_logging()
 
@@ -83,6 +93,7 @@ class DealConverter:
 
         self._mark_core_objs()
         self._drop_core_duplicates()
+        self._assign_core_objs()
 
         remaining = self._list_remaining_objs()
         while not remaining.empty:
@@ -156,6 +167,17 @@ class DealConverter:
                  len(out_core_dups), out_core_dups[["name", "quadrant"]].to_dict("records"))
         self.card_ = self.card_.drop(index=out_core_dups.index)
 
+    def _assign_core_objs(self):
+        """Assign each core obj to hand based on quadrant, by adding col 'hand'. """
+        def _to_hand(row: pd.Series):
+            if not row.is_core:
+                return None
+
+            assert row.quadrant != MARGIN, f"Unexpected 'margin' core card: {row.name}"
+            return HAND_MAP[row.quadrant]
+
+        self.card_["hand"] = self.card_.apply(_to_hand, axis=1)
+
     def _list_remaining_objs(self) -> pd.DataFrame:
         pass
 
@@ -166,7 +188,7 @@ class DealConverter:
         pass
 
     def _assign_one_obj(self, obj_idx, quadrant):
-        """Assign the object to a hand indicated by `quadrant`, by adding col 'hand'."""
+        """Assign object to hand indicated by `quadrant`, by updating col 'hand'."""
         pass
 
     def _drop_assigned(self, obj_idx, remaining) -> pd.DataFrame:
