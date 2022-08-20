@@ -299,15 +299,22 @@ dconv._divide_to_quadrants()
 dconv._mark_core_objs()
 
 # %%
-dconv.card_.query("quadrant == 'left'")
+dconv.card_.query("quadrant == 'top'").sort_values("name")
 
 # %%
-card_w.pipe(locate_detected_classes)
+(
+    dconv.card_.query("quadrant == 'top'")
+        .pipe(locate_detected_classes)
+)
 
 # %%
+print(dconv.card_.shape)
+dconv._drop_core_duplicates()
+print(dconv.card_.shape)
 
 # %% [markdown]
 # ---
+# ## Misc
 
 # %%
 # NOT USEFUL

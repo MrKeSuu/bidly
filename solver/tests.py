@@ -94,11 +94,25 @@ class TestConverter:
         deal_converter._divide_to_quadrants()
         deal_converter._mark_core_objs()
 
-        assert "is_core" in deal_converter.card_.columns
-        assert deal_converter.card_["is_core"].notna().all()
+        card = deal_converter.card_
+        assert "is_core" in card.columns
+        assert card.is_core.notna().all()
+
+        assert card.query("name == 'As' and quadrant == 'left'").is_core.to_list() == [True]
+        assert card.query("name == '8h' and quadrant == 'right'").is_core.to_list() == [False]
 
         expected_north_core_cards = {'3d', '7c', '5s', '6c', '6h'}
-        actual_mark = deal_converter.card_.loc[
-            lambda df: df.name.isin(expected_north_core_cards),
-            'is_core']
+        actual_mark = card.loc[card.name.isin(expected_north_core_cards), 'is_core']
         assert actual_mark.to_list() == [True] * 5
+
+    def test_drop_core_duplicates(self, deal_converter: converter.DealConverter):
+        deal_converter.dedup(smart=True)
+        deal_converter._divide_to_quadrants()
+        deal_converter._mark_core_objs()
+        deal_converter._drop_core_duplicates()
+
+        card = deal_converter.card_
+        assert card.shape == (44, 10)
+        assert card.query("name == '6d' and is_core == True").shape[0] == 1
+        assert card.query("name == 'Qc'").shape[0] == 1
+        assert card.query("name == 'Js' and quadrant == 'margin'").empty

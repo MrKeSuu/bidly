@@ -1,12 +1,15 @@
 """Converting .json from yolo into .pbn for pythondds."""
 import abc
 import json
+import logging as lgg
 from typing import Iterable
 
 import numpy as np
 import pandas as pd
 import sklearn.cluster
 import sympy
+
+import util
 
 
 CARD_CLASSES = [
@@ -21,6 +24,8 @@ QUADRANT_BOTTOM = "bottom"
 QUADRANT_LEFT = "left"
 QUADRANT_RIGHT = "right"
 MARGIN = "margin"
+
+util.setup_basic_logging()
 
 
 class ICoreFinder(abc.ABC):
@@ -138,8 +143,18 @@ class DealConverter:
         )
 
     def _drop_core_duplicates(self):
-        """Drop objects duplicated with core objects."""
-        pass
+        """Drop objects duplicated with core objects, both inside core and outside core."""
+        core = self.card_[self.card_.is_core]
+
+        in_core_dups = core[core.duplicated("name")]
+        lgg.info("Dropping %s duplicates inside core: %s",
+                 len(in_core_dups), in_core_dups[["name", "quadrant"]].to_dict("records"))
+        self.card_ = self.card_.drop(index=in_core_dups.index)
+
+        out_core_dups = self.card_[lambda df: (~df.is_core) & (df.name.isin(core.name))]
+        lgg.info("Dropping %s duplicates outside core: %s",
+                 len(out_core_dups), out_core_dups[["name", "quadrant"]].to_dict("records"))
+        self.card_ = self.card_.drop(index=out_core_dups.index)
 
     def _list_remaining_objs(self) -> pd.DataFrame:
         pass
@@ -269,7 +284,6 @@ class DealConverter:
 
     def _find_quadrant_core_objs(self, quadrant) -> pd.Series:
         """Find core objects for a specific quadrant"""
-        #  a method: list Top Q objs; transform to records; core_finder function call; transform to series with the right index
         subframe = self.card_.loc[lambda df: df.quadrant == quadrant, ["center_x", "center_y"]]
 
         _obj_records = subframe.itertuples(index=False)
