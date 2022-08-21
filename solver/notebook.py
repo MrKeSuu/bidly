@@ -245,7 +245,8 @@ res_.pipe(locate_detected_classes, min_conf=0)
 
 # %%
 dbscan = strategy.CoreFinderDbscan()
-dconv = converter.DealConverter(dbscan)
+single_linkage = strategy.SingleLinkage()
+dconv = converter.DealConverter(dbscan, single_linkage)
 # dconv.read_yolo(YOLO_JSON_FILEPATH_3I)
 dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
 dconv.dedup(smart=True)
@@ -322,6 +323,15 @@ dconv.card_.shape
 
 # dconv._hands_to_assign()
 # # GOOD
+#
+
+# %%
+dconv._assign_core_objs()
+remaining = dconv._list_remaining_objs()
+# GOOD
+
+dconv._find_closest_obj(remaining)
+# GOOD
 
 # %% [markdown]
 # ---

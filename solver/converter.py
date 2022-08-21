@@ -45,9 +45,10 @@ class DealConverter:
     card: pd.DataFrame
     card_: pd.DataFrame
 
-    def __init__(self, core_finder: strategy.ICoreFinder):
+    def __init__(self, core_finder: strategy.ICoreFinder, linkage: strategy.ILinkage):
         self.card = None
         self.core_finder = core_finder
+        self.linkage = linkage
 
         self.card_ = None
 
@@ -182,11 +183,30 @@ class DealConverter:
         hand_size = self.card_.hand.value_counts()
         return hand_size[hand_size < 13].index.tolist()
 
-    def _find_closest_obj(self, remaining: pd.DataFrame):
-        """Find the closest obj to any of the *qualifying hands*.
+    def _find_closest_obj(self, remaining: pd.DataFrame) -> Tuple[int, str]:
+        """Find the closest obj to any of the *qualified hands*.
 
         Qualification: each hand can have 13 objects at most."""
-        pass
+        min_distance = 2  # large enough assuming coordinates are in (0, 1)
+        closest_obj_idx = None
+        closest_hand = None
+        for hand in self._hands_to_assign():
+            _hand_cards = self.card_[self.card_.hand == hand]
+            hand_coords = list(_hand_cards[["center_x", "center_y"]].itertuples(index=False))
+
+            for obj_idx, x, y in remaining[["center_x", "center_y"]].itertuples():
+                distance = self.linkage.calc_distance(x, y, hand_coords)
+                if distance < min_distance:
+                    min_distance = distance
+                    closest_obj_idx = obj_idx
+                    closest_hand = hand
+
+        log.info(
+            "Found a closest obj(%s) to '%s': %s",
+            remaining.loc[closest_obj_idx, ["name", "quadrant"]].to_dict(),
+            closest_hand,
+            min_distance)
+        return closest_obj_idx, closest_hand
 
     def _assign_one_obj(self, obj_idx, hand):
         """Assign object to `hand`, by updating col 'hand'."""

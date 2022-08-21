@@ -6,6 +6,7 @@ import pytest
 from pythondds_min import calc_ddtable_pbn
 import converter
 import main
+import strategy
 
 
 @pytest.mark.verbose
@@ -29,11 +30,15 @@ class TestConverter:
 
     @pytest.fixture
     def core_finder(self):
-        return converter.CoreFinderDbscan()
+        return strategy.CoreFinderDbscan()
 
     @pytest.fixture
-    def deal_converter(self, core_finder: converter.ICoreFinder):
-        deal_converter = converter.DealConverter(core_finder)
+    def linkage(self):
+        return strategy.SingleLinkage()
+
+    @pytest.fixture
+    def deal_converter(self, core_finder: strategy.ICoreFinder, linkage: strategy.ILinkage):
+        deal_converter = converter.DealConverter(core_finder, linkage)
         deal_converter.read_yolo(self.YOLO_FILEPATH)
         return deal_converter
 
@@ -129,3 +134,16 @@ class TestConverter:
         assert card.query("name == 'As'").hand.to_list() == ["west"]
         assert card.query("name == '6h'").hand.to_list() == ["north"]
         assert card.query("quadrant == 'margin'").hand.isna().all()
+
+    def test_find_closest_obj(self, deal_converter: converter.DealConverter):
+        deal_converter.dedup(smart=True)
+        deal_converter._divide_to_quadrants()
+        deal_converter._mark_core_objs()
+        deal_converter._drop_core_duplicates()
+        deal_converter._assign_core_objs()
+
+        remaining = deal_converter._list_remaining_objs()
+        obj_idx, hand = deal_converter._find_closest_obj(remaining)
+
+        assert obj_idx == 46
+        assert hand == 'south'

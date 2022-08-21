@@ -1,6 +1,7 @@
 import abc
 from typing import Iterable, Tuple
 
+import scipy.spatial
 import sklearn
 
 
@@ -34,3 +35,23 @@ class CoreFinderDbscan(ICoreFinder):
         _labels = self.dbscan.labels_
         is_core = [label != self.DBSCAN_NOISY_LABEL for label in _labels]
         return is_core
+
+
+class ILinkage(abc.ABC):
+
+    @abc.abstractmethod
+    def calc_distance(self, x, y, coords: Iterable[Coord]):
+        """Calculate distance between a single point (x, y) and `coords`."""
+        pass
+
+    def _calc_pointwise_distances(self, x, y, coords: Iterable[Coord]):
+        return [scipy.spatial.distance.euclidean([x, y], [x2, y2])
+                for x2, y2 in coords]
+
+
+class SingleLinkage(ILinkage):
+    """Single Linkage (SL) calcs distance using the closest point."""
+
+    def calc_distance(self, x, y, coords: Iterable):
+        pointwise_distances = self._calc_pointwise_distances(x, y, coords)
+        return min(pointwise_distances)
