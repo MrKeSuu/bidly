@@ -88,9 +88,9 @@ class DealConverter:
 
         remaining = self._list_remaining_objs()
         while not remaining.empty:
-            obj_idx, quadrant = self._find_closest_obj(remaining)
+            obj_idx, hand = self._find_closest_obj(remaining)
 
-            self._assign_one_obj(obj_idx, quadrant)
+            self._assign_one_obj(obj_idx, hand)
             remaining = self._drop_assigned(obj_idx, remaining)
 
     def infer_missing(self):
@@ -170,19 +170,22 @@ class DealConverter:
         self.card_["hand"] = self.card_.apply(_to_hand, axis=1)
 
     def _list_remaining_objs(self) -> pd.DataFrame:
-        pass
+        """Return a df containing unassigned objs."""
+        assert 'hand' in self.card_, "Required col 'hand' not in `self.card_`!"
+        remaining = self.card_[self.card_.hand.isna()].copy()
+        return remaining
 
-    def _find_closest_obj(self, remaining):
+    def _find_closest_obj(self, remaining: pd.DataFrame):
         """Find the closest obj to any of the *qualifying hands*.
 
         Qualification: each hand can have 13 objects at most."""
         pass
 
-    def _assign_one_obj(self, obj_idx, quadrant):
-        """Assign object to hand indicated by `quadrant`, by updating col 'hand'."""
+    def _assign_one_obj(self, obj_idx, hand):
+        """Assign object to `hand`, by updating col 'hand'."""
         pass
 
-    def _drop_assigned(self, obj_idx, remaining) -> pd.DataFrame:
+    def _drop_assigned(self, obj_idx, remaining: pd.DataFrame) -> pd.DataFrame:
         """Drop assigned object from `remaining`."""
         pass
 
