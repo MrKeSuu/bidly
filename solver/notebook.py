@@ -218,7 +218,7 @@ res_.pipe(locate_detected_classes, min_conf=0)
 # 2. gradually add the obj with the lowest avg linkage *among all 4 quadrants*
 #
 # ###### TODOs
-# - [ ] come up with def for 'core objects'
+# - [x] come up with def for 'core objects'
 #     - can see DBSCAN
 #     - can set a margin to exclude objs
 # - [ ] ignore/drop dups

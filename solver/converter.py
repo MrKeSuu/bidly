@@ -1,6 +1,6 @@
 """Converting .json from yolo into .pbn for pythondds."""
 import json
-import logging as lgg
+import logging as log
 from typing import Tuple
 
 import numpy as np
@@ -150,12 +150,12 @@ class DealConverter:
         core = self.card_[self.card_.is_core]
 
         in_core_dups = core[core.duplicated("name")]
-        lgg.info("Dropping %s duplicates inside core: %s",
+        log.info("Dropping %s duplicates inside core: %s",
                  len(in_core_dups), in_core_dups[["name", "quadrant"]].to_dict("records"))
         self.card_ = self.card_.drop(index=in_core_dups.index)
 
         out_core_dups = self.card_[lambda df: (~df.is_core) & (df.name.isin(core.name))]
-        lgg.info("Dropping %s duplicates outside core: %s",
+        log.info("Dropping %s duplicates outside core: %s",
                  len(out_core_dups), out_core_dups[["name", "quadrant"]].to_dict("records"))
         self.card_ = self.card_.drop(index=out_core_dups.index)
 
@@ -308,7 +308,7 @@ class DealConverter:
         """Find core objects for a specific quadrant"""
         subframe = self.card_.loc[lambda df: df.quadrant == quadrant, ["center_x", "center_y"]]
 
-        _obj_records = subframe.itertuples(index=False)
-        bool_seq = self.core_finder.find_core(_obj_records)
+        _obj_coords = subframe.itertuples(index=False)
+        bool_seq = self.core_finder.find_core(_obj_coords)
 
         return pd.Series(bool_seq, index=subframe.index)
