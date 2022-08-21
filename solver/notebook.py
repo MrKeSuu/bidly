@@ -297,6 +297,7 @@ card_n.pipe(locate_detected_classes)
 # %%
 dconv._divide_to_quadrants()
 dconv._mark_core_objs()
+dconv.card_.shape
 
 # %%
 dconv.card_.query("quadrant == 'top'").sort_values("name")
@@ -308,9 +309,19 @@ dconv.card_.query("quadrant == 'top'").sort_values("name")
 )
 
 # %%
-print(dconv.card_.shape)
 dconv._drop_core_duplicates()
-print(dconv.card_.shape)
+dconv.card_.shape
+
+# %%
+# dconv.card_.pipe(locate_detected_classes)
+# # GOOD
+
+# dconv._assign_core_objs()
+# dconv.card_
+# # GOOD
+
+# dconv._hands_to_assign()
+# # GOOD
 
 # %% [markdown]
 # ---

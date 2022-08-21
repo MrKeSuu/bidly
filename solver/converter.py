@@ -1,6 +1,7 @@
 """Converting .json from yolo into .pbn for pythondds."""
 import json
 import logging as lgg
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -87,7 +88,7 @@ class DealConverter:
         self._assign_core_objs()
 
         remaining = self._list_remaining_objs()
-        while not remaining.empty:
+        while not remaining.empty and self._hands_to_assign():
             obj_idx, hand = self._find_closest_obj(remaining)
 
             self._assign_one_obj(obj_idx, hand)
@@ -174,6 +175,11 @@ class DealConverter:
         assert 'hand' in self.card_, "Required col 'hand' not in `self.card_`!"
         remaining = self.card_[self.card_.hand.isna()].copy()
         return remaining
+
+    def _hands_to_assign(self):
+        """Return a list of hands available for assignment (< 13 cards assigned)."""
+        hand_size = self.card_.hand.value_counts()
+        return hand_size[hand_size < 13].index.tolist()
 
     def _find_closest_obj(self, remaining: pd.DataFrame):
         """Find the closest obj to any of the *qualifying hands*.
