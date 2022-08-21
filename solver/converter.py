@@ -5,6 +5,7 @@ from typing import Tuple
 
 import numpy as np
 import pandas as pd
+import scipy.spatial
 import sklearn.cluster
 import sympy
 
@@ -216,7 +217,7 @@ class DealConverter:
                 .pipe(self._make_pair_wise)
                 .query('name_1 == name_2')
                 .assign(dist_=lambda df: df.apply(
-                    lambda row: self._euclidean_dist(row.x_1, row.y_1, row.x_2, row.y_2),
+                    lambda s: scipy.spatial.distance.euclidean([s.x_1, s.y_1], [s.x_2, s.y_2]),
                     axis=1))
         )
         return pair_dist
@@ -265,10 +266,6 @@ class DealConverter:
              df.add_suffix('_2').reindex(midx, level='n2')], axis=1)
         # order doesn't matter -> combination instead of permutation
         return pair.loc[midx[midx.get_level_values(0) < midx.get_level_values(1)]]
-
-    @staticmethod
-    def _euclidean_dist(x1, y1, x2, y2):
-        return np.sqrt((x1-x2)**2 + (y1-y2)**2)
 
     @staticmethod
     def _mark_marginal(card: pd.DataFrame, width) -> pd.DataFrame:
