@@ -26,7 +26,7 @@ import pandas as pd
 import sympy
 
 import converter
-importlib.reload(converter)
+import strategy
 
 def optimize_cell_width():
     from IPython.display import display, HTML
@@ -43,7 +43,7 @@ YOLO_JSON_FILEPATH_3I = pathlib.Path('fixtures/deal3-manual-edit.json')
 # ## `DealConverter` whiteboard
 
 # %%
-dbscan = converter.CoreFinderDbscan()
+dbscan = strategy.CoreFinderDbscan()
 dconv = converter.DealConverter(dbscan)
 dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
 
@@ -244,7 +244,7 @@ res_.pipe(locate_detected_classes, min_conf=0)
 # ```
 
 # %%
-dbscan = converter.CoreFinderDbscan()
+dbscan = strategy.CoreFinderDbscan()
 dconv = converter.DealConverter(dbscan)
 # dconv.read_yolo(YOLO_JSON_FILEPATH_3I)
 dconv.read_yolo(YOLO_JSON_FILEPATH_1M)

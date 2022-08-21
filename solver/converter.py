@@ -1,14 +1,13 @@
 """Converting .json from yolo into .pbn for pythondds."""
-import abc
 import json
 import logging as lgg
-from typing import Iterable
 
 import numpy as np
 import pandas as pd
 import sklearn.cluster
 import sympy
 
+import strategy
 import util
 
 
@@ -38,21 +37,13 @@ HAND_MAP = {
 util.setup_basic_logging()
 
 
-class ICoreFinder(abc.ABC):
-
-    @abc.abstractmethod
-    def find_core(records: Iterable):
-        """Find core objects on 2-D plane represented by (YOLO) relative coordinates."""
-        pass
-
-
 class DealConverter:
     QUADRANT_MARGIN_WIDTH = 0.05
 
     card: pd.DataFrame
     card_: pd.DataFrame
 
-    def __init__(self, core_finder: ICoreFinder):
+    def __init__(self, core_finder: strategy.ICoreFinder):
         self.card = None
         self.core_finder = core_finder
 
@@ -312,24 +303,3 @@ class DealConverter:
         bool_seq = self.core_finder.find_core(_obj_records)
 
         return pd.Series(bool_seq, index=subframe.index)
-
-
-class CoreFinderDbscan(ICoreFinder):
-    """CoreFinder with DBSCAN clutering."""
-    EPS = 0.1  # assumes records in relative coords valued in (0, 1)
-    MIN_SAMPLES = 3
-
-    DBSCAN_NOISY_LABEL = -1
-
-    def __init__(self):
-        self.dbscan = sklearn.cluster.DBSCAN(
-            eps=self.EPS,
-            min_samples=self.MIN_SAMPLES,
-        )
-
-    def find_core(self, records: Iterable):
-        self.dbscan.fit(list(records))
-
-        _labels = self.dbscan.labels_
-        is_core = [label != self.DBSCAN_NOISY_LABEL for label in _labels]
-        return is_core
