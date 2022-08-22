@@ -210,11 +210,19 @@ class DealConverter:
 
     def _assign_one_obj(self, obj_idx, hand):
         """Assign object to `hand`, by updating col 'hand'."""
-        pass
+        assert obj_idx in self.card_.index, f"{obj_idx} not found in `card_.index`!"
+        self.card_.at[obj_idx, 'hand'] = hand
 
     def _drop_assigned(self, obj_idx, remaining: pd.DataFrame) -> pd.DataFrame:
-        """Drop assigned object from `remaining`."""
-        pass
+        """Drop assigned object(s) from `remaining`."""
+        _assigned_name = remaining.at[obj_idx, 'name']
+        assigned_cards = remaining[remaining.name == _assigned_name]
+
+        log.info(
+            "Dropping %s assigned cards: %s",
+            len(assigned_cards),
+            assigned_cards[["name", "quadrant"]].to_dict("records"))
+        return remaining.drop(index=assigned_cards.index)
 
     def _calc_symbol_pair_dist(self):
         card_filtered = (

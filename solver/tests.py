@@ -42,6 +42,8 @@ class TestConverter:
         deal_converter.read_yolo(self.YOLO_FILEPATH)
         return deal_converter
 
+    # TODO to speed up tests, run complete deal_converter methods and test each step
+
     def test_read_yolo(self, deal_converter):
         assert isinstance(deal_converter.card, pd.DataFrame)
         assert deal_converter.card.shape == (51, 7)
