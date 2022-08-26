@@ -84,7 +84,6 @@ class DealConverter:
     # two cases after dedup
     def assign(self):
         """Case 1: everything is perfect -> work on assigning cards to four hands"""
-        # TODO test `assign` with deal3-manual-edit.json
         log.info("Assigning cards to hands..")
         self._divide_to_quadrants()
 
@@ -127,6 +126,7 @@ class DealConverter:
         good_dup = self._get_good_dup(self.card, dist, densest_dist)
 
         log.info("Found %s 'good' dups: %s", len(good_dup), good_dup[["name"]].to_dict("records"))
+        # TODO From later experiments, here we might want to replace with mean of each pair.
         return (pd.concat([self._dedup_simple(),
                            good_dup])
                     .drop_duplicates())

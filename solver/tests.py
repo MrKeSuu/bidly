@@ -26,7 +26,8 @@ class TestBasic:
 
 
 class TestConverter:
-    YOLO_FILEPATH = pathlib.Path('fixtures/deal1-result-md.json')
+    DEAL1_YOLO_FILEPATH = pathlib.Path('fixtures/deal1-result-md.json')
+    MANUAL_EDIT_YOLO_FILEPATH = pathlib.Path('fixtures/deal3-manual-edit.json')
 
     @pytest.fixture
     def core_finder(self):
@@ -39,7 +40,7 @@ class TestConverter:
     @pytest.fixture
     def deal_converter(self, core_finder: strategy.ICoreFinder, linkage: strategy.ILinkage):
         deal_converter = converter.DealConverter(core_finder, linkage)
-        deal_converter.read_yolo(self.YOLO_FILEPATH)
+        deal_converter.read_yolo(self.DEAL1_YOLO_FILEPATH)
         return deal_converter
 
     # TODO to speed up tests, run complete deal_converter methods and test each step
@@ -79,6 +80,20 @@ class TestConverter:
         assert captrued.out == (
             "Missing cards: ['2s', '6s', '9s', '3c', '10c', '4d', '5d', '10d', 'Qd', '3h', '9h']\n"
             "FP cards: ['5c']\n")
+
+    def test_assign(self, deal_converter: converter.DealConverter):
+        deal_converter.read_yolo(self.MANUAL_EDIT_YOLO_FILEPATH)
+        deal_converter.dedup(smart=True)
+        deal_converter.assign()
+
+        card_ = deal_converter.card_.dropna(subset=["hand"]).set_index("name")
+        assert isinstance(card_, pd.DataFrame)
+        assert card_.index.is_unique
+        assert card_.hand.value_counts().eq(13).all()
+        assert card_.at['7s', 'hand'] == 'east'
+        assert card_.at['Ah', 'hand'] == 'west'
+        assert card_.at['6c', 'hand'] == 'north'
+        assert card_.at['10d', 'hand'] == 'south'
 
     def test_divide_to_quadrants_basic(self, deal_converter: converter.DealConverter):
         deal_converter.dedup(smart=True)
