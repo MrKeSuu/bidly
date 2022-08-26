@@ -242,6 +242,8 @@ res_.pipe(locate_detected_classes, min_conf=0)
 # ea_full = add_closest(ea_core, remaining)
 # we_full = add_closest(we_core, remaining)
 # ```
+#
+# ### Example deal1-md-sq
 
 # %%
 dbscan = strategy.CoreFinderDbscan()
@@ -289,8 +291,6 @@ def divide_quardrants(card: pd.DataFrame, margin=0):
 
 card_s, card_n, card_e, card_w = divide_quardrants(res, margin=0.05)
 card_n.pipe(locate_detected_classes)
-
-# TODO use this as test case
 
 # %% [markdown]
 # #### find core objs

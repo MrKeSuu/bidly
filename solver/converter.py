@@ -53,6 +53,7 @@ class DealConverter:
         self.card_ = None
 
     def read_yolo(self, path):
+        log.info("Reading from yolo file: %s", path)
         with open(path, 'r') as f:
             yolo_json = json.load(f)
         self.card = (
@@ -74,6 +75,7 @@ class DealConverter:
         print("FP cards:", fp_classes)
 
     def dedup(self, smart=False):
+        log.info("Running dedup (smart=%s) ..", smart)
         if smart:
             self.card_ = self._dedup_smart()
         else:
@@ -83,6 +85,7 @@ class DealConverter:
     def assign(self):
         """Case 1: everything is perfect -> work on assigning cards to four hands"""
         # TODO test `assign` with deal3-manual-edit.json
+        log.info("Assigning cards to hands..")
         self._divide_to_quadrants()
 
         self._mark_core_objs()
@@ -123,6 +126,7 @@ class DealConverter:
         densest_dist = self._find_densest(dist.query('0.1 <= dist_ <= 0.3').dist_)
         good_dup = self._get_good_dup(self.card, dist, densest_dist)
 
+        log.info("Found %s 'good' dups: %s", len(good_dup), good_dup[["name"]].to_dict("records"))
         return (pd.concat([self._dedup_simple(),
                            good_dup])
                     .drop_duplicates())
@@ -134,6 +138,8 @@ class DealConverter:
                 .pipe(self._mark_marginal, width=self.QUADRANT_MARGIN_WIDTH)
                 .assign(quadrant=lambda df: df.apply(self._calc_quadrant, axis=1))
         )
+        log.info("Divided to quadrants with %s marginal cards.",
+                 self.card_.query("quadrant == 'margin'").shape[0])
 
     def _mark_core_objs(self):
         """Find core objects for all four quadrants by adding col 'is_core'."""
@@ -146,20 +152,22 @@ class DealConverter:
             pd.concat([core_objs_t, core_objs_b, core_objs_l, core_objs_r])
                 .reindex(self.card_.index, fill_value=False)  # for marginal objs
         )
+        log.info("Marked %s core objs in total", self.card_['is_core'].sum())
 
     def _drop_core_duplicates(self):
         """Drop objects duplicated with core objects, both inside core and outside core."""
         core = self.card_[self.card_.is_core]
 
         in_core_dups = core[core.duplicated("name")]
-        log.info("Dropping %s duplicates inside core: %s",
-                 len(in_core_dups), in_core_dups[["name", "quadrant"]].to_dict("records"))
         self.card_ = self.card_.drop(index=in_core_dups.index)
 
         out_core_dups = self.card_[lambda df: (~df.is_core) & (df.name.isin(core.name))]
-        log.info("Dropping %s duplicates outside core: %s",
-                 len(out_core_dups), out_core_dups[["name", "quadrant"]].to_dict("records"))
         self.card_ = self.card_.drop(index=out_core_dups.index)
+
+        log.info("Dropped %s duplicates inside core: %s",
+                 len(in_core_dups), in_core_dups[["name", "quadrant"]].to_dict("records"))
+        log.info("Dropped %s duplicates outside core: %s",
+                 len(out_core_dups), out_core_dups[["name", "quadrant"]].to_dict("records"))
 
     def _assign_core_objs(self):
         """Assign each core obj to hand based on quadrant, by adding col 'hand'. """
