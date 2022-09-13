@@ -257,6 +257,13 @@ res.pipe(locate_detected_classes)
 # hard obj: the 5c close to E hand
 
 # %%
+dconv.assign()
+
+# %%
+dconv.card_.sort_values(['hand', 'center_y'])
+
+
+# %%
 ## Obsolete
 def mark_marginal(card: pd.DataFrame, margin):
     """Mark a card as marginal.
@@ -301,11 +308,73 @@ dconv._mark_core_objs()
 dconv.card_.shape
 
 # %%
-dconv.card_.query("quadrant == 'top'").sort_values("name")
+dconv.card_.query("quadrant == 'bottom'").sort_values("name")
 
 # %%
 (
-    dconv.card_.query("quadrant == 'top'")
+    dconv.card_.query("quadrant == 'bottom'")
+        .pipe(locate_detected_classes)
+)
+
+# %%
+dconv._drop_core_duplicates()
+dconv.card_.shape
+
+# %%
+# dconv.card_.pipe(locate_detected_classes)
+# # GOOD
+
+# dconv._assign_core_objs()
+# dconv.card_
+# # GOOD
+
+# dconv._hands_to_assign()
+# # GOOD
+#
+
+# %%
+dconv._assign_core_objs()
+remaining = dconv._list_remaining_objs()
+# GOOD
+
+dconv._find_closest_obj(remaining)
+# GOOD
+
+# %% [markdown]
+# ### Example deal3-sm-sq (manual edit)
+
+# %%
+dbscan = strategy.CoreFinderDbscan()
+single_linkage = strategy.SingleLinkage()
+dconv = converter.DealConverter(dbscan, single_linkage)
+dconv.read_yolo(YOLO_JSON_FILEPATH_3I)
+# dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
+dconv.dedup(smart=True)
+dconv.card_.pipe(locate_detected_classes, min_conf=0)
+
+# %%
+dconv.assign()
+
+# %%
+dconv.card_.hand.value_counts()
+
+# %%
+dconv.card_.sort_values(['hand','center_x'])[['name', 'hand']]
+
+# %% [markdown]
+# #### low-level methods
+
+# %%
+dconv._divide_to_quadrants()
+dconv._mark_core_objs()
+dconv.card_.shape
+
+# %%
+dconv.card_.query("quadrant == 'bottom'").sort_values("name")
+
+# %%
+(
+    dconv.card_.query("quadrant == 'bottom'")
         .pipe(locate_detected_classes)
 )
 
