@@ -283,6 +283,19 @@ class DealConverter:
         formatted_suit = "".join(sorted_cards.short_rank)
         return formatted_suit
 
+    def _build_pbn_deal(self, hands: tuple, first_hand=HAND_W):
+        """Build deal given four hands according to pbn format. (See deals.py)"""
+        if first_hand != HAND_W:
+            raise NotImplementedError
+
+        first = HAND_SHORTNAME_MAP[first_hand]
+
+        assert len(hands) == 4
+        formatted_hands = " ".join(hands)
+
+        deal = f"{first}:{formatted_hands}"
+        return deal
+
     def _calc_symbol_pair_dist(self):
         card_filtered = (
             self.card[['name', 'confidence', 'center_x', 'center_y']]

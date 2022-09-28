@@ -177,3 +177,14 @@ class TestConverter:
 
         formatted_suit = deal_converter._build_pbn_suit(card_names, "d")
         assert formatted_suit == ""
+
+    def test_build_pbn_deal(self, deal_converter: converter.DealConverter):
+        deal_converter.read_yolo(self.MANUAL_EDIT_YOLO_FILEPATH)
+        deal_converter.dedup(smart=True)
+        deal_converter.assign()
+
+        hands = deal_converter._build_pbn_hands()
+        formatted_deal = deal_converter._build_pbn_deal(hands)
+
+        expected = 'W:9432.AT72.K98.JT KQ65.KJ.A52.9632 7.Q86.QJ763.AK84 AJT8.9543.T4.Q75'
+        assert formatted_deal == expected
