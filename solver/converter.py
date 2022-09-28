@@ -25,6 +25,7 @@ QUADRANT_BOTTOM = "bottom"
 QUADRANT_LEFT = "left"
 QUADRANT_RIGHT = "right"
 MARGIN = "margin"
+
 HAND_N = 'north'
 HAND_S = 'south'
 HAND_W = 'west'
@@ -33,8 +34,17 @@ HAND_MAP = {
     QUADRANT_TOP: HAND_N,
     QUADRANT_BOTTOM: HAND_S,
     QUADRANT_LEFT: HAND_W,
-    QUADRANT_RIGHT: HAND_E,
+    QUADRANT_RIGHT: HAND_E
 }
+HAND_SHORTNAME_MAP = {
+    HAND_N: 'N',
+    HAND_S: 'S',
+    HAND_W: 'W',
+    HAND_E: 'E'
+}
+SUIT_S, SUIT_H, SUIT_D, SUIT_C = "s", "h", "d", "c"
+RANKS = ["A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2"]
+
 
 util.setup_basic_logging()
 
@@ -231,6 +241,47 @@ class DealConverter:
             len(assigned_cards),
             assigned_cards[["name", "quadrant"]].to_dict("records"))
         return remaining.drop(index=assigned_cards.index)
+
+    def _build_pbn_hands(self) -> tuple:
+        """Build four hands according to pbn format. (See deals.py)
+
+        Now only supports a 4-tuple of (W, N, E, S)."""
+        hands = (
+            self._build_pbn_hand(HAND_W),
+            self._build_pbn_hand(HAND_N),
+            self._build_pbn_hand(HAND_E),
+            self._build_pbn_hand(HAND_S)
+        )
+        return hands
+
+    def _build_pbn_hand(self, hand_name):
+        card_names = self.card_[self.card_.hand == hand_name].name.copy()
+
+        suits = (
+            self._build_pbn_suit(card_names, SUIT_S),
+            self._build_pbn_suit(card_names, SUIT_H),
+            self._build_pbn_suit(card_names, SUIT_D),
+            self._build_pbn_suit(card_names, SUIT_C)
+        )
+        formatted_hand = ".".join(suits)
+        return formatted_hand
+
+    @staticmethod
+    def _build_pbn_suit(card_names: pd.Series, suit_name):
+        cards = (
+            card_names.to_frame()
+                .assign(rank=lambda df: df.name.str.slice(stop=-1),
+                        suit=lambda df: df.name.str.slice(start=-1))
+                .assign(rank_order=lambda df: df["rank"].map(RANKS.index),
+                        short_rank=lambda df: df["rank"].map(lambda r: "T" if r == "10" else r))
+        )
+
+        suit_cards = cards[cards.suit == suit_name]
+
+        sorted_cards = suit_cards.sort_values("rank_order")
+
+        formatted_suit = "".join(sorted_cards.short_rank)
+        return formatted_suit
 
     def _calc_symbol_pair_dist(self):
         card_filtered = (

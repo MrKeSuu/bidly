@@ -43,6 +43,12 @@ class TestConverter:
         deal_converter.read_yolo(self.DEAL1_YOLO_FILEPATH)
         return deal_converter
 
+    @pytest.fixture
+    def card_names(self):
+        return pd.Series(
+            ['8s', 'Js', 'As', '5c', '10s', '3h', '4h', '7c', 'Qc', '10c', '4s', '5h', '9h'],
+            name="name")
+
     # TODO to speed up tests, run complete deal_converter methods and test each step
 
     def test_read_yolo(self, deal_converter):
@@ -164,3 +170,10 @@ class TestConverter:
 
         assert obj_idx == 46
         assert hand == 'south'
+
+    def test_build_pbn_suit(self, deal_converter: converter.DealConverter, card_names):
+        formatted_suit = deal_converter._build_pbn_suit(card_names, "s")
+        assert formatted_suit == "AJT84"
+
+        formatted_suit = deal_converter._build_pbn_suit(card_names, "d")
+        assert formatted_suit == ""
