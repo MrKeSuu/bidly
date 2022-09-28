@@ -361,6 +361,10 @@ dconv.card_.hand.value_counts()
 # %%
 dconv.card_.sort_values(['hand','center_x'])[['name', 'hand']]
 
+# %%
+hands = dconv._build_pbn_hands()
+dconv._build_pbn_deal(hands)
+
 # %% [markdown]
 # #### low-level methods
 
