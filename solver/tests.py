@@ -29,6 +29,8 @@ class TestConverter:
     DEAL1_YOLO_FILEPATH = pathlib.Path('fixtures/deal1-result-md.json')
     MANUAL_EDIT_YOLO_FILEPATH = pathlib.Path('fixtures/deal3-manual-edit.json')
 
+    PBN_FILEPATH = pathlib.Path('fixtures/deal3-manual-edit.pbn')
+
     @pytest.fixture
     def core_finder(self):
         return strategy.CoreFinderDbscan()
@@ -188,3 +190,21 @@ class TestConverter:
 
         expected = 'W:9432.AT72.K98.JT KQ65.KJ.A52.9632 7.Q86.QJ763.AK84 AJT8.9543.T4.Q75'
         assert formatted_deal == expected
+
+    def test_write_pbn(self, deal_converter: converter.DealConverter):
+        deal_converter.read_yolo(self.MANUAL_EDIT_YOLO_FILEPATH)
+        deal_converter.dedup(smart=True)
+        deal_converter.assign()
+
+        assert not self.PBN_FILEPATH.exists()
+
+        deal_converter.write_pbn(self.PBN_FILEPATH)
+
+        assert self.PBN_FILEPATH.exists()
+
+        with open(self.PBN_FILEPATH, 'rb') as fi:
+            content = fi.read()
+        expected = b'W:9432.AT72.K98.JT KQ65.KJ.A52.9632 7.Q86.QJ763.AK84 AJT8.9543.T4.Q75'
+        assert content == expected
+
+        self.PBN_FILEPATH.unlink()

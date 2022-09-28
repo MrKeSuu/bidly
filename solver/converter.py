@@ -1,6 +1,7 @@
 """Converting .json from yolo into .pbn for pythondds."""
 import json
 import logging as log
+import pathlib
 from typing import Tuple
 
 import numpy as np
@@ -113,7 +114,9 @@ class DealConverter:
         pass  # *lower priority
 
     def write_pbn(self, path):
-        pass
+        hands = self._build_pbn_hands()
+        deal = self._build_pbn_deal(hands)
+        self._write_pbn_deal(deal, path)
 
     def _dedup_simple(self):
         """Dedup in a simple way, only keeping the one with highest confidence."""
@@ -295,6 +298,18 @@ class DealConverter:
 
         deal = f"{first}:{formatted_hands}"
         return deal
+
+    def _write_pbn_deal(self, deal: str, path, force=False):
+        """Write pbn-formatted deal to path."""
+        path = pathlib.Path(path)
+        if path.exists():
+            if force:
+                log.warning("Overwriting existing file at %s", path)
+            else:
+                raise IOError("File exists; use force=True to overwrite.")
+
+        with open(path, 'w') as fo:
+            fo.write(deal)
 
     def _calc_symbol_pair_dist(self):
         card_filtered = (
