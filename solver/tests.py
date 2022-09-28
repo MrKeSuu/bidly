@@ -3,10 +3,16 @@ import pathlib
 import pandas as pd
 import pytest
 
+from pythondds_min import adapter
 from pythondds_min import calc_ddtable_pbn
 import converter
 import main
 import strategy
+
+
+@pytest.fixture
+def pbn_hand() -> bytes:
+    return b'W:9432.AT72.K98.JT KQ65.KJ.A52.9632 7.Q86.QJ763.AK84 AJT8.9543.T4.Q75'
 
 
 @pytest.mark.verbose
@@ -191,7 +197,7 @@ class TestConverter:
         expected = 'W:9432.AT72.K98.JT KQ65.KJ.A52.9632 7.Q86.QJ763.AK84 AJT8.9543.T4.Q75'
         assert formatted_deal == expected
 
-    def test_write_pbn(self, deal_converter: converter.DealConverter):
+    def test_write_pbn(self, deal_converter: converter.DealConverter, pbn_hand: bytes):
         deal_converter.read_yolo(self.MANUAL_EDIT_YOLO_FILEPATH)
         deal_converter.dedup(smart=True)
         deal_converter.assign()
@@ -204,7 +210,15 @@ class TestConverter:
 
         with open(self.PBN_FILEPATH, 'rb') as fi:
             content = fi.read()
-        expected = b'W:9432.AT72.K98.JT KQ65.KJ.A52.9632 7.Q86.QJ763.AK84 AJT8.9543.T4.Q75'
-        assert content == expected
+        assert content == pbn_hand
 
         self.PBN_FILEPATH.unlink()
+
+
+@pytest.mark.single
+class TestDdsAdapter:
+    def test_format_hand(self, pbn_hand):
+        formatted = adapter.format_hand(pbn_hand)
+
+        assert "Hand: Unnamed Hand\n" in formatted
+        assert "\nK98                     QJ763 " in formatted
