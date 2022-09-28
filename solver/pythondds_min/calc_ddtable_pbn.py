@@ -2,8 +2,8 @@
 import ctypes
 
 import deals
-from . import dds
-from . import functions
+from pythondds_min import dds
+from pythondds_min import functions
 
 
 HANDS = [
@@ -22,8 +22,8 @@ def main():
 
     dds.SetMaxThreads(0)
 
-    for handno in range(3):
-        tableDealPBN.cards = HANDS[handno]
+    for handno, hand in enumerate(HANDS):
+        tableDealPBN.cards = hand
 
         res = dds.CalcDDtablePBN(tableDealPBN, myTable)
 
