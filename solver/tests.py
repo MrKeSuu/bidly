@@ -222,3 +222,10 @@ class TestDdsAdapter:
 
         assert "Hand: Unnamed Hand\n" in formatted
         assert "\nK98                     QJ763 " in formatted
+
+    def test_solve_hand(self, pbn_hand):
+        result = adapter.solve_hand(pbn_hand)
+        formatted = adapter.format_result(result)
+
+        assert "NT" in formatted
+        assert "South" in formatted

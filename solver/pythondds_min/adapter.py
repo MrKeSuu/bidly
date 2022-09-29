@@ -37,11 +37,12 @@ def format_hand(hand: PbnHand, title="Unnamed Hand"):
     return formatted_hand
 
 
-def format_table(table):
-    # TODO
-    # takes pointer from solve_hand
-    # https://stackoverflow.com/questions/1218933/can-i-redirect-the-stdout-into-some-sort-of-string-buffer
-    pass
+def format_result(result):
+    with io.StringIO() as buf, contextlib.redirect_stdout(buf):
+        functions.PrintTable(result)
+        formatted_result = buf.getvalue()
+
+    return formatted_result
 
 
 def _init_deal(hand: PbnHand):
