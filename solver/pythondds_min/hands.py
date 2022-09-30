@@ -309,4 +309,4 @@ dcardRank = [
 ]
 
 dcardSuit = ["S", "H", "D", "C", "N"]
-dcardHand = ['N' 'E', 'S', 'W']
+dcardHand = ['N', 'E', 'S', 'W']

@@ -233,3 +233,14 @@ class TestDdsAdapter:
 
         assert "NT" in formatted
         assert "South" in formatted
+
+    def test_to_result_df(self, result):
+        result_df = adapter.to_result_df(result)
+
+        assert isinstance(result_df, pd.DataFrame)
+        assert result_df.shape == (20, 1)
+        assert result_df.columns.tolist() == ['tricks']
+        assert result_df.at[('N', 'H'), 'tricks'] == 5
+        assert result_df.at[('S', 'C'), 'tricks'] == 7
+        assert result_df.at[('E', 'N'), 'tricks'] == 7
+        assert result_df.at[('W', 'D'), 'tricks'] == 9

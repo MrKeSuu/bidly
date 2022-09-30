@@ -4,8 +4,12 @@ import ctypes
 import io
 import logging as log
 
+import numpy as np
+import pandas as pd
+
 from pythondds_min import dds
 from pythondds_min import functions
+from pythondds_min import hands
 
 PbnHand = bytes
 
@@ -43,6 +47,31 @@ def format_result(result):
         formatted_result = buf.getvalue()
 
     return formatted_result
+
+
+def to_result_df(result) -> pd.DataFrame:
+    """Convert result to a DataFrame indexed by (player, suit).
+
+    `resTable` doc: Encodes the solution of a deal for combinations of denomination and declarer.
+    First index is denomination. Suit encoding. Second index is declarer. Hand encoding.
+    Each entry is a number of tricks.
+    """
+    orig_table = result.contents.resTable
+    orig_values = np.asarray([orig_table[s][p] for s in range(5) for p in range(4)]).reshape(5, 4)
+    df_table = pd.DataFrame(
+        orig_values,
+        index=pd.Series(hands.dcardSuit, name='suit'),
+        columns=pd.Series(hands.dcardHand, name='player'))
+
+    result_df = (
+        df_table.stack().rename('tricks')
+            .reset_index().set_index(['player', 'suit']))
+    return result_df
+
+
+def tricks_to_level(tricks):
+    assert 0 <= tricks <= 13
+    return max(0, tricks - 6)
 
 
 def _init_deal(hand: PbnHand):
