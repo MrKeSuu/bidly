@@ -244,3 +244,24 @@ class TestDdsAdapter:
         assert result_df.at[('S', 'C'), 'tricks'] == 7
         assert result_df.at[('E', 'N'), 'tricks'] == 7
         assert result_df.at[('W', 'D'), 'tricks'] == 9
+
+    def test_calc_par_none_vul(self, result):
+        par_result = adapter.calc_par(result, vul=0)
+        formatted = adapter.format_par(par_result)
+
+        assert "NS score: NS -100\n" in formatted
+        assert "NS list : NS:NS 3Sx" in formatted
+
+    def test_calc_par_both_vul(self, result):
+        par_result = adapter.calc_par(result, vul=1)
+        formatted = adapter.format_par(par_result)
+
+        assert "NS score: NS -110\n" in formatted
+        assert "NS list : NS:EW 3D" in formatted
+
+    def test_calc_par_ew_vul(self, result):
+        par_result = adapter.calc_par(result, vul=3)
+        formatted = adapter.format_par(par_result)
+
+        assert "NS score: NS -100\n" in formatted
+        assert "NS list : NS:NS 3Sx" in formatted

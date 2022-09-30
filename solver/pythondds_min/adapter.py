@@ -10,6 +10,8 @@ import pandas as pd
 from pythondds_min import dds
 from pythondds_min import functions
 from pythondds_min import hands
+from pythondds_min.hands import VUL_NONE, VUL_BOTH, VUL_NS, VUL_EW
+
 
 PbnHand = bytes
 
@@ -29,6 +31,12 @@ def solve_hand(hand: PbnHand):
     return result
 
 
+def calc_par(result, vul):
+    par_result = _init_par_result()
+    dds.Par(result, par_result, vul)
+    return par_result
+
+
 def format_hand(hand: PbnHand, title="Unnamed Hand"):
     title_line = f"Hand: {title}"
     deal = _init_deal(hand)
@@ -41,7 +49,16 @@ def format_hand(hand: PbnHand, title="Unnamed Hand"):
     return formatted_hand
 
 
-def format_result(result):
+def format_par(par_result: dds.parResults):
+    with io.StringIO() as buf, contextlib.redirect_stdout(buf):
+        functions.PrintPar(par_result)
+        formatted_result = buf.getvalue()
+
+    return formatted_result
+
+
+def format_result(result: dds.ddTableResults):
+    # Possible TODO, let result be Union of pd.DF and pythondds_min.dds.ddTableResults
     with io.StringIO() as buf, contextlib.redirect_stdout(buf):
         functions.PrintTable(result)
         formatted_result = buf.getvalue()
@@ -53,7 +70,8 @@ def to_result_df(result) -> pd.DataFrame:
     """Convert result to a DataFrame indexed by (player, suit).
 
     `resTable` doc: Encodes the solution of a deal for combinations of denomination and declarer.
-    First index is denomination. Suit encoding. Second index is declarer. Hand encoding.
+    First index is denomination. Suit encoding.
+    Second index is declarer. Hand encoding.
     Each entry is a number of tricks.
     """
     orig_table = result.contents.resTable
@@ -69,7 +87,7 @@ def to_result_df(result) -> pd.DataFrame:
     return result_df
 
 
-def tricks_to_level(tricks):
+def tricks_to_level(tricks: int):
     assert 0 <= tricks <= 13
     return max(0, tricks - 6)
 
@@ -82,5 +100,11 @@ def _init_deal(hand: PbnHand):
 
 def _init_result():
     res = dds.ddTableResults()
-    results = ctypes.pointer(res)
-    return results
+    result = ctypes.pointer(res)
+    return result
+
+
+def _init_par_result():
+    par_res = dds.parResults()
+    par_result = ctypes.pointer(par_res)
+    return par_result
