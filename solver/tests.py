@@ -10,7 +10,7 @@ import main
 import strategy
 
 
-@pytest.fixture
+@pytest.fixture(scope='module')
 def pbn_hand() -> bytes:
     return b'W:9432.AT72.K98.JT KQ65.KJ.A52.9632 7.Q86.QJ763.AK84 AJT8.9543.T4.Q75'
 
@@ -217,14 +217,18 @@ class TestConverter:
 
 @pytest.mark.single
 class TestDdsAdapter:
+
+    @pytest.fixture(scope='class')
+    def result(self, pbn_hand):
+        return adapter.solve_hand(pbn_hand)
+
     def test_format_hand(self, pbn_hand):
         formatted = adapter.format_hand(pbn_hand)
 
         assert "Hand: Unnamed Hand\n" in formatted
         assert "\nK98                     QJ763 " in formatted
 
-    def test_solve_hand(self, pbn_hand):
-        result = adapter.solve_hand(pbn_hand)
+    def test_solve_hand(self, result):
         formatted = adapter.format_result(result)
 
         assert "NT" in formatted
