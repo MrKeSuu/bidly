@@ -73,7 +73,7 @@ def ComparePar(par, handno):
     return True
 
 def PrintTable(table):
-    print("{:5} {:<5} {:<5} {:<5} {:<5}".format("", "North", "South", "East", "West"))
+    print("{:5} {:>5} {:>5} {:>5} {:>5}".format("", "North", "South", "East", "West"))
     print("{:>5} {:5} {:5} {:5} {:5}".format(
         "NT",
         table.contents.resTable[4][0],

@@ -10,6 +10,9 @@ test-vv:
 daemon:
 	tail -f /dev/null
 
+example:
+	python main.py fixtures/deal3-manual-edit.json
+
 dktest:
 	docker build . -t handsolver
 	docker run --rm -t handsolver test

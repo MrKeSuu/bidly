@@ -15,12 +15,14 @@ def main():
     deal_converter.assign()
     pbn_hand = deal_converter.format_pbn()
 
-    formatted_hand = dds_adapter.format_hand(pbn_hand)
+    formatted_hand = dds_adapter.format_hand(pbn_hand, title="Example Hand")
     print(formatted_hand)
 
     dds_result = dds_adapter.solve_hand(pbn_hand)
     formatted_dd_result = dds_adapter.format_result(dds_result)
     print(formatted_dd_result)
+
+    print(dds_adapter.to_result_df(dds_result).head(5))
 
 
 if __name__ == '__main__':
