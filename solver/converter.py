@@ -118,6 +118,11 @@ class DealConverter:
         deal = self._build_pbn_deal(hands)
         self._write_pbn_deal(deal, path)
 
+    def format_pbn(self) -> bytes:
+        hands = self._build_pbn_hands()
+        deal = self._build_pbn_deal(hands)
+        return deal.encode("ascii")
+
     def _dedup_simple(self):
         """Dedup in a simple way, only keeping the one with highest confidence."""
         return (self.card
@@ -424,3 +429,10 @@ class DealConverter:
         bool_seq = self.core_finder.find_core(_obj_coords)
 
         return pd.Series(bool_seq, index=subframe.index)
+
+
+def get_deal_converter() -> DealConverter:
+    dbscan = strategy.CoreFinderDbscan()
+    single_linkage = strategy.SingleLinkage()
+    deal_converter = DealConverter(dbscan, single_linkage)
+    return deal_converter
