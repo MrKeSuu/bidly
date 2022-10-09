@@ -221,10 +221,10 @@ res_.pipe(locate_detected_classes, min_conf=0)
 # - [x] come up with def for 'core objects'
 #     - can see DBSCAN
 #     - can set a margin to exclude objs
-# - [ ] ignore/drop dups
+# - [x] ignore/drop dups
 #     - can be handled right after adding a non-core object to a cluster
 #         - and should be checked after finding out core objects
-# - [ ] consider giving more weights to objs further from the margin
+# - [ ] *consider giving more weights to objs further from the margin
 #
 #
 # #### Example code
