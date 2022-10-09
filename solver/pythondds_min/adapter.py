@@ -66,7 +66,26 @@ def format_result(result: dds.ddTableResults):
     return formatted_result
 
 
-def to_result_df(result) -> pd.DataFrame:
+def _init_deal(hand: PbnHand):
+    deal_obj = dds.ddTableDealPBN()
+    deal_obj.cards = hand
+    return deal_obj
+
+
+def _init_result():
+    res = dds.ddTableResults()
+    result = ctypes.pointer(res)
+    return result
+
+
+def _init_par_result():
+    par_res = dds.parResults()
+    par_result = ctypes.pointer(par_res)
+    return par_result
+
+
+## Util-like
+def result_to_df(result) -> pd.DataFrame:
     """Convert result to a DataFrame indexed by (player, suit).
 
     `resTable` doc: Encodes the solution of a deal for combinations of denomination and declarer.
@@ -90,21 +109,3 @@ def to_result_df(result) -> pd.DataFrame:
 def tricks_to_level(tricks: int):
     assert 0 <= tricks <= 13
     return max(0, tricks - 6)
-
-
-def _init_deal(hand: PbnHand):
-    deal_obj = dds.ddTableDealPBN()
-    deal_obj.cards = hand
-    return deal_obj
-
-
-def _init_result():
-    res = dds.ddTableResults()
-    result = ctypes.pointer(res)
-    return result
-
-
-def _init_par_result():
-    par_res = dds.parResults()
-    par_result = ctypes.pointer(par_res)
-    return par_result

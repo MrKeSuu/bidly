@@ -234,8 +234,8 @@ class TestDdsAdapter:
         assert "NT" in formatted
         assert "South" in formatted
 
-    def test_to_result_df(self, result):
-        result_df = adapter.to_result_df(result)
+    def test_result_to_df(self, result):
+        result_df = adapter.result_to_df(result)
 
         assert isinstance(result_df, pd.DataFrame)
         assert result_df.shape == (20, 1)

@@ -22,7 +22,7 @@ def main():
     formatted_dd_result = dds_adapter.format_result(dds_result)
     print(formatted_dd_result)
 
-    print(dds_adapter.to_result_df(dds_result).head(5))
+    print(dds_adapter.result_to_df(dds_result).head(5))
 
 
 if __name__ == '__main__':
