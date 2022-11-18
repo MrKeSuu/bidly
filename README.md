@@ -13,5 +13,9 @@ This project consists of three parts:
 |Final synthesized photo| <img src="rawdata/data/for-readme/bidly-rawdata-3cards.png"/> |
 
 ## Detector
+| | Example |
+|---|---|
+|Original |<img src="detector/test-deal-images/bidly-detector-original.jpg"/>|
+|Detection |<img src="detector/test-deal-images/bidly-detector-detected.png"/>|
 
 ## Solver
