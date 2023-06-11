@@ -5,9 +5,9 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.13.1
+#       jupytext_version: 1.14.4
 #   kernelspec:
-#     display_name: Python 3
+#     display_name: Python 3 (ipykernel)
 #     language: python
 #     name: python3
 # ---
@@ -528,10 +528,10 @@ display_img(cv2.imread(img_fn,cv2.IMREAD_UNCHANGED),polygons=[refCornerHL,refCor
 # It may happen that the function can't find a valid convex hull for a card. It is not a problem, it only means that this card won't be used to generate the dataset.
 
 # %% [markdown]
-# #### Find corner zones dynamically ~~for K/Q/Js~~
+# #### YL Find corner zones dynamically ~~for K/Q/Js~~
 # - ~~maybe try 'contour with the largest area' again, for the extracted cards~~, use simpler method using brightness
 #
-# #### Fix 10s (1 exluded sometimes)
+# #### YL Fix 10s (1 exluded sometimes)
 # fixed, by adjusting params relating to 'center of mass'
 
 # %%
@@ -1304,7 +1304,7 @@ os.makedirs(test_dir, exist_ok=True)
 
 def get_n_scenes_per_card(card_name):
     if card_name.startswith('A') or card_name.startswith('4'):
-        # similar so gen a bit more:
+        # YL: similar so gen a bit more:
         return N_SCENES_PER_CARD + 20
     return N_SCENES_PER_CARD
 
@@ -1334,7 +1334,7 @@ for i in tqdm(range(nb_cards_to_generate)):
 
 
 # %%
-## control # images for first card
+## YL: control # images for first card
 for card_name in Cards.CARD_NAMES:
     print('Generating 2-card scenes for', card_name)
 
@@ -1376,7 +1376,7 @@ for i in tqdm(range(nb_cards_to_generate)):
 
 
 # %%
-## control # images for first card
+## YL control # images for first card
 for card_name in Cards.CARD_NAMES:
     print('Generating 3-card scenes for', card_name)
 
