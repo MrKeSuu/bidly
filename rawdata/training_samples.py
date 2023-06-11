@@ -182,6 +182,7 @@ cards_pck_fn=data_dir+"/cards-{}.pck"
 
 
 # imgW,imgH: dimensions of the generated dataset images 
+# YL: can this be higher, given we have a better desktop?
 imgW=960
 imgH=960
 
@@ -266,6 +267,13 @@ backgrounds.get_total_images()
 # Test: display a random background
 backgrounds = Backgrounds()
 __ = backgrounds.get_random(display=True)
+
+# %% [markdown]
+# #### TODO YL What is the bg img resolution distri?
+
+# %%
+
+# %%
 
 # %% [markdown]
 # # Extraction of the cards from pictures or video 
@@ -1285,6 +1293,11 @@ img3,card_val3,hulla3,hullb3=cards.get_random()
 
 newimg=Scene(bg,img1,card_val1,hulla1,hullb1,img2,card_val2,hulla2,hullb2,img3,card_val3,hulla3,hullb3)
 newimg.display()
+
+# %% [markdown]
+# ^ YL: cards too big in rel size.
+# - c.f. this photo taken by phone:
+# <img src="../detector/test-deal-images/deal2-sm-sq.jpg" alt="Actual phone photo" title="Actual phone photo" />
 
 # %% [markdown]
 # ## Generate the datasets
