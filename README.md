@@ -15,7 +15,7 @@ This project consists of three parts:
 ## Detector
 | | Example |
 |---|---|
-|Original |<img src="detector/test-deal-images/bidly-detector-original.jpg"/>|
-|Detection |<img src="detector/test-deal-images/bidly-detector-detected.png"/>|
+|Original |<img src="detector/test-deals/bidly-detector-original.jpg"/>|
+|Detection |<img src="detector/test-deals/bidly-detector-detected.png"/>|
 
 ## Solver
