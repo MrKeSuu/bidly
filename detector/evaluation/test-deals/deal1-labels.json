@@ -11,7 +11,6 @@
   {"class_id":40, "name":"Ks", "relative_coordinates":{"center_x":0.787152, "center_y":0.630593, "width":0.033645, "height":0.035449}, "confidence":0.999481}, 
   {"class_id":39, "name":"As", "relative_coordinates":{"center_x":0.074596, "center_y":0.420642, "width":0.039808, "height":0.016992}, "confidence":0.996107}, 
   {"class_id":38, "name":"2c", "relative_coordinates":{"center_x":0.708654, "center_y":0.502951, "width":0.036903, "height":0.018970}, "confidence":0.996988}, 
-  {"class_id":36, "name":"4c", "relative_coordinates":{"center_x":0.682152, "center_y":0.314353, "width":0.034927, "height":0.021473}, "confidence":0.528778}, 
   {"class_id":35, "name":"5c", "relative_coordinates":{"center_x":0.471104, "center_y":0.476194, "width":0.036101, "height":0.025022}, "confidence":0.999074}, 
   {"class_id":35, "name":"5c", "relative_coordinates":{"center_x":0.624031, "center_y":0.440089, "width":0.035927, "height":0.024694}, "confidence":0.998608}, 
   {"class_id":35, "name":"3c", "relative_coordinates":{"center_x":0.679411, "center_y":0.335314, "width":0.037282, "height":0.022575}, "confidence":0.991890}, 
