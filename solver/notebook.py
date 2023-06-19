@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.13.7
+#       jupytext_version: 1.14.4
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -44,7 +44,8 @@ YOLO_JSON_FILEPATH_3I = pathlib.Path('fixtures/deal3-manual-edit.json')
 
 # %%
 dbscan = strategy.CoreFinderDbscan()
-dconv = converter.DealConverter(dbscan)
+single_linkage = strategy.SingleLinkage()
+dconv = converter.DealConverter(dbscan, single_linkage)
 dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
 
 # %%
