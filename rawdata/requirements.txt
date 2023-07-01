@@ -1,4 +1,4 @@
 imgaug==0.4.0
-opencv-python==4.5.2.54
-Shapely==1.7.1
+opencv-python==4.7.0.72
+Shapely==2.0.1
 tqdm==4.54.0
