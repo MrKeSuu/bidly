@@ -65,7 +65,7 @@ def _calc_iou(obj1: YoloObject, obj2: YoloObject):  # tested with another impl.
 
 
 class Evaluator:
-    IOU_LEVELS = [0.5, 0.75, 0.9]
+    IOU_LEVELS = [0.75, 0.9]
     DIFFICULT_CLASSES = {'As', '4s', 'Ah', '4h', 'Ad', '4d', 'Ac', '4c'}
 
     def __init__(self, gt_path, pred_path) -> None:
@@ -176,6 +176,7 @@ def _load_img(path):
 
 
 def _is_misclf(gt, pred, iou, min_iou=0.5, thresh=0.5):
+    # Note: similar logics in `_convert_to_gt_proba_info` and `metrics.classification_metrics`
     if gt is None or pred is None:
         return True
     if iou < min_iou:
