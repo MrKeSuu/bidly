@@ -2,13 +2,20 @@ import dataclasses
 import json
 import typing
 
+import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 
 from . import metrics
+from . import util
 
 
 DEFAULT_MIN_IOU = 0.75
+TEXT_Y_OFFEST = 50 / 1200  # 50 was based on img with H1200
+GROUND_TRUTH_EC = (0.5, 1, 0.5)
+GROUND_TRUTH_FC = (0.8, 1, 0.8)
+PREDICTION_FC = (1, 0.5, 0.5)
+PREDICTION_EC = (1, 0.8, 0.8)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -131,21 +138,92 @@ class Evaluator:
         return gt_n_probas
 
 
-def plot_paired_boxes(obj1: YoloObject, obj2: YoloObject):
+def plot_paired_boxes(obj1: YoloObject, obj2: YoloObject, ax=None):
     print(obj1, obj2, _calc_iou(obj1, obj2), sep='\n')
-    ax = _plot_bbox(obj1, ec='b')
+    ax = _plot_bbox(obj1, ec='b', ax=ax)
     ax = _plot_bbox(obj2, ec='r', ax=ax)
     return
 
 
-def _plot_bbox(obj: YoloObject, ax=None, **kwargs):
+def plot_misclf(pairs, img_filepath, classes=None):
+    img = _load_img(img_filepath)
+
+    __, ax = plt.subplots(figsize=(12, 12))
+    for gt, pred, iou in pairs:
+        if not _is_misclf(gt, pred, iou):
+            continue
+        if _not_in_classes(gt, pred, classes):
+            continue
+
+        if gt is not None:
+            ax = _plot_bbox(gt, img_shape=img.shape, ax=ax, ec='g')
+            ax = _plot_label(gt, 'top', img_shape=img.shape, ax=ax, ec=GROUND_TRUTH_EC, fc=GROUND_TRUTH_FC)
+        if pred is not None:
+            ax = _plot_bbox(pred, img_shape=img.shape, ax=ax, ec='r')
+            ax = _plot_label(pred, 'bottom', img_shape=img.shape, ax=ax, ec=PREDICTION_EC, fc=PREDICTION_FC)
+
+    ax.imshow(img)
+
+
+def _load_img(path):
+    image = cv2.imread(str(path))
+    height, width = image.shape[:2]
+    resized_image = cv2.resize(
+        image, (width, height),
+        interpolation=cv2.INTER_CUBIC)
+    converted_image = cv2.cvtColor(resized_image, cv2.COLOR_BGR2RGB)
+    return converted_image
+
+
+def _is_misclf(gt, pred, iou, min_iou=0.5, thresh=0.5):
+    if gt is None or pred is None:
+        return True
+    if iou < min_iou:
+        return True
+    if pred.confid < thresh:
+        return True
+
+def _not_in_classes(gt, pred, classes):
+    gt_class = None if gt is None else gt.name
+    pd_class = None if pred is None else pred.name
+    return not util.in_default(gt_class, classes) and not util.in_default(pd_class, classes)
+
+
+def _plot_bbox(obj: YoloObject, img_shape, ax=None, **kwargs):
     if ax is None:
         __, ax = plt.subplots(figsize=(12, 12))
 
+    x_scaler, y_scaler = img_shape[:2]
+
+    x = x_scaler * (obj.x - obj.w/2)
+    y = y_scaler * (obj.y - obj.h/2)
+    w = x_scaler * obj.w
+    h = y_scaler * obj.h
     rect = matplotlib.patches.Rectangle(
-        (obj.x - obj.w/2, 1-(obj.y - obj.h/2)),
-        obj.w, obj.h,
+        (x, y),
+        w, h,
         linewidth=.5, facecolor='none', alpha=0.7, **kwargs
     )
     ax.add_patch(rect)
+    return ax
+
+
+def _plot_label(obj: YoloObject, pos, img_shape, ax=None, **kwargs):
+    if ax is None:
+        __, ax = plt.subplots(figsize=(12, 12))
+
+    x_scaler, y_scaler = img_shape[:2]
+    text_y_offset = TEXT_Y_OFFEST if pos == 'bottom' else -TEXT_Y_OFFEST
+
+    text_x = x_scaler * obj.x
+    text_y = y_scaler * (obj.y + text_y_offset)
+    text = f"{obj.name}"
+    if pos == 'bottom':
+        text += f", {round(obj.confid, 3)}"
+
+    ax.text(
+        text_x, text_y, text,
+        ha="center", va="center",
+        bbox=dict(boxstyle="round", alpha=0.3, **kwargs),
+    )
     return ax
