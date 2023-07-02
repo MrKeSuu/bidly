@@ -2,6 +2,10 @@ import dataclasses
 import json
 import typing
 
+import matplotlib
+import matplotlib.pyplot as plt
+import sklearn.metrics
+
 from . import metrics
 
 
@@ -119,3 +123,22 @@ class Evaluator:
             gt_n_probas.append((y_true, y_pred, name))
         return gt_n_probas
 
+
+def plot_paired_boxes(obj1: YoloObject, obj2: YoloObject):
+    print(obj1, obj2, _calc_iou(obj1, obj2), sep='\n')
+    ax = _plot_bbox(obj1, ec='b')
+    ax = _plot_bbox(obj2, ec='r', ax=ax)
+    return
+
+
+def _plot_bbox(obj: YoloObject, ax=None, **kwargs):
+    if ax is None:
+        __, ax = plt.subplots(figsize=(12, 12))
+
+    rect = matplotlib.patches.Rectangle(
+        (obj.x - obj.w/2, 1-(obj.y - obj.h/2)),
+        obj.w, obj.h,
+        linewidth=.5, facecolor='none', alpha=0.7, **kwargs
+    )
+    ax.add_patch(rect)
+    return ax
