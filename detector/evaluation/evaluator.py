@@ -4,12 +4,11 @@ import typing
 
 import matplotlib
 import matplotlib.pyplot as plt
-import sklearn.metrics
 
 from . import metrics
 
 
-DEFAULT_MIN_IOU = 0.5
+DEFAULT_MIN_IOU = 0.75
 
 
 @dataclasses.dataclass(frozen=True)
@@ -59,6 +58,8 @@ def _calc_iou(obj1: YoloObject, obj2: YoloObject):  # tested with another impl.
 
 
 class Evaluator:
+    IOU_LEVELS = [0.5, 0.75, 0.9]
+    DIFFICULT_CLASSES = {'As', '4s', 'Ah', '4h', 'Ad', '4d', 'Ac', '4c'}
 
     def __init__(self, gt_path, pred_path) -> None:
         # load
@@ -73,16 +74,22 @@ class Evaluator:
 
         self.pairs = list(self._paired_objs(self.gt_objs, self.pred_objs))
 
-        self.gt_proba_info = self._convert_to_gt_proba_info(self.pairs)
-
     def report_precision_metrics(self):
-        pass
+        results = {}
+        for iou in self.IOU_LEVELS:
+            iou_ = int(iou*100)
+            results[f'mAP{iou_}'] = self.report_mean_ap(iou)
+            results[f'modified_mAP{iou_}'] = self.report_mean_ap(iou, self.DIFFICULT_CLASSES)
 
-    def report_clf_metrics(self, thresh=0.5):
-        return metrics.classification_metrics(self.gt_proba_info, self.gt_objs, thresh)
+        return results
+
+    def report_clf_metrics(self, thresh=0.5, min_iou=DEFAULT_MIN_IOU):
+        gt_proba_info = self._convert_to_gt_proba_info(self.pairs, min_iou)
+        return metrics.classification_metrics(gt_proba_info, self.gt_objs, thresh)
 
     def report_mean_ap(self, min_iou=DEFAULT_MIN_IOU, classes=None):
-        pass
+        gt_proba_info = self._convert_to_gt_proba_info(self.pairs, min_iou)
+        return metrics.mean_average_precision(gt_proba_info, classes)
 
     def _paired_objs(self, gt_objs, pred_objs):
         """Pair GT with Pred based on IOU."""
@@ -104,7 +111,7 @@ class Evaluator:
             if pred not in paired_preds:
                 yield (None, pred, None)
 
-    def _convert_to_gt_proba_info(self, pairs, min_iou=0.5):
+    def _convert_to_gt_proba_info(self, pairs, min_iou=DEFAULT_MIN_IOU):
         gt_n_probas = []
         for gt_obj, pred_obj, iou in pairs:
             if gt_obj is None:

@@ -1,5 +1,8 @@
 import collections
 
+import sklearn.metrics
+
+
 def classification_metrics(gt_proba_info, gt_objs, thresh=0.5):
     count_map = collections.defaultdict(dict)  # class -> counts
 
@@ -17,4 +20,13 @@ def classification_metrics(gt_proba_info, gt_objs, thresh=0.5):
     return [{'name': name, **value} for name, value in count_map.items()]
 
 
-def mean_average_precision(): pass
+def mean_average_precision(gt_proba_info, classes):
+    y_true = [t[0] for t in gt_proba_info if in_default(t[2], classes)]
+    y_prob = [t[1] for t in gt_proba_info if in_default(t[2], classes)]
+    return sklearn.metrics.average_precision_score(y_true, y_prob)
+
+
+def in_default(item, collection, default=True):
+    if collection:
+        return item in collection
+    return default
