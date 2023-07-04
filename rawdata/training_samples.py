@@ -1141,12 +1141,14 @@ class BBA:  # Bounding box + annotations
 
 class Scene:
     def __init__(self, bg,
-                 img1, class1, hulla1, hullb1,
-                 img2, class2, hulla2, hullb2,
+                 img1=None, class1=None, hulla1=None, hullb1=None,
+                 img2=None, class2=None, hulla2=None, hullb2=None,
                  img3=None, class3=None, hulla3=None, hullb3=None):
         self.class1 = class1
         self.class2 = class2
         self.class3 = class3
+        
+        self.listbba = []
         
         if img3 is not None:
             self.create3CardsScene(
@@ -1154,11 +1156,18 @@ class Scene:
                 img1, class1, hulla1, hullb1,
                 img2, class2, hulla2, hullb2,
                 img3, class3, hulla3, hullb3)
-        else:
+        elif img1 is not None and img2 is not None:
             self.create2CardsScene(
                 bg,
                 img1, class1, hulla1, hullb1,
                 img2, class2, hulla2, hullb2)
+        else:
+            self.create0CardsScene(bg)
+    
+    def create0CardsScene(self, bg):
+        # need add random augs to bg to meet arbitrary amount requirements
+        self.bg = scaleBg.augment_image(bg)
+        self.final = self.bg
 
     def create2CardsScene(
             self, bg,
