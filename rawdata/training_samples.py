@@ -928,8 +928,7 @@ ABSOLUTE_OJB_HEIGHT_GENERATED_CARDS = 68
 imgH * RELATIVE_OBJ_HEIGHT_REAL_PHOTOS / ABSOLUTE_OJB_HEIGHT_GENERATED_CARDS
 
 # %%
-AFFINE_SCALE = [0.75, 1]  # for 1200
-    # YL having more larger ones to potentially taking into account 'large size' cards
+AFFINE_SCALE = [0.75, 0.8]  # for 1200
 
 # %% [markdown]
 # # Generating a scene
@@ -1100,13 +1099,16 @@ def preview_aug(img, aug):
 
 
 # %%
+scale_sometimes = iaa.Sometimes(0.75, iaa.Affine(scale=AFFINE_SCALE))
+sharpen_sometimes = iaa.Sometimes(0.75, iaa.Sharpen(alpha=(0.3, 0.4)))
+
 # imgaug transformation for one card in scenario with 2 cards
 transform_1card = iaa.Sequential([
-    iaa.Affine(scale=AFFINE_SCALE),
+    scale_sometimes,
     iaa.Affine(rotate=(-180, 180)),
     iaa.Affine(translate_percent={"x": (-0.25,0.25), "y": (-0.25,0.25)}),
     iaa.PerspectiveTransform(),
-    iaa.Sharpen(alpha=(0.0, 0.4)),
+    sharpen_sometimes,
 ])
 
 # For the 3 cards scenario, we use 3 imgaug transforms, the first 2 are for individual cards, 
@@ -1121,11 +1123,11 @@ trans_rot2 = iaa.Sequential([
 ])
 transform_3cards = iaa.Sequential([
     iaa.Affine(translate_px={"x": decalX-decalX3, "y": decalY-decalY3}),
-    iaa.Affine(scale=AFFINE_SCALE),
+    scale_sometimes,
     iaa.Affine(rotate=(-180, 180)),
     iaa.Affine(translate_percent={"x": (-0.2,0.2),"y": (-0.2,0.2)}),
     iaa.PerspectiveTransform(),
-    iaa.Sharpen(alpha=(0.0, 0.4)),
+    sharpen_sometimes,
 ])
 
 # imgaug transformation for the background
