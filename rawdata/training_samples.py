@@ -7,9 +7,9 @@
 #       format_version: '1.3'
 #       jupytext_version: 1.14.4
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: bidly
 #     language: python
-#     name: python3
+#     name: bidly
 # ---
 
 # %%
@@ -183,8 +183,8 @@ cards_pck_fn=data_dir+"/cards-{}.pck"
 
 # imgW,imgH: dimensions of the generated dataset images 
 # YL: can this be higher, given we have a better desktop?
-imgW=960
-imgH=960
+imgW=1200
+imgH=1200
 
 
 refCard=np.array([[0,0],[cardW,0],[cardW,cardH],[0,cardH]],dtype=np.float32)
@@ -269,7 +269,18 @@ backgrounds = Backgrounds()
 __ = backgrounds.get_random(display=True)
 
 # %% [markdown]
-# #### TODO YL What is the bg img resolution distri?
+# #### YL bg resolution dist?
+
+# %%
+backgrounds = Backgrounds()
+res = []
+for __ in range(1000):
+    bg = backgrounds.get_random()
+    res.append(bg.shape[0]*bg.shape[1])
+len(res)
+
+# %%
+pd.Series(res).pow(1/2).plot(kind='hist', bins=25)
 
 # %%
 
@@ -896,6 +907,32 @@ _=cards.get_random(display=True)
 #_=cards.get_random("As",display=True)
 
 # %% [markdown]
+# #### Determine optimal scaling factor for generating scenes
+# obj heights in real photos (1200sq):
+# - 52, 55, 51, 54 -> 53 -> **0.044**
+
+# %%
+_card =cards.get_random(display=False)
+
+_obj_h = max(t[0][1] for t in _card[2]) -  min(t[0][1] for t in _card[2])
+_obj_h
+
+# %% [markdown]
+# obj heights in cards (before merge):
+# - 72, 72, 64, 65, 72, 64, 70 -> **68**
+
+# %%
+RELATIVE_OBJ_HEIGHT_REAL_PHOTOS = 0.044
+ABSOLUTE_OJB_HEIGHT_GENERATED_CARDS = 68
+
+# %%
+imgH * RELATIVE_OBJ_HEIGHT_REAL_PHOTOS / ABSOLUTE_OJB_HEIGHT_GENERATED_CARDS
+
+# %%
+AFFINE_SCALE = [0.75, 1]  # for 1200
+    # YL having more larger ones to potentially taking into account 'large size' cards
+
+# %% [markdown]
 # # Generating a scene
 # We can now generate a scene (= image of the dataset). We are considering here only 2 kinds of scene (but nothing prevents you to add more scenarios):
 # 1. a scene with 2 cards: each card is randomly transformed (scaled, rotated, translated) independantly from the other;
@@ -1013,11 +1050,10 @@ cardKP = ia.KeypointsOnImage([
     ia.Keypoint(x=decalX, y=decalY+cardH)
 ], shape=(imgH,imgW,3))
 
-# YL: ideally scale should be around 0.4 but that maybe too small (orig resolution too low)
-
+# %%
 # imgaug transformation for one card in scenario with 2 cards
 transform_1card = iaa.Sequential([
-    iaa.Affine(scale=[0.6, 1]),
+    iaa.Affine(scale=AFFINE_SCALE),
     iaa.Affine(rotate=(-180, 180)),
     iaa.Affine(translate_percent={"x": (-0.25,0.25), "y": (-0.25,0.25)}),
     iaa.PerspectiveTransform(),
@@ -1036,7 +1072,7 @@ trans_rot2 = iaa.Sequential([
 ])
 transform_3cards = iaa.Sequential([
     iaa.Affine(translate_px={"x": decalX-decalX3, "y": decalY-decalY3}),
-    iaa.Affine(scale=[0.6, 1]),
+    iaa.Affine(scale=AFFINE_SCALE),
     iaa.Affine(rotate=(-180, 180)),
     iaa.Affine(translate_percent={"x": (-0.2,0.2),"y": (-0.2,0.2)}),
     iaa.PerspectiveTransform(),
@@ -1296,9 +1332,24 @@ newimg=Scene(bg,img1,card_val1,hulla1,hullb1,img2,card_val2,hulla2,hullb2,img3,c
 newimg.display()
 
 # %% [markdown]
-# ^ YL: cards too big in rel size.
 # - c.f. this photo taken by phone:
-# <img src="../detector/test-deal-images/deal2-sm-sq.jpg" alt="Actual phone photo" title="Actual phone photo" />
+#
+# <img src="../detector/evaluation/test-deals/deal3-md-sq.jpg" alt="Actual phone photo" title="Actual phone photo"
+#      width="930" style="margin-left: 50px"/>
+
+# %%
+bg=backgrounds.get_random()
+Scene(bg).display()
+
+# %% [markdown]
+# ### TODO* Add a (symmetric) shadow
+#
+# 1. random black triangle
+# 2. blur
+# 3. overlay with proper alpha
+
+# %%
+img1.shape
 
 # %% [markdown]
 # ## Generate the datasets
@@ -1403,6 +1454,11 @@ for card_name in Cards.CARD_NAMES:
 
     for __ in tqdm(range(n_scenes_te)):
         gen_3_cards_scene(test_dir, main_card=card_name)
+
+# %% [markdown]
+# ### TODO YL object counts in training data
+
+# %%
 
 # %% [markdown]
 # ## In case you want to train YOLO with the generated datasets
