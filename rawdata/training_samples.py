@@ -14,7 +14,7 @@
 
 # %%
 def optimize_cell_width():
-    from IPython.core.display import display, HTML
+    from IPython.display import display, HTML
     display(HTML("<style>.container { width:100% !important; }</style>"))
 
 optimize_cell_width()
@@ -83,27 +83,27 @@ cornerYmax=int(cornerYmax*zoom)
 # ## Imports
 
 # %%
-import numpy as np
-import cv2
+from glob import glob
 import os
-from tqdm import tqdm
+import pickle
 import random
-import os
+
+import cv2
+import imgaug as ia
+from imgaug import augmenters as iaa
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib.patches as patches
-import pickle
-from glob import glob 
-import imgaug as ia
-from imgaug import augmenters as iaa
+import numpy as np
+import pandas as pd
 from shapely.geometry import Polygon
+from tqdm import tqdm
 
 
 # %% [markdown]
 # ## Some convenient functions used in this notebook
 
 # %%
-
 def display_img(img,polygons=[],channels="bgr",size=9):
     """
         Function to display an inline image, and draw optional polygons (bounding boxes, convex hulls) on it.
@@ -346,7 +346,7 @@ def extract_card (img, output_fn=None, min_focus=120, debug=False):
     # Both areas sould be very close
     rect=cv2.minAreaRect(cnt)
     box=cv2.boxPoints(rect)
-    box=np.int0(box)
+    box=np.intp(box)
     areaCnt=cv2.contourArea(cnt)
     areaBox=cv2.contourArea(box)
     valid=areaCnt/areaBox>0.95
@@ -369,7 +369,7 @@ def extract_card (img, output_fn=None, min_focus=120, debug=False):
         cnta=cnt.reshape(1,-1,2).astype(np.float32)
         # Apply the transformation 'Mp' to the contour
         cntwarp=cv2.perspectiveTransform(cnta,Mp)
-        cntwarp=cntwarp.astype(np.int)
+        cntwarp=cntwarp.astype(int)
         
         # We build the alpha channel so that we have transparency on the
         # external border of the card
@@ -543,16 +543,6 @@ display_img(cv2.imread(img_fn,cv2.IMREAD_UNCHANGED),polygons=[refCornerHL,refCor
 # fixed, by adjusting params relating to 'center of mass'
 
 # %%
-# Checking column min brightness to determine const: MIN_BRIGHTNESS
-filename = None
-# filename = 'data/cards/Js.jpg'
-img = read_card_img(filename)
-
-plt_imshow('img', img)
-grey = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-plt.plot(grey.min(axis=0))
-
-# %%
 MIN_BRIGHTNESS = 65
 
 IMGS_DIR = 'data/cards'
@@ -597,7 +587,18 @@ def adjust_corner_zone(img, corner, bottom_right):
     
     zone = img[y1:y2,x1:x2].copy()
     return zone, corner
-    
+
+
+
+# %%
+# Checking column min brightness to determine const: MIN_BRIGHTNESS
+filename = None
+# filename = 'data/cards/Js.jpg'
+img = read_card_img(filename)
+
+plt_imshow('img', img)
+grey = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+plt.plot(grey.min(axis=0))
 
 
 # %%
@@ -611,7 +612,7 @@ def findHull(img, corner=refCornerHL, debug="no", bottom_right=False):
     """
     
     kernel = np.ones((3,3),np.uint8)
-    corner=corner.astype(np.int)
+    corner=corner.astype(int)
 
     # We will focus on the zone of 'img' delimited by 'corner'
     w=int(corner[2][0])-int(corner[0][0])
@@ -1092,6 +1093,7 @@ def augment(img, list_kps, seq, restart=True):
     return img_aug, list_kps_aug, list_bbs
 
 
+# %%
 class BBA:  # Bounding box + annotations
     def __init__(self, bb, classname):
         self.x1 = int(round(bb.x1))
@@ -1272,7 +1274,6 @@ class Scene:
             print("New image saved in", jpg_fn)
 
         create_voc_xml(xml_fn, jpg_fn, self.listbba, display=display)
-
 
 
 # %%
