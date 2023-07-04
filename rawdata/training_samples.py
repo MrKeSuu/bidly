@@ -925,7 +925,6 @@ _obj_h
 RELATIVE_OBJ_HEIGHT_REAL_PHOTOS = 0.044
 ABSOLUTE_OJB_HEIGHT_GENERATED_CARDS = 68
 
-# %%
 imgH * RELATIVE_OBJ_HEIGHT_REAL_PHOTOS / ABSOLUTE_OJB_HEIGHT_GENERATED_CARDS
 
 # %%
@@ -1050,39 +1049,6 @@ cardKP = ia.KeypointsOnImage([
     ia.Keypoint(x=decalX, y=decalY+cardH)
 ], shape=(imgH,imgW,3))
 
-# %%
-# imgaug transformation for one card in scenario with 2 cards
-transform_1card = iaa.Sequential([
-    iaa.Affine(scale=AFFINE_SCALE),
-    iaa.Affine(rotate=(-180, 180)),
-    iaa.Affine(translate_percent={"x": (-0.25,0.25), "y": (-0.25,0.25)}),
-    iaa.PerspectiveTransform(),
-    iaa.Sharpen(alpha=(0.0, 0.4)),
-])
-
-# For the 3 cards scenario, we use 3 imgaug transforms, the first 2 are for individual cards, 
-# and the third one for the group of 3 cards
-trans_rot1 = iaa.Sequential([
-    iaa.Affine(translate_px={"x": (10, 20)}),
-    iaa.Affine(rotate=(22, 30))
-])
-trans_rot2 = iaa.Sequential([
-    iaa.Affine(translate_px={"x": (0, 5)}),
-    iaa.Affine(rotate=(10, 15))
-])
-transform_3cards = iaa.Sequential([
-    iaa.Affine(translate_px={"x": decalX-decalX3, "y": decalY-decalY3}),
-    iaa.Affine(scale=AFFINE_SCALE),
-    iaa.Affine(rotate=(-180, 180)),
-    iaa.Affine(translate_percent={"x": (-0.2,0.2),"y": (-0.2,0.2)}),
-    iaa.PerspectiveTransform(),
-    iaa.Sharpen(alpha=(0.0, 0.4)),
-])
-
-# imgaug transformation for the background
-scaleBg = iaa.Resize({"height": imgH, "width": imgW})
-
-
 def augment(img, list_kps, seq, restart=True):
     """
         Apply augmentation 'seq' to image 'img' and keypoints 'list_kps'.
@@ -1128,8 +1094,49 @@ def augment(img, list_kps, seq, restart=True):
                 
     return img_aug, list_kps_aug, list_bbs
 
+def preview_aug(img, aug):
+    img_aug = aug.augment_image(img)
+    display_img(img_aug)
+
 
 # %%
+# imgaug transformation for one card in scenario with 2 cards
+transform_1card = iaa.Sequential([
+    iaa.Affine(scale=AFFINE_SCALE),
+    iaa.Affine(rotate=(-180, 180)),
+    iaa.Affine(translate_percent={"x": (-0.25,0.25), "y": (-0.25,0.25)}),
+    iaa.PerspectiveTransform(),
+    iaa.Sharpen(alpha=(0.0, 0.4)),
+])
+
+# For the 3 cards scenario, we use 3 imgaug transforms, the first 2 are for individual cards, 
+# and the third one for the group of 3 cards
+trans_rot1 = iaa.Sequential([
+    iaa.Affine(translate_px={"x": (10, 20)}),
+    iaa.Affine(rotate=(22, 30))
+])
+trans_rot2 = iaa.Sequential([
+    iaa.Affine(translate_px={"x": (0, 5)}),
+    iaa.Affine(rotate=(10, 15))
+])
+transform_3cards = iaa.Sequential([
+    iaa.Affine(translate_px={"x": decalX-decalX3, "y": decalY-decalY3}),
+    iaa.Affine(scale=AFFINE_SCALE),
+    iaa.Affine(rotate=(-180, 180)),
+    iaa.Affine(translate_percent={"x": (-0.2,0.2),"y": (-0.2,0.2)}),
+    iaa.PerspectiveTransform(),
+    iaa.Sharpen(alpha=(0.0, 0.4)),
+])
+
+# imgaug transformation for the background
+scaleBg = iaa.Resize({"height": imgH, "width": imgW})
+aug_bg = iaa.Sequential([
+    iaa.AddToBrightness((-40, 40)),
+    iaa.OneOf([iaa.Sharpen(alpha=(0.0, 0.4)),
+               iaa.GaussianBlur(sigma=(0.0, 0.2))]),
+])
+
+
 class BBA:  # Bounding box + annotations
     def __init__(self, bb, classname):
         self.x1 = int(round(bb.x1))
@@ -1167,6 +1174,7 @@ class Scene:
     def create0CardsScene(self, bg):
         # need add random augs to bg to meet arbitrary amount requirements
         self.bg = scaleBg.augment_image(bg)
+        self.bg = aug_bg.augment_image(self.bg)
         self.final = self.bg
 
     def create2CardsScene(
@@ -1347,8 +1355,8 @@ newimg.display()
 #      width="930" style="margin-left: 50px"/>
 
 # %%
-bg=backgrounds.get_random()
-Scene(bg).display()
+_bg = backgrounds.get_random()
+Scene(_bg).display()
 
 # %% [markdown]
 # ### TODO* Add a (symmetric) shadow
@@ -1356,6 +1364,7 @@ Scene(bg).display()
 # 1. random black triangle
 # 2. blur
 # 3. overlay with proper alpha
+#   - `iaa.BlendAlpah`
 
 # %%
 img1.shape
