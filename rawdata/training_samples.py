@@ -1378,11 +1378,28 @@ img1.shape
 #
 
 # %%
+TEST_SIZE = 0.25
+
+print(
+    pow(10000, 2/3)  # 10000 labels per class but 3d -> 2d
+    * 52  # n_classes
+    / 2.5  # avg n_labels per scene
+    / 52
+    / (1-TEST_SIZE)
+)
+
+print(
+    1500  # images per class
+    * 52  # n_classes
+    / 2.5  # avg n_classes per scene
+    / 52
+    / (1-TEST_SIZE)
+)
+
+N_SCENES_PER_CARD = 800 // 2  # max of the two / 2
+
 train_dir = "data/train"
 test_dir = "data/test"
-
-N_SCENES_PER_CARD = 100
-TEST_SIZE = 0.25
 
 os.makedirs(train_dir, exist_ok=True)
 os.makedirs(test_dir, exist_ok=True)
@@ -1390,7 +1407,7 @@ os.makedirs(test_dir, exist_ok=True)
 def get_n_scenes_per_card(card_name):
     if card_name.startswith('A') or card_name.startswith('4'):
         # YL: similar so gen a bit more:
-        return N_SCENES_PER_CARD + 20
+        return round(N_SCENES_PER_CARD*1.2)
     return N_SCENES_PER_CARD
 
 
@@ -1409,27 +1426,26 @@ def gen_2_cards_scene(output_dir, main_card=None):
         img2, card_val2, hulla2, hullb2)
     newimg.write_files(output_dir)
 
-
 # %%
-## all random
-nb_cards_to_generate = 100
+# ## all random
+# nb_cards_to_generate = 100
 
-for i in tqdm(range(nb_cards_to_generate)):
-    gen_2_cards_scene(train_dir)
+# for i in tqdm(range(nb_cards_to_generate)):
+#     gen_2_cards_scene(train_dir)
 
 
 # %%
 ## YL: control # images for first card
 for card_name in Cards.CARD_NAMES:
-    print('Generating 2-card scenes for', card_name)
-
     n_scenes = get_n_scenes_per_card(card_name)
     n_scenes_te = int(n_scenes * TEST_SIZE)
     n_scenes_tr = n_scenes - n_scenes_te
 
+    print('Generating training 2-card scenes for', card_name)
     for __ in tqdm(range(n_scenes_tr)):
         gen_2_cards_scene(train_dir, main_card=card_name)
 
+    print('Generating testing 2-card scenes for', card_name)
     for __ in tqdm(range(n_scenes_te)):
         gen_2_cards_scene(test_dir, main_card=card_name)
 
@@ -1451,32 +1467,28 @@ def gen_3_cards_scene(output_dir, main_card=None):
         img3, card_val3, hulla3, hullb3)
     newimg.write_files(output_dir)
 
-
 # %%
-## all random
-nb_cards_to_generate = 100
+# ## all random
+# nb_cards_to_generate = 100
 
-for i in tqdm(range(nb_cards_to_generate)):
-    gen_3_cards_scene(train_dir)
+# for i in tqdm(range(nb_cards_to_generate)):
+#     gen_3_cards_scene(train_dir)
 
 
 # %%
 ## YL control # images for first card
 for card_name in Cards.CARD_NAMES:
-    print('Generating 3-card scenes for', card_name)
-
     n_scenes = get_n_scenes_per_card(card_name)
     n_scenes_te = int(n_scenes * TEST_SIZE)
     n_scenes_tr = n_scenes - n_scenes_te
 
+    print('Generating training 3-card scenes for', card_name)
     for __ in tqdm(range(n_scenes_tr)):
         gen_3_cards_scene(train_dir, main_card=card_name)
 
+    print('Generating testing 3-card scenes for', card_name)
     for __ in tqdm(range(n_scenes_te)):
         gen_3_cards_scene(test_dir, main_card=card_name)
-
-# %% [markdown]
-# ### TODO YL object counts in training data
 
 # %%
 
@@ -1488,3 +1500,6 @@ for card_name in Cards.CARD_NAMES:
 # %%
 # !python convert_voc_yolo.py data/train data/cards.names data/yolo_train_list.txt
 # !python convert_voc_yolo.py data/test data/cards.names data/yolo_test_list.txt
+
+# %% [markdown]
+# ### TODO YL object counts in training data
