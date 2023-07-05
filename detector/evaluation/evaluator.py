@@ -1,3 +1,4 @@
+import abc
 import dataclasses
 import json
 import typing
@@ -29,20 +30,50 @@ class YoloObject:
     confid: typing.Optional[float]
 
 
-def _transform_res_to_obj(info):
-    objs = []
-    for d in info:
-        objs.append(
-            YoloObject(
-                name=d['name'],
-                x=d['relative_coordinates']['center_x'],
-                y=d['relative_coordinates']['center_y'],
-                w=d['relative_coordinates']['width'],
-                h=d['relative_coordinates']['height'],
-                confid=d['confidence'],
+class ILabelReader(abc.ABC):
+    @abc.abstractmethod
+    def read(self, path) -> typing.List[YoloObject]:
+        pass
+
+
+class Yolo4Reader(ILabelReader):
+    @staticmethod
+    def _transform_to_objs(info):
+        objs = []
+        for d in info:
+            objs.append(
+                YoloObject(
+                    name=d['name'],
+                    x=d['relative_coordinates']['center_x'],
+                    y=d['relative_coordinates']['center_y'],
+                    w=d['relative_coordinates']['width'],
+                    h=d['relative_coordinates']['height'],
+                    confid=d['confidence'],
+                )
             )
-        )
-    return objs
+        return objs
+
+
+class GroudTruthReader(Yolo4Reader):
+    def read(self, path):
+        with open(path, 'r') as fi:
+            gt_info = json.load(fi)
+
+        objs = self._transform_to_objs(gt_info)
+        return objs
+
+
+class Yolo4PredReader(Yolo4Reader):
+    def read(self, path):
+        with open(path, 'r') as fi:
+            pred_info = json.load(fi)[0]['objects']
+
+        objs = self._transform_to_objs(pred_info)
+        return objs
+
+
+class Yolo5PredReader(ILabelReader):
+    pass
 
 
 def _calc_iou(obj1: YoloObject, obj2: YoloObject):  # tested with another impl.
@@ -68,16 +99,9 @@ class Evaluator:
     IOU_LEVELS = [0.75, 0.9]
     DIFFICULT_CLASSES = {'As', '4s', 'Ah', '4h', 'Ad', '4d', 'Ac', '4c'}
 
-    def __init__(self, gt_path, pred_path) -> None:
-        # load
-        with open(gt_path, 'r') as fi:
-            self.gt_info = json.load(fi)
-        with open(pred_path, 'r') as fi:
-            self.pred_info = json.load(fi)[0]['objects']
-
-        # transform
-        self.gt_objs = _transform_res_to_obj(self.gt_info)
-        self.pred_objs = _transform_res_to_obj(self.pred_info)
+    def __init__(self, gt_path, pred_path, pred_reader: ILabelReader) -> None:
+        self.gt_objs = GroudTruthReader().read(gt_path)
+        self.pred_objs = pred_reader.read(pred_path)
 
         self.pairs = list(self._paired_objs(self.gt_objs, self.pred_objs))
 
