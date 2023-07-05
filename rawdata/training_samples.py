@@ -877,7 +877,7 @@ def enhance_with_hulls():
 
 
 # %% [markdown]
-# ### Load the cards pickle file in 'cards'
+# # Load the cards pickle file in 'cards'
 # 'cards' is an instance of the class Cards
 # To get a random background image, call the method : cards.get_random() or cards.get_random(card_name) if you want a random card of a given value. Ex: cards.get_random('Ah')
 
@@ -907,7 +907,7 @@ _=cards.get_random(display=True)
 #_=cards.get_random("As",display=True)
 
 # %% [markdown]
-# #### Determine optimal scaling factor for generating scenes
+# ### Determine optimal scaling factor for generating scenes
 # obj heights in real photos (1200sq):
 # - 52, 55, 51, 54 -> 53 -> **0.044**
 
@@ -1397,6 +1397,7 @@ print(
 )
 
 N_SCENES_PER_CARD = 800 // 2  # max of the two / 2
+N_SCENES_WO_CARD = round(N_SCENES_PER_CARD * 52 * 0.05)  # negative examples
 
 train_dir = "data/train"
 test_dir = "data/test"
@@ -1434,7 +1435,7 @@ def gen_2_cards_scene(output_dir, main_card=None):
 #     gen_2_cards_scene(train_dir)
 
 
-# %%
+# %% tags=[]
 ## YL: control # images for first card
 for card_name in Cards.CARD_NAMES:
     n_scenes = get_n_scenes_per_card(card_name)
@@ -1475,7 +1476,7 @@ def gen_3_cards_scene(output_dir, main_card=None):
 #     gen_3_cards_scene(train_dir)
 
 
-# %%
+# %% tags=[]
 ## YL control # images for first card
 for card_name in Cards.CARD_NAMES:
     n_scenes = get_n_scenes_per_card(card_name)
@@ -1490,6 +1491,30 @@ for card_name in Cards.CARD_NAMES:
     for __ in tqdm(range(n_scenes_te)):
         gen_3_cards_scene(test_dir, main_card=card_name)
 
+
+# %% [markdown]
+# ### Generation of the 0 cards scenes (negative examples)
+# YL yolo5 does not require neg .txt files, so `convert_voc_yolo.py` was not ran for neg examples
+
+# %%
+def gen_0_cards_scene(output_dir):
+    bg = backgrounds.get_random()
+    newimg = Scene(bg)
+    newimg.write_files(output_dir)
+
+
+# %%
+n_scenes_te = int(N_SCENES_WO_CARD * TEST_SIZE)
+n_scenes_tr = N_SCENES_WO_CARD - n_scenes_te
+
+print('Generating training 0-card scenes')
+for __ in tqdm(range(n_scenes_tr)):
+    gen_0_cards_scene(train_dir)
+
+print('Generating testing 0-card scenes')
+for __ in tqdm(range(n_scenes_te)):
+    gen_0_cards_scene(test_dir)
+
 # %%
 
 # %% [markdown]
@@ -1497,9 +1522,99 @@ for card_name in Cards.CARD_NAMES:
 # YOLO cannot directly exploit the Pascal VOC annotations files. You need to convert the xml files in txt files accordingly to the syntax explained here: https://github.com/AlexeyAB/darknet#how-to-train-to-detect-your-custom-objects
 # The script 'convert_voc_yolo.py' makes this conversion and also generates the txt file that contains all the images of the dataset
 
-# %%
+# %% tags=[]
 # !python convert_voc_yolo.py data/train data/cards.names data/yolo_train_list.txt
 # !python convert_voc_yolo.py data/test data/cards.names data/yolo_test_list.txt
 
 # %% [markdown]
-# ### TODO YL object counts in training data
+# ### YL object counts in training data
+
+# %%
+train_dir, test_dir
+
+# %%
+# !cat data/train/000008156.txt
+
+# %%
+train_label_paths = glob(train_dir+'/*.txt')
+test_label_paths = glob(test_dir+'/*.txt')
+len(train_label_paths + test_label_paths)
+
+# %%
+with open(data_dir+'/cards.names', "r") as f:
+    card_names = [l.strip() for l in f.readlines() if l]
+len(card_names)
+
+# %%
+tr_lbl_concat = pd.concat(
+    [
+        pd.read_csv(path, sep=' ', header=None).assign(path=path)
+        for path in train_label_paths
+    ],
+    ignore_index=True,
+)
+tr_lbl_concat.shape
+
+# %%
+tr_lbl_concat.path.nunique()
+
+# %%
+te_lbl_concat = pd.concat(
+    [
+        pd.read_csv(path, sep=' ', header=None).assign(path=path)
+        for path in test_label_paths
+    ],
+    ignore_index=True,
+)
+te_lbl_concat.shape
+
+# %%
+(
+    tr_lbl_concat
+        .assign(name=lambda df: df[0].map(card_names.__getitem__))
+        .name.value_counts().reindex(card_names)
+        .plot(kind='barh', figsize=(5, 10), title="Labels per Class")
+)
+# ~2400 labels per class
+
+# %%
+(
+    tr_lbl_concat
+        .assign(name=lambda df: df[0].map(card_names.__getitem__))
+        .groupby('name').path.nunique()
+        .reindex(card_names)
+        .plot(kind='barh', figsize=(5, 10), title='Images per Class')
+)
+# ~1500 images per class
+
+# %%
+
+# %%
+(
+    te_lbl_concat
+        .assign(name=lambda df: df[0].map(card_names.__getitem__))
+        .name.value_counts().reindex(card_names)
+        .plot(kind='barh', figsize=(3, 8))
+)
+
+# %%
+(
+    te_lbl_concat
+        .assign(name=lambda df: df[0].map(card_names.__getitem__))
+        .groupby('name').path.nunique()
+        .reindex(card_names)
+        .plot(kind='barh', figsize=(3, 8))
+)
+
+# %%
+
+# %% [markdown]
+# ### card names in yaml format
+
+# %%
+print(
+    '\n'.join(
+        f"  {i}: {name}"
+        for i, name in enumerate(card_names)
+    )
+)
