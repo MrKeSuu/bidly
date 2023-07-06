@@ -138,7 +138,7 @@ class Evaluator:
 
         return results
 
-    def report_clf_metrics(self, thresh=0.5, min_iou=DEFAULT_MIN_IOU):
+    def report_clf_metrics(self, min_iou=DEFAULT_MIN_IOU, thresh=0.5):
         pairs = list(self.paired_objs(min_iou))
         gt_proba_info = self._convert_to_gt_proba_info(pairs)
         return metrics.classification_metrics(gt_proba_info, self.gt_objs, thresh)
