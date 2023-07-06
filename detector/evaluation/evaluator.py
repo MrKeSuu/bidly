@@ -6,6 +6,7 @@ import typing
 import cv2
 import matplotlib
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from . import metrics
 from . import util
@@ -27,7 +28,7 @@ class YoloObject:
     y: float
     w: float
     h: float
-    confid: typing.Optional[float]
+    confid: typing.Optional[float] = None
 
 
 class ILabelReader(abc.ABC):
@@ -73,7 +74,32 @@ class Yolo4PredReader(Yolo4Reader):
 
 
 class Yolo5PredReader(ILabelReader):
-    pass
+    def read(self, path):
+        pred_info = pd.read_csv(path, sep=' ', header=None)
+        pred_info.columns = [
+            'cls_id', 'center_x', 'center_y', 'width', 'height', 'confid'
+        ]
+
+        with open('yolo-cfg/obj.names', 'r') as f:  # TODO use constant for abs paths
+            card_names = [l.strip() for l in f.readlines() if l]
+        objs = (
+            pred_info
+                .assign(card_name=pred_info.cls_id.map(card_names.__getitem__))
+                .assign(yolo_obj=lambda df: df.apply(self._make_yolo_obj, axis=1))
+                .yolo_obj.tolist()
+        )
+        return objs
+
+    @staticmethod
+    def _make_yolo_obj(row: pd.Series):
+        return YoloObject(
+            name=row.card_name,
+            x=row.center_x,
+            y=row.center_y,
+            w=row.width,
+            h=row.height,
+            confid=row.confid,
+        )
 
 
 def _calc_iou(obj1: YoloObject, obj2: YoloObject):  # tested with another impl.
