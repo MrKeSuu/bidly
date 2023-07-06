@@ -12,7 +12,7 @@ from . import metrics
 from . import util
 
 
-DEFAULT_MIN_IOU = 0.75
+DEFAULT_MIN_IOU = 0.7
 TEXT_Y_OFFEST = 50 / 1200  # 50 was based on img with H1200
 GROUND_TRUTH_EC = (0.5, 1, 0.5)
 GROUND_TRUTH_FC = (0.8, 1, 0.8)
@@ -122,65 +122,61 @@ def _calc_iou(obj1: YoloObject, obj2: YoloObject):  # tested with another impl.
 
 
 class Evaluator:
-    IOU_LEVELS = [0.75, 0.9]
+    IOU_LEVELS = [DEFAULT_MIN_IOU, 0.9]
     DIFFICULT_CLASSES = {'As', '4s', 'Ah', '4h', 'Ad', '4d', 'Ac', '4c'}
 
     def __init__(self, gt_path, pred_path, pred_reader: ILabelReader) -> None:
         self.gt_objs = GroudTruthReader().read(gt_path)
         self.pred_objs = pred_reader.read(pred_path)
 
-        self.pairs = list(self._paired_objs(self.gt_objs, self.pred_objs))
-
     def report_precision_metrics(self):
         results = {}
         for iou in self.IOU_LEVELS:
             iou_ = int(iou*100)
             results[f'mAP{iou_}'] = self.report_mean_ap(iou)
-            results[f'modified_mAP{iou_}'] = self.report_mean_ap(iou, self.DIFFICULT_CLASSES)
+            results[f'subset_mAP{iou_}'] = self.report_mean_ap(iou, self.DIFFICULT_CLASSES)
 
         return results
 
     def report_clf_metrics(self, thresh=0.5, min_iou=DEFAULT_MIN_IOU):
-        gt_proba_info = self._convert_to_gt_proba_info(self.pairs, min_iou)
+        pairs = list(self.paired_objs(min_iou))
+        gt_proba_info = self._convert_to_gt_proba_info(pairs)
         return metrics.classification_metrics(gt_proba_info, self.gt_objs, thresh)
 
     def report_mean_ap(self, min_iou=DEFAULT_MIN_IOU, classes=None):
-        gt_proba_info = self._convert_to_gt_proba_info(self.pairs, min_iou)
+        pairs = list(self.paired_objs(min_iou))
+        gt_proba_info = self._convert_to_gt_proba_info(pairs)
         return metrics.mean_average_precision(gt_proba_info, classes)
 
-    def _paired_objs(self, gt_objs, pred_objs):
+    def paired_objs(self, min_iou=DEFAULT_MIN_IOU):
         """Pair GT with Pred based on IOU."""
         paired_gts, paired_preds = set(), set()
-        for gt in gt_objs:
-            for pred in pred_objs:
+        for gt in self.gt_objs:
+            for pred in self.pred_objs:
                 if gt.name == pred.name:
                     iou = _calc_iou(gt, pred)
-                    if iou > 0:
+                    if iou > min_iou:
                         paired_gts.add(gt)
                         paired_preds.add(pred)
                         yield (gt, pred, iou)
 
-        for gt in gt_objs:
+        for gt in self.gt_objs:
             if gt not in paired_gts:
                 yield (gt, None, None)
 
-        for pred in pred_objs:
+        for pred in self.pred_objs:
             if pred not in paired_preds:
                 yield (None, pred, None)
 
-    def _convert_to_gt_proba_info(self, pairs, min_iou=DEFAULT_MIN_IOU):
+    def _convert_to_gt_proba_info(self, pairs):
         gt_n_probas = []
-        for gt_obj, pred_obj, iou in pairs:
+        for gt_obj, pred_obj, __ in pairs:
             if gt_obj is None:
-                # non overlapping FP potentially
+                # FP potentially
                 y_true, y_pred, name = 0, pred_obj.confid, pred_obj.name
             elif pred_obj is None:
                 # FN
                 y_true, y_pred, name = 1, 0, gt_obj.name
-
-            elif iou < min_iou:
-                # overlapping FP potentially
-                y_true, y_pred, name = 0, pred_obj.confid, gt_obj.name
             else:  # iou >= min_iou
                 y_true, y_pred, name = 1, pred_obj.confid, gt_obj.name
 
@@ -199,8 +195,8 @@ def plot_misclf(pairs, img_filepath, classes=None):
     img = _load_img(img_filepath)
 
     __, ax = plt.subplots(figsize=(12, 12))
-    for gt, pred, iou in pairs:
-        if not _is_misclf(gt, pred, iou):
+    for gt, pred, __ in pairs:
+        if not _is_misclf(gt, pred):
             continue
         if _not_in_classes(gt, pred, classes):
             continue
@@ -225,11 +221,9 @@ def _load_img(path):
     return converted_image
 
 
-def _is_misclf(gt, pred, iou, min_iou=DEFAULT_MIN_IOU, thresh=0.5):
+def _is_misclf(gt, pred, thresh=0.5):
     # Note: similar logics in `_convert_to_gt_proba_info` and `metrics.classification_metrics`
     if gt is None or pred is None:
-        return True
-    if iou < min_iou:
         return True
     if pred.confid < thresh:
         return True
