@@ -225,7 +225,7 @@ def _load_img(path):
     return converted_image
 
 
-def _is_misclf(gt, pred, iou, min_iou=0.5, thresh=0.5):
+def _is_misclf(gt, pred, iou, min_iou=DEFAULT_MIN_IOU, thresh=0.5):
     # Note: similar logics in `_convert_to_gt_proba_info` and `metrics.classification_metrics`
     if gt is None or pred is None:
         return True
