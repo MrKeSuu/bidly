@@ -191,12 +191,12 @@ def plot_paired_boxes(obj1: YoloObject, obj2: YoloObject, ax=None):
     return
 
 
-def plot_misclf(pairs, img_filepath, classes=None):
+def plot_misclf(pairs, img_filepath, thresh=0.5, classes=None):
     img = _load_img(img_filepath)
 
     __, ax = plt.subplots(figsize=(12, 12))
     for gt, pred, __ in pairs:
-        if not _is_misclf(gt, pred):
+        if not _is_misclf(gt, pred, thresh):
             continue
         if _not_in_classes(gt, pred, classes):
             continue
