@@ -15,7 +15,7 @@
   {"class_id":37, "name":"3c", "relative_coordinates":{"center_x":0.277496, "center_y":0.255683, "width":0.034679, "height":0.048645}, "confidence":0.997824}, 
   {"class_id":36, "name":"4c", "relative_coordinates":{"center_x":0.036366, "center_y":0.523869, "width":0.034098, "height":0.046391}, "confidence":0.998676}, 
   {"class_id":35, "name":"5c", "relative_coordinates":{"center_x":0.385683, "center_y":0.661541, "width":0.019368, "height":0.052572}, "confidence":0.997306}, 
-  {"class_id":35, "name":"10s", "relative_coordinates":{"center_x":0.364989, "center_y":0.674673, "width":0.022020, "height":0.056319}, "confidence":0.715054}, 
+  {"class_id":43, "name":"10s", "relative_coordinates":{"center_x":0.364989, "center_y":0.674673, "width":0.022020, "height":0.056319}, "confidence":0.715054}, 
   {"class_id":34, "name":"6c", "relative_coordinates":{"center_x":0.844781, "center_y":0.486107, "width":0.034905, "height":0.047564}, "confidence":0.987368}, 
   {"class_id":33, "name":"7c", "relative_coordinates":{"center_x":0.320735, "center_y":0.184015, "width":0.029789, "height":0.051783}, "confidence":0.978953}, 
   {"class_id":32, "name":"8c", "relative_coordinates":{"center_x":0.440081, "center_y":0.655008, "width":0.022215, "height":0.050608}, "confidence":0.997721}, 
@@ -53,5 +53,5 @@
   {"class_id":2, "name":"Qh", "relative_coordinates":{"center_x":0.605457, "center_y":0.663326, "width":0.038730, "height":0.044607}, "confidence":0.987314}, 
   {"class_id":1, "name":"Kh", "relative_coordinates":{"center_x":0.445444, "center_y":0.153368, "width":0.020882, "height":0.056284}, "confidence":0.452266}, 
   {"class_id":0, "name":"Ah", "relative_coordinates":{"center_x":0.121021, "center_y":0.436793, "width":0.021797, "height":0.051764}, "confidence":0.965646},
-  {"class_id":0, "name":"Ac", "relative_coordinates":{"center_x":0.098021, "center_y":0.464793, "width":0.023997, "height":0.049064}, "confidence":0.965646}
+  {"class_id":26, "name":"Ac", "relative_coordinates":{"center_x":0.098021, "center_y":0.464793, "width":0.023997, "height":0.049064}, "confidence":0.965646}
 ]
