@@ -221,12 +221,17 @@ def _load_img(path):
     return converted_image
 
 
-def _is_misclf(gt, pred, thresh=0.5):
+def _is_misclf(gt: YoloObject, pred: YoloObject, thresh=0.5):
     # Note: similar logics in `_convert_to_gt_proba_info` and `metrics.classification_metrics`
-    if gt is None or pred is None:
-        return True
-    if pred.confid < thresh:
-        return True
+    if gt is None and pred.confid >= thresh:
+        return True  # FP
+    if pred is None:
+        return True  # FN
+
+    if gt is not None and pred.confid < thresh:
+        return True  # FN
+
+    return False
 
 def _not_in_classes(gt, pred, classes):
     gt_class = None if gt is None else gt.name
