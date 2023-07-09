@@ -48,7 +48,7 @@ class TestConverter:
     @pytest.fixture
     def deal_converter(self, core_finder: strategy.ICoreFinder, linkage: strategy.ILinkage):
         deal_converter = converter.DealConverter(core_finder, linkage)
-        deal_converter.read_yolo(self.DEAL1_YOLO_FILEPATH)
+        deal_converter.read_yolo4(self.DEAL1_YOLO_FILEPATH)
         return deal_converter
 
     @pytest.fixture
@@ -96,7 +96,7 @@ class TestConverter:
             "FP cards: ['5c']\n")
 
     def test_assign(self, deal_converter: converter.DealConverter):
-        deal_converter.read_yolo(self.MANUAL_EDIT_YOLO_FILEPATH)
+        deal_converter.read_yolo4(self.MANUAL_EDIT_YOLO_FILEPATH)
         deal_converter.dedup(smart=True)
         deal_converter.assign()
 
@@ -187,7 +187,7 @@ class TestConverter:
         assert formatted_suit == ""
 
     def test_build_pbn_deal(self, deal_converter: converter.DealConverter):
-        deal_converter.read_yolo(self.MANUAL_EDIT_YOLO_FILEPATH)
+        deal_converter.read_yolo4(self.MANUAL_EDIT_YOLO_FILEPATH)
         deal_converter.dedup(smart=True)
         deal_converter.assign()
 
@@ -198,7 +198,7 @@ class TestConverter:
         assert formatted_deal == expected
 
     def test_write_pbn(self, deal_converter: converter.DealConverter, pbn_hand: bytes):
-        deal_converter.read_yolo(self.MANUAL_EDIT_YOLO_FILEPATH)
+        deal_converter.read_yolo4(self.MANUAL_EDIT_YOLO_FILEPATH)
         deal_converter.dedup(smart=True)
         deal_converter.assign()
 

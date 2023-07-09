@@ -46,7 +46,7 @@ YOLO_JSON_FILEPATH_3I = pathlib.Path('fixtures/deal3-manual-edit.json')
 dbscan = strategy.CoreFinderDbscan()
 single_linkage = strategy.SingleLinkage()
 dconv = converter.DealConverter(dbscan, single_linkage)
-dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
+dconv.read_yolo4(YOLO_JSON_FILEPATH_1M)
 
 # %%
 dconv.card.name.unique()
@@ -59,7 +59,7 @@ dconv.report_missing_and_fp()
 # ## Dedup EDA & sketches
 
 # %%
-dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
+dconv.read_yolo4(YOLO_JSON_FILEPATH_1M)
 res = dconv.card
 res.shape
 
@@ -175,7 +175,7 @@ def locate_detected_classes(res, min_conf=0.7):
 
 
 # %%
-dconv.read_yolo(YOLO_JSON_FILEPATH_3I)
+dconv.read_yolo4(YOLO_JSON_FILEPATH_3I)
 res = dconv.card
 res.shape
 
@@ -187,8 +187,8 @@ locate_detected_classes(res)
 # #### before/after smart dedup
 
 # %%
-# dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
-dconv.read_yolo(YOLO_JSON_FILEPATH_2M)
+# dconv.read_yolo4(YOLO_JSON_FILEPATH_1M)
+dconv.read_yolo4(YOLO_JSON_FILEPATH_2M)
 res = dconv.card
 res.shape
 
@@ -250,8 +250,8 @@ res_.pipe(locate_detected_classes, min_conf=0)
 dbscan = strategy.CoreFinderDbscan()
 single_linkage = strategy.SingleLinkage()
 dconv = converter.DealConverter(dbscan, single_linkage)
-# dconv.read_yolo(YOLO_JSON_FILEPATH_3I)
-dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
+# dconv.read_yolo4(YOLO_JSON_FILEPATH_3I)
+dconv.read_yolo4(YOLO_JSON_FILEPATH_1M)
 dconv.dedup(smart=True)
 res = dconv.card_
 res.pipe(locate_detected_classes)
@@ -348,8 +348,8 @@ dconv._find_closest_obj(remaining)
 dbscan = strategy.CoreFinderDbscan()
 single_linkage = strategy.SingleLinkage()
 dconv = converter.DealConverter(dbscan, single_linkage)
-dconv.read_yolo(YOLO_JSON_FILEPATH_3I)
-# dconv.read_yolo(YOLO_JSON_FILEPATH_1M)
+dconv.read_yolo4(YOLO_JSON_FILEPATH_3I)
+# dconv.read_yolo4(YOLO_JSON_FILEPATH_1M)
 dconv.dedup(smart=True)
 dconv.card_.pipe(locate_detected_classes, min_conf=0)
 

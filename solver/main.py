@@ -10,7 +10,7 @@ def main():
     args = parser.parse_args()
 
     deal_converter = converter.get_deal_converter()
-    deal_converter.read_yolo(args.yolo_path)
+    deal_converter.read_yolo4(args.yolo_path)
     deal_converter.dedup(smart=True)
     deal_converter.assign()
     pbn_hand = deal_converter.format_pbn()

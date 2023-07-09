@@ -63,7 +63,7 @@ class DealConverter:
 
         self.card_ = None
 
-    def read_yolo(self, path):
+    def read_yolo4(self, path):
         log.info("Reading from yolo file: %s", path)
         with open(path, 'r') as f:
             yolo_json = json.load(f)
@@ -74,6 +74,9 @@ class DealConverter:
                                  "relative_coordinates.width": "width",
                                  "relative_coordinates.height" :"height"})
         )
+
+    def read_yolo5(self, path):
+        pass  # TODO
 
     def report_missing_and_fp(self):
         # report missing
@@ -132,7 +135,7 @@ class DealConverter:
     def _dedup_smart(self):
         """Dedup in a smart way.
 
-        steps:  # YL: got a feeling this is to complex
+        steps:  # YL: got a feeling this is too complex
         1. find out dup pairs whose dist between a range: not too far nor too close
         2. remove dup objs by keeping one with highest conf; could lead to removal of valid objs
         3. append back good dups found in 1. and leave them for assign to decide
