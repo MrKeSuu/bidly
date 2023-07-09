@@ -825,7 +825,7 @@ def apply_random_lighting():
 
 
 # %% [markdown]
-# *YL: the following won't work as the modified `findHull` uses a const: MIN_BRIGHTNESS; instead, use orig imgs to assign static hull value to each card*
+# *YL: the following didn't work (after `random_lighting`) as the modified `findHull` uses a const: MIN_BRIGHTNESS; instead, use orig imgs to assign static hull value to each card*
 #
 # ### Load all card image, calculate their convex hulls and save the whole in a pickle file (1x)
 #
@@ -900,9 +900,10 @@ class Cards():
     
 cards = Cards()
 
-# %%
-# Test: display a random card
-_=cards.get_random(display=True)
+# %% tags=[] jupyter={"outputs_hidden": true}
+# Test: display a random card for each class
+for name in Cards.CARD_NAMES:
+    cards.get_random(card_name=name, display=True)
 # Display a random Ace of spades
 #_=cards.get_random("As",display=True)
 
