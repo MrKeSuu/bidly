@@ -206,7 +206,8 @@ def plot_misclf(pairs, img_filepath, thresh=0.5, classes=None):
             ax = _plot_label(gt, 'top', img_shape=img.shape, ax=ax, ec=GROUND_TRUTH_EC, fc=GROUND_TRUTH_FC)
         if pred is not None:
             ax = _plot_bbox(pred, img_shape=img.shape, ax=ax, ec='r')
-            ax = _plot_label(pred, 'bottom', img_shape=img.shape, ax=ax, ec=PREDICTION_EC, fc=PREDICTION_FC)
+            pred_fc = PREDICTION_FC if pred.confid >= thresh else (.5, .5, .5)  # FN ref, rather than FP
+            ax = _plot_label(pred, 'bottom', img_shape=img.shape, ax=ax, ec=PREDICTION_EC, fc=pred_fc)
 
     ax.imshow(img)
 
