@@ -186,8 +186,8 @@ class Evaluator:
 
 def plot_paired_boxes(obj1: YoloObject, obj2: YoloObject, ax=None):
     print(obj1, obj2, _calc_iou(obj1, obj2), sep='\n')
-    ax = _plot_bbox(obj1, ec='b', ax=ax)
-    ax = _plot_bbox(obj2, ec='r', ax=ax)
+    ax = _plot_bbox(obj1, (1, 1), ec='b', ax=ax)
+    ax = _plot_bbox(obj2, (1, 1), ec='r', ax=ax)
     return
 
 
