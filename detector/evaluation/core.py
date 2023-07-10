@@ -129,6 +129,18 @@ class Evaluator:
         self.gt_objs = GroudTruthReader().read(gt_path)
         self.pred_objs = pred_reader.read(pred_path)
 
+    def report_main_metrics(self):
+        mean_ap = self.report_mean_ap(DEFAULT_MIN_IOU)
+        subset_mean_ap = self.report_mean_ap(DEFAULT_MIN_IOU, self.DIFFICULT_CLASSES)
+
+        clf_metrics = self.report_clf_metrics(DEFAULT_MIN_IOU, thresh=0.5)
+        fn_count = pd.DataFrame(clf_metrics).fn_upper.fillna(0).astype(int).sum()
+
+        return {f'mAP{int(DEFAULT_MIN_IOU*100)}': mean_ap,
+                f'subset_mAP{int(DEFAULT_MIN_IOU*100)}': subset_mean_ap,
+                'fn': fn_count,
+                }
+
     def report_precision_metrics(self):
         results = {}
         for iou in self.IOU_LEVELS:
