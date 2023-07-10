@@ -181,10 +181,9 @@ backgrounds_pck_fn=data_dir+"/backgrounds-{}.pck"
 cards_pck_fn=data_dir+"/cards-{}.pck"
 
 
-# imgW,imgH: dimensions of the generated dataset images 
-# YL: can this be higher, given we have a better desktop?
-imgW=1200
-imgH=1200
+# imgW,imgH: dimensions of the generated dataset images
+imgW=1184
+imgH=1184
 
 
 refCard=np.array([[0,0],[cardW,0],[cardW,cardH],[0,cardH]],dtype=np.float32)
@@ -852,7 +851,7 @@ def enhance_with_hulls():
                 print(f"!!! {card_dir} does not exist !!!")
                 continue
 
-            # Find hull using orig imgs
+            # YL Find hull using orig imgs
             orig_img = cv2.imread(get_orig_filepath(card_dir), cv2.IMREAD_UNCHANGED)
             hullHL=findHull(orig_img,refCornerHL,debug="no")
             hullLR=findHull(orig_img,refCornerLR,debug="no",bottom_right=True)
@@ -929,7 +928,7 @@ ABSOLUTE_OJB_HEIGHT_GENERATED_CARDS = 68
 imgH * RELATIVE_OBJ_HEIGHT_REAL_PHOTOS / ABSOLUTE_OJB_HEIGHT_GENERATED_CARDS
 
 # %%
-AFFINE_SCALE = [0.75, 0.8]  # for 1200
+AFFINE_SCALE = [0.7, 0.8]
 
 # %% [markdown]
 # # Generating a scene
@@ -1026,7 +1025,7 @@ def kps_to_BB(kps):
     """
         Determine imgaug bounding box from imgaug keypoints
     """
-    extend = 3 # To make the bounding box a little bit bigger
+    extend = 1 # To make the bounding box a little bit bigger  (YL reduced from 3, following rec from yolo5 doc)
     kpsx = [kp.x for kp in kps.keypoints]
     minx = max(0, int(min(kpsx)-extend))
     maxx = min(imgW, int(max(kpsx)+extend))
@@ -1106,7 +1105,8 @@ sharpen_sometimes = iaa.Sometimes(0.75, iaa.Sharpen(alpha=(0.3, 0.4)))
 # imgaug transformation for one card in scenario with 2 cards
 transform_1card = iaa.Sequential([
     scale_sometimes,
-    iaa.Affine(rotate=(-180, 180)),
+    # iaa.Affine(rotate=(-180, 180)),
+    iaa.Affine(rotate=(-45, 45)),  # YL yolo5 Round 2, focus on fanned-out cards
     iaa.Affine(translate_percent={"x": (-0.25,0.25), "y": (-0.25,0.25)}),
     iaa.PerspectiveTransform(),
     sharpen_sometimes,
@@ -1125,7 +1125,8 @@ trans_rot2 = iaa.Sequential([
 transform_3cards = iaa.Sequential([
     iaa.Affine(translate_px={"x": decalX-decalX3, "y": decalY-decalY3}),
     scale_sometimes,
-    iaa.Affine(rotate=(-180, 180)),
+    # iaa.Affine(rotate=(-180, 180)),
+    iaa.Affine(rotate=(-45, 45)),  # YL yolo5 Round 2, focus on more upright cards
     iaa.Affine(translate_percent={"x": (-0.2,0.2),"y": (-0.2,0.2)}),
     iaa.PerspectiveTransform(),
     sharpen_sometimes,
@@ -1323,7 +1324,7 @@ class Scene:
         return self.final
 
     def write_files(self, save_dir, display=False):
-        jpg_fn, xml_fn = get_filename(save_dir, ["jpg", "xml"])
+        jpg_fn, xml_fn = get_filename(save_dir, ["jpg", "xml"], prefix='r2_')
 
         plt.imsave(jpg_fn, self.final)
         if display:
@@ -1360,17 +1361,6 @@ newimg.display()
 # %%
 _bg = backgrounds.get_random()
 Scene(_bg).display()
-
-# %% [markdown]
-# ### TODO* Add a (symmetric) shadow
-#
-# 1. random black triangle
-# 2. blur
-# 3. overlay with proper alpha
-#   - `iaa.BlendAlpah`
-
-# %%
-img1.shape
 
 # %% [markdown]
 # ## Generate the datasets
@@ -1577,6 +1567,7 @@ te_lbl_concat.shape
         .plot(kind='barh', figsize=(5, 10), title="Labels per Class")
 )
 # ~2400 labels per class
+# r2: ~4800
 
 # %%
 (
@@ -1587,6 +1578,7 @@ te_lbl_concat.shape
         .plot(kind='barh', figsize=(5, 10), title='Images per Class')
 )
 # ~1500 images per class
+# r2: ~3000
 
 # %%
 
