@@ -42,7 +42,7 @@ class ILabelReader(abc.ABC):
         pass
 
 
-class Yolo4Reader(ILabelReader):
+class BaseYolo4Reader(ILabelReader):
     @staticmethod
     def _transform_to_objs(info):
         objs = []
@@ -60,7 +60,7 @@ class Yolo4Reader(ILabelReader):
         return objs
 
 
-class GroudTruthReader(Yolo4Reader):
+class GroudTruthReader(BaseYolo4Reader):
     def read(self, src):
         with open(src, 'r') as fi:
             gt_info = json.load(fi)
@@ -69,7 +69,7 @@ class GroudTruthReader(Yolo4Reader):
         return objs
 
 
-class Yolo4PredReader(Yolo4Reader):
+class Yolo4PredReader(BaseYolo4Reader):
     def read(self, src):
         with open(src, 'r') as fi:
             pred_info = json.load(fi)[0]['objects']
@@ -223,11 +223,33 @@ class Evaluator:
         return gt_n_probas
 
 
+def report_baseline():
+    """Report baseline metrics evaluated against the gold test set (from YOLO4)."""
+    gold_lbl_paths = _list_gold_label_paths()
+
+    pred_dirpath = GOLD_DEALS_PATH/'yolo4-preds'
+    pred_paths = sorted(list(pred_dirpath.glob('rawpred*-net1600.json')))
+
+    mets = []
+    y4_reader = Yolo4PredReader()
+    for i, path in enumerate(pred_paths):
+        evl = Evaluator(
+            gold_lbl_paths[i],
+            path,
+            pred_reader=y4_reader
+        )
+        met = evl.report_main_metrics()
+        met['label_path'] = gold_lbl_paths[i].name
+        mets.append(met)
+
+    return mets
+
+
 def report_gold_test(weight_path):
     """Report metrics evaluated against the gold test set for YOLO5."""
     # list gold tests
-    gold_img_paths = sorted(list(GOLD_DEALS_PATH.glob('deal*-md-sq.jpg')))
-    gold_lbl_paths = sorted(list(GOLD_DEALS_PATH.glob('deal*-labels.json')))
+    gold_img_paths = _list_gold_image_paths()
+    gold_lbl_paths = _list_gold_label_paths()
     print(*gold_img_paths, sep='\n')
     print(*gold_lbl_paths, sep='\n')
 
@@ -239,13 +261,14 @@ def report_gold_test(weight_path):
     mets = []
     y5_pd_reader = Yolo5PredPandasReader()
     for i, result in enumerate(results):
+        gold_lbl_path = gold_lbl_paths[i]
         evl = Evaluator(
-            gold_lbl_paths[i],
+            gold_lbl_path,
             result,
             pred_reader=y5_pd_reader
         )
         met = evl.report_main_metrics()
-        met['img_path'] = gold_img_paths[i].name
+        met['label_path'] = gold_lbl_path.name
         mets.append(met)
 
     # report overall
@@ -278,6 +301,14 @@ def plot_misclf(pairs, img_filepath, thresh=0.5, classes=None):
             ax = _plot_label(pred, 'bottom', img_shape=img.shape, ax=ax, ec=PREDICTION_EC, fc=pred_fc)
 
     ax.imshow(img)
+
+
+def _list_gold_label_paths():
+    return sorted(list(GOLD_DEALS_PATH.glob('deal*-labels.json')))
+
+
+def _list_gold_image_paths():
+    return sorted(list(GOLD_DEALS_PATH.glob('deal*-md-sq.jpg')))
 
 
 def _load_img(path):
