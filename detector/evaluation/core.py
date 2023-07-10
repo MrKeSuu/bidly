@@ -33,7 +33,7 @@ class YoloObject:
 
 class ILabelReader(abc.ABC):
     @abc.abstractmethod
-    def read(self, path) -> typing.List[YoloObject]:
+    def read(self, src) -> typing.List[YoloObject]:
         pass
 
 
@@ -56,8 +56,8 @@ class Yolo4Reader(ILabelReader):
 
 
 class GroudTruthReader(Yolo4Reader):
-    def read(self, path):
-        with open(path, 'r') as fi:
+    def read(self, src):
+        with open(src, 'r') as fi:
             gt_info = json.load(fi)
 
         objs = self._transform_to_objs(gt_info)
@@ -65,8 +65,8 @@ class GroudTruthReader(Yolo4Reader):
 
 
 class Yolo4PredReader(Yolo4Reader):
-    def read(self, path):
-        with open(path, 'r') as fi:
+    def read(self, src):
+        with open(src, 'r') as fi:
             pred_info = json.load(fi)[0]['objects']
 
         objs = self._transform_to_objs(pred_info)
@@ -74,8 +74,8 @@ class Yolo4PredReader(Yolo4Reader):
 
 
 class Yolo5PredReader(ILabelReader):
-    def read(self, path):
-        pred_info = pd.read_csv(path, sep=' ', header=None)
+    def read(self, src):
+        pred_info = pd.read_csv(src, sep=' ', header=None)
         pred_info.columns = [
             'cls_id', 'center_x', 'center_y', 'width', 'height', 'confid'
         ]
@@ -102,6 +102,28 @@ class Yolo5PredReader(ILabelReader):
         )
 
 
+class Yolo5PredPandasReader(ILabelReader):
+    def read(self, src: pd.DataFrame):
+        pred_info = src
+        objs = (
+            pred_info
+                .assign(yolo_obj=lambda df: df.apply(self._make_yolo_obj, axis=1))
+                .yolo_obj.tolist()
+        )
+        return objs
+
+    @staticmethod
+    def _make_yolo_obj(row: pd.Series):
+        return YoloObject(
+            name=row['name'],
+            x=row.xcenter,
+            y=row.ycenter,
+            w=row.width,
+            h=row.height,
+            confid=row.confidence,
+        )
+
+
 def _calc_iou(obj1: YoloObject, obj2: YoloObject):  # tested with another impl.
     # intersection first (correctness for 6 cases verified)
     min_w, max_w = 0, min(obj1.w, obj2.w)
@@ -125,9 +147,9 @@ class Evaluator:
     IOU_LEVELS = [DEFAULT_MIN_IOU, 0.9]
     DIFFICULT_CLASSES = {'As', '4s', 'Ah', '4h', 'Ad', '4d', 'Ac', '4c'}
 
-    def __init__(self, gt_path, pred_path, pred_reader: ILabelReader) -> None:
+    def __init__(self, gt_path, pred_src, pred_reader: ILabelReader) -> None:
         self.gt_objs = GroudTruthReader().read(gt_path)
-        self.pred_objs = pred_reader.read(pred_path)
+        self.pred_objs = pred_reader.read(pred_src)
 
     def report_main_metrics(self):
         mean_ap = self.report_mean_ap(DEFAULT_MIN_IOU)
