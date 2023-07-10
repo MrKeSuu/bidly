@@ -1,16 +1,21 @@
 import abc
 import dataclasses
 import json
+import pathlib
 import typing
 
 import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
+import torch
 
 from . import metrics
 from . import util
 
+
+FILE_PATH = pathlib.Path(__file__)
+GOLD_DEALS_PATH = FILE_PATH.parent/'test-deals'
 
 DEFAULT_MIN_IOU = 0.7
 TEXT_Y_OFFEST = 50 / 1200  # 50 was based on img with H1200
@@ -80,7 +85,7 @@ class Yolo5PredReader(ILabelReader):
             'cls_id', 'center_x', 'center_y', 'width', 'height', 'confid'
         ]
 
-        with open('yolo-cfg/obj.names', 'r') as f:  # TODO use constant for abs paths
+        with open(FILE_PATH.parent.parent/'yolo-cfg'/'obj.names', 'r') as f:
             card_names = [l.strip() for l in f.readlines() if l]
         objs = (
             pred_info
@@ -216,6 +221,35 @@ class Evaluator:
 
             gt_n_probas.append((y_true, y_pred, name))
         return gt_n_probas
+
+
+def report_gold_test(weight_path):
+    """Report metrics evaluated against the gold test set for YOLO5."""
+    # list gold tests
+    gold_img_paths = sorted(list(GOLD_DEALS_PATH.glob('deal*-md-sq.jpg')))
+    gold_lbl_paths = sorted(list(GOLD_DEALS_PATH.glob('deal*-labels.json')))
+    print(*gold_img_paths, sep='\n')
+    print(*gold_lbl_paths, sep='\n')
+
+    # detect
+    model = torch.hub.load('yolov5', 'custom', path=weight_path, source='local')
+    results = model(gold_img_paths, size=1184).pandas().xywhn
+
+    # eval individual
+    mets = []
+    y5_pd_reader = Yolo5PredPandasReader()
+    for i, result in enumerate(results):
+        evl = Evaluator(
+            gold_lbl_paths[i],
+            result,
+            pred_reader=y5_pd_reader
+        )
+        met = evl.report_main_metrics()
+        met['img_path'] = gold_img_paths[i].name
+        mets.append(met)
+
+    # report overall
+    return mets
 
 
 def plot_paired_boxes(obj1: YoloObject, obj2: YoloObject, ax=None):
