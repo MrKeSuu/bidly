@@ -17,8 +17,11 @@ limitations under the License."""
 ### see details at: https://github.com/Afwas/python-dds/blob/master/dds.md
 
 from ctypes import *
+import pathlib
 
-dds = cdll.LoadLibrary("/home/user/pythondds_min/libdds.so")
+
+DDS_DIR = str(pathlib.Path(__file__).parent/'libdds.so')
+dds = cdll.LoadLibrary(DDS_DIR)
 print('Loaded lib {0}'.format(dds))
 
 DDS_VERSION = 20700    
