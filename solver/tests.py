@@ -27,7 +27,9 @@ class TestBasic:
         assert " C     9     9     3     4\n" in captured.out
         assert " H    13    13     0     0\n" in captured.out
 
-    def test_main(self):
+    def test_main(self, monkeypatch):
+        monkeypatch.setattr('sys.argv', ['--yolo-path', 'fixtures/deal3-manual-edit.json'])
+
         main.main()
 
 
