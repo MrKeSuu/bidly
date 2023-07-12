@@ -16,6 +16,7 @@ from . import util
 
 FILE_PATH = pathlib.Path(__file__)
 GOLD_DEALS_PATH = FILE_PATH.parent/'test-deals'
+DEFAULT_IMG_SIZE = 1184
 
 DEFAULT_MIN_IOU = 0.7
 TEXT_Y_OFFEST = 50 / 1200  # 50 was based on img with H1200
@@ -247,15 +248,11 @@ def report_baseline():
 
 def report_gold_test(weight_path):
     """Report metrics evaluated against the gold test set for YOLO5."""
-    # list gold tests
-    gold_img_paths = _list_gold_image_paths()
-    gold_lbl_paths = _list_gold_label_paths()
-    print(*gold_img_paths, sep='\n')
-    print(*gold_lbl_paths, sep='\n')
+    gold_img_paths, gold_lbl_paths = _list_gold_paths()
 
     # detect
     model = torch.hub.load('yolov5', 'custom', path=weight_path, source='local')
-    results = model(gold_img_paths, size=1184).pandas().xywhn
+    results = model(gold_img_paths, size=DEFAULT_IMG_SIZE).pandas().xywhn
 
     # eval individual
     mets = []
@@ -273,6 +270,24 @@ def report_gold_test(weight_path):
 
     # report overall
     return mets
+
+
+def plot_gold_misclf(weight_path, min_iou=DEFAULT_MIN_IOU, thresh=0.5):
+    """Report misclassifications in gold test set for YOLO5."""
+    gold_img_paths, gold_lbl_paths = _list_gold_paths()
+
+    # detect
+    model = torch.hub.load('yolov5', 'custom', path=weight_path, source='local')
+    results = model(gold_img_paths, size=DEFAULT_IMG_SIZE).pandas().xywhn
+
+    # plot each
+    y5_pd_reader = Yolo5PredPandasReader()
+    for i, result in enumerate(results):
+        lbl_path = gold_lbl_paths[i]
+        evl = Evaluator(lbl_path, result, pred_reader=y5_pd_reader)
+
+        img_path = gold_img_paths[i]
+        plot_misclf(evl.paired_objs(min_iou), img_path, thresh=thresh)
 
 
 def plot_paired_boxes(obj1: YoloObject, obj2: YoloObject, ax=None):
@@ -300,7 +315,16 @@ def plot_misclf(pairs, img_filepath, thresh=0.5, classes=None):
             pred_fc = PREDICTION_FC if pred.confid >= thresh else (.5, .5, .5)  # FN ref, rather than FP
             ax = _plot_label(pred, 'bottom', img_shape=img.shape, ax=ax, ec=PREDICTION_EC, fc=pred_fc)
 
+    ax.set_title(pathlib.Path(img_filepath).name)
     ax.imshow(img)
+
+
+def _list_gold_paths():
+    img_paths = _list_gold_image_paths()
+    lbl_paths = _list_gold_label_paths()
+    print(*img_paths, sep='\n')
+    print(*lbl_paths, sep='\n')
+    return img_paths, lbl_paths
 
 
 def _list_gold_label_paths():
