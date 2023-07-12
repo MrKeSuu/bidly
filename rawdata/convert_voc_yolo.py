@@ -62,7 +62,7 @@ if not os.path.isdir(images_dir):
     sys.exit(1)
 with open(classes_fn,"r") as f:
     classes=f.read().split("\n")
-classes=[c for c in classes if c!='']
+classes=[c+"-alpha" for c in classes if c!='']
 print(classes,len(classes))
 
 list_file = open(list_fn,"w")

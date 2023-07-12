@@ -29,7 +29,7 @@ optimize_cell_width()
 # <img src="data-nb/img/ex_generated_image.png" alt="Example of generated image "  title="Example of generated image " />
 #
 
-# %% [markdown]
+# %% [markdown] toc-hr-collapsed=true
 # # Prerequisites 
 #
 # ### A. In addition to opencv and numpy, you need the following python packages:
@@ -193,8 +193,11 @@ refCornerLR=np.array([[cardW-cornerXmax,cardH-cornerYmax],[cardW-cornerXmin,card
 refCorners=np.array([refCornerHL,refCornerLR])
 
 
-# %% [markdown]
-# # Get Describable Textures Dataset (DTD)
+# %% [markdown] tags=[]
+# # Backgrounds
+
+# %% [markdown] tags=[] toc-hr-collapsed=true jp-MarkdownHeadingCollapsed=true
+# ## Get Describable Textures Dataset (DTD)
 # A convenient way to generate backgrounds for the images of the cards dataset
 
 # %% [markdown]
@@ -232,8 +235,8 @@ refCorners=np.array([refCornerHL,refCornerLR])
 # # !rm -r dtd
 # # !rm dtd-r1.0.1.tar.gz
 
-# %% [markdown]
-# ### Load the backgounds pickle file in 'backgrounds'
+# %% [markdown] tags=[]
+# ## Load the backgounds pickle file in 'backgrounds'
 # 'backgrounds' is an instance of the class Backgrounds
 # To get a random background image, call the method : backgrounds.get_random
 
@@ -259,8 +262,9 @@ class Backgrounds():
 
 
 # %%
-backgrounds = Backgrounds()
-backgrounds.get_total_images()
+# backgrounds = Backgrounds()
+# backgrounds.get_total_images()
+# # 5640
 
 # %%
 # Test: display a random background
@@ -283,8 +287,6 @@ pd.Series(res).pow(1/2).plot(kind='hist', bins=25)
 
 # %%
 
-# %%
-
 # %% [markdown]
 # # Extraction of the cards from pictures or video 
 
@@ -296,7 +298,7 @@ pd.Series(res).pow(1/2).plot(kind='hist', bins=25)
 #
 
 # %%
-bord_size=2 # bord_size alpha=0
+bord_size=3 # bord_size alpha=0
 alphamask=np.ones((cardH,cardW),dtype=np.uint8)*255
 cv2.rectangle(alphamask,(0,0),(cardW-1,cardH-1),0,bord_size)
 cv2.line(alphamask,(bord_size*3,0),(0,bord_size*3),0,bord_size)
@@ -307,7 +309,55 @@ plt.figure(figsize=(10,10))
 plt.imshow(alphamask)
 
 
-# %% [markdown]
+# %%
+def apply_alphamask_no_contour(card_img):  # YL
+    card_img = cv2.cvtColor(card_img, cv2.COLOR_BGR2BGRA)
+    card_img[:,:,3] = alphamask
+    return card_img
+
+
+def apply_alphamask(card_img, debug=False):  # YL
+    BD = 5
+    # Enlarge border so that entire card can be detected as the largest contour
+    if BD:
+        card_img_ = cv2.copyMakeBorder(card_img, BD, BD, BD, BD, cv2.BORDER_CONSTANT, 0)
+        alphamask_ = cv2.copyMakeBorder(alphamask, BD, BD, BD, BD, cv2.BORDER_REPLICATE)
+    else:
+        card_img_ = card_img
+        alphamask_ = alphamask
+
+    # Find contours
+    gray = cv2.cvtColor(card_img_, cv2.COLOR_BGR2GRAY)
+    gray = cv2.bilateralFilter(gray, 11, 17, 17) # Noise-reducing and edge-preserving filter
+    edge = cv2.Canny(gray, 30, 200)
+    cnts, _ = cv2.findContours(edge.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnt = sorted(cnts, key=cv2.contourArea)[-1]
+    cnta = cnt.reshape(1,-1,2)
+
+    if debug:
+        cv2.imshow("Gray",gray)
+        cv2.imshow("Canny",edge)
+        edge_bgr=cv2.cvtColor(edge,cv2.COLOR_GRAY2BGR)
+        cv2.drawContours(edge_bgr,[cnt],0,(0,255,0),-1)
+        cv2.imshow("Contour with biggest area",edge_bgr)
+
+    alphachannel = np.zeros(card_img_.shape[:2], dtype=np.uint8)
+    cv2.drawContours(alphachannel, cnta, 0, 255, -1)
+    alphachannel = cv2.bitwise_and(alphachannel, alphamask_)
+
+    card_img_ = cv2.cvtColor(card_img_, cv2.COLOR_BGR2BGRA)
+    card_img_[:,:,3] = alphachannel
+    if BD:
+        card_img = card_img_[BD:-BD, BD:-BD]  # shrink the border
+
+    if debug:
+        cv2.imshow("Alphachannel",alphachannel)
+        cv2.imshow("Extracted card",card_img)
+    
+    return card_img
+
+
+# %% [markdown] jp-MarkdownHeadingCollapsed=true tags=[]
 # ## Function extract_card 
 # Extract from scene image (cv2/bgr) the part corresponding to the card and transforms it 
 # to fit into the reference card shape.
@@ -386,7 +436,7 @@ def extract_card (img, output_fn=None, min_focus=120, debug=False):
         # First, initialize alpha channel fully transparent
         alphachannel=np.zeros(imgwarp.shape[:2],dtype=np.uint8)
         # Then fill in the contour to make opaque this zone of the card 
-        cv2.drawContours(alphachannel,cntwarp,0,255,-1)
+        cv2.drawContours(alphachannel,cntwarp,0,255,-1)  #YL 0: index, 255 color, -1 fill/interior
         
         # Apply the alphamask onto the alpha channel to clean it
         alphachannel=cv2.bitwise_and(alphachannel,alphamask)
@@ -422,7 +472,7 @@ valid,card=extract_card(img,"data-nb/test/extracted_card.png", debug=debug)
 if valid:
     display_img(card)
 if debug:
-    cv2.waitKey(0)
+    cv2.waitKey(0)  # press 0 to exit
     cv2.destroyAllWindows()
 
 # %%
@@ -445,10 +495,10 @@ def extract_cards_from_photos():
 # extract_cards_from_photos()
 
 
-# %% [markdown]
+# %% [markdown] jp-MarkdownHeadingCollapsed=true tags=[]
 # ## Function extract_cards_from_video
 
-# %%
+# %% tags=[]
 def extract_cards_from_video(video_fn, output_dir=None, keep_ratio=5, min_focus=120, debug=False):
     """
         Extract cards from media file 'video_fn' 
@@ -507,7 +557,7 @@ def extract_cards_from_video(video_fn, output_dir=None, keep_ratio=5, min_focus=
 # The cards from a video, or the card from an image, will be extracted in a subdirectory named 'card_name' placed in the directory 'imgs_dir' (ex: data/cards)
 #
 
-# %%
+# %% tags=[]
 # video_dir="data/video"
 # extension="avi"
 # imgs_dir="data/cards"
@@ -534,7 +584,22 @@ imgs_dir="data/cards"
 imgs_fns=glob(imgs_dir+"/*.jpg")
 img_fn=random.choice(imgs_fns)
 # img_fn='data/cards/As.jpg'
-display_img(cv2.imread(img_fn,cv2.IMREAD_UNCHANGED),polygons=[refCornerHL,refCornerLR])
+display_img(
+    cv2.imread(img_fn,cv2.IMREAD_UNCHANGED),
+    polygons=[refCornerHL,refCornerLR]
+)
+
+# %%
+debug = False
+img_fn=random.choice(imgs_fns)
+card_img = cv2.imread(img_fn,cv2.IMREAD_UNCHANGED)
+card_img_ = apply_alphamask_no_contour(card_img)
+display_img(card_img_)
+
+# %%
+# show alphamask again
+# plt.figure(figsize=(9, 9))
+# plt.imshow(card_img_[:, :, 3])
 
 # %% [markdown]
 # # Finding the convex hulls
@@ -731,8 +796,8 @@ display_img(img,[refCornerHL,refCornerLR,hullHL,hullLR])
 if debug!="no": cv2.destroyAllWindows()
 
 
-# %% [markdown]
-# ### Generate images with different lighting condition for each card
+# %% [markdown] tags=[]
+# # Generate images with different lighting condition for each card
 #
 
 # %%
@@ -823,7 +888,7 @@ def apply_random_lighting():
         
 
 
-# %% [markdown]
+# %% [markdown] tags=[]
 # *YL: the following didn't work (after `random_lighting`) as the modified `findHull` uses a const: MIN_BRIGHTNESS; instead, use orig imgs to assign static hull value to each card*
 #
 # ### Load all card image, calculate their convex hulls and save the whole in a pickle file (1x)
@@ -876,6 +941,33 @@ def enhance_with_hulls():
 
 
 # %% [markdown]
+# # Recover alpha masks
+
+# %%
+# This should have been avoided by saving cards as *.png files.
+RECOVERED_SUFFIX = "-alpha"
+def recover_alpha_masks():
+    for suit in card_suits:
+        for value in card_values:
+            card_name = value+suit
+            print("Recovering alpha masks for:", card_name)
+            pck_filepath = cards_pck_fn.format(card_name)
+            cards = pickle.load(open(pck_filepath, 'rb'))
+            
+            cards_ = []
+            for img, hull1, hull2 in cards:
+                img_ = apply_alphamask_no_contour(img)
+                cards_.append((img_, hull1, hull2))
+            
+            card_name = card_name+RECOVERED_SUFFIX
+            out_path = cards_pck_fn.format(card_name)
+            print("Saving in :", out_path)
+            pickle.dump(cards_, open(out_path, 'wb'))
+
+recover_alpha_masks()
+
+
+# %% [markdown]
 # # Load the cards pickle file in 'cards'
 # 'cards' is an instance of the class Cards
 # To get a random background image, call the method : cards.get_random() or cards.get_random(card_name) if you want a random card of a given value. Ex: cards.get_random('Ah')
@@ -889,6 +981,7 @@ class Cards():
         if card_name is None:
             card_name = random.choice(self.CARD_NAMES)
 
+        card_name = card_name+RECOVERED_SUFFIX
         pck_filepath = cards_pck_fn.format(card_name)
         random_info = random.choice(pickle.load(open(pck_filepath, 'rb')))
 
@@ -912,20 +1005,30 @@ for name in Cards.CARD_NAMES:
 # - 52, 55, 51, 54 -> 53 -> **0.044**
 
 # %%
-_card =cards.get_random(display=False)
+_card =cards.get_random(display=True)
 
 _obj_h = max(t[0][1] for t in _card[2]) -  min(t[0][1] for t in _card[2])
 _obj_h
 
 # %% [markdown]
-# obj heights in cards (before merge):
-# - 72, 72, 64, 65, 72, 64, 70 -> **68**
+# ```
+# # name: gen (hull) -> real (sq1200)
+# # 5d: 74 -> 56
+# # Ad: 72 -> 56
+# # Tc: 64 -> 47
+# # 4c: 67 -> 46
+# # Ac: 63 -> 47
+# ```
 
 # %%
-RELATIVE_OBJ_HEIGHT_REAL_PHOTOS = 0.044
-ABSOLUTE_OJB_HEIGHT_GENERATED_CARDS = 68
+OBJ_HEIGHTS_REAL_PHOTOS = [56, 56, 47, 46, 47] 
+REAL_PHOTO_HEIGHT = 1200
+OBJ_HEIGHTS_GENERATED_CARDS = [74, 72, 64, 67, 63]
 
-imgH * RELATIVE_OBJ_HEIGHT_REAL_PHOTOS / ABSOLUTE_OJB_HEIGHT_GENERATED_CARDS
+relative_obj_heights_real_photos = pd.Series(OBJ_HEIGHTS_REAL_PHOTOS).div(REAL_PHOTO_HEIGHT)
+relative_obj_heights_real_photos
+
+relative_obj_heights_real_photos.mul(imgH).div(pd.Series(OBJ_HEIGHTS_GENERATED_CARDS)).mean()
 
 # %%
 AFFINE_SCALE = [0.7, 0.8]
@@ -1099,14 +1202,19 @@ def preview_aug(img, aug):
 
 
 # %%
+DATA_VERSION = 'r3'
+
 scale_sometimes = iaa.Sometimes(0.75, iaa.Affine(scale=AFFINE_SCALE))
 sharpen_sometimes = iaa.Sometimes(0.75, iaa.Sharpen(alpha=(0.3, 0.4)))
+rotate_2kinds = iaa.OneOf([
+    iaa.Affine(rotate=(-180, 180)),
+    iaa.Affine(rotate=(-45, 45)),  # more upright cards
+])
 
 # imgaug transformation for one card in scenario with 2 cards
 transform_1card = iaa.Sequential([
     scale_sometimes,
-    # iaa.Affine(rotate=(-180, 180)),
-    iaa.Affine(rotate=(-45, 45)),  # YL yolo5 Round 2, focus on fanned-out cards
+    rotate_2kinds,
     iaa.Affine(translate_percent={"x": (-0.25,0.25), "y": (-0.25,0.25)}),
     iaa.PerspectiveTransform(),
     sharpen_sometimes,
@@ -1116,17 +1224,16 @@ transform_1card = iaa.Sequential([
 # and the third one for the group of 3 cards
 trans_rot1 = iaa.Sequential([
     iaa.Affine(translate_px={"x": (10, 20)}),
-    iaa.Affine(rotate=(22, 30))
+    iaa.Affine(rotate=(17, 30))
 ])
 trans_rot2 = iaa.Sequential([
     iaa.Affine(translate_px={"x": (0, 5)}),
-    iaa.Affine(rotate=(10, 15))
+    iaa.Affine(rotate=(5, 10))
 ])
 transform_3cards = iaa.Sequential([
     iaa.Affine(translate_px={"x": decalX-decalX3, "y": decalY-decalY3}),
     scale_sometimes,
-    # iaa.Affine(rotate=(-180, 180)),
-    iaa.Affine(rotate=(-45, 45)),  # YL yolo5 Round 2, focus on more upright cards
+    rotate_2kinds,
     iaa.Affine(translate_percent={"x": (-0.2,0.2),"y": (-0.2,0.2)}),
     iaa.PerspectiveTransform(),
     sharpen_sometimes,
@@ -1324,7 +1431,7 @@ class Scene:
         return self.final
 
     def write_files(self, save_dir, display=False):
-        jpg_fn, xml_fn = get_filename(save_dir, ["jpg", "xml"], prefix='r2_')
+        jpg_fn, xml_fn = get_filename(save_dir, ["jpg", "xml"], prefix=f'{DATA_VERSION}_')
 
         plt.imsave(jpg_fn, self.final)
         if display:
@@ -1372,22 +1479,24 @@ Scene(_bg).display()
 TEST_SIZE = 0.25
 
 print(
-    pow(10000, 2/3)  # 10000 labels per class but 3d -> 2d
+    "lbl/cls req:",
+    10000  # labels per class, from v5 doc
     * 52  # n_classes
-    / 2.5  # avg n_labels per scene
+    / 4  # avg n_labels per scene
     / 52
     / (1-TEST_SIZE)
 )
 
 print(
-    1500  # images per class
+    "img/cls req:",
+    1500  # images per class, from v5 doc
     * 52  # n_classes
     / 2.5  # avg n_classes per scene
     / 52
     / (1-TEST_SIZE)
 )
 
-N_SCENES_PER_CARD = 800 // 2  # max of the two / 2
+N_SCENES_PER_CARD = 2000 // 2  # try getting away with 2000 instead of 3333
 N_SCENES_WO_CARD = round(N_SCENES_PER_CARD * 52 * 0.05)  # negative examples
 
 train_dir = "data/train"
@@ -1516,6 +1625,11 @@ for __ in tqdm(range(n_scenes_te)):
 # %% tags=[]
 # !python convert_voc_yolo.py data/train data/cards.names data/yolo_train_list.txt
 # !python convert_voc_yolo.py data/test data/cards.names data/yolo_test_list.txt
+
+# %% [markdown]
+# ```
+# find . -type f -empty -delete
+# ```
 
 # %% [markdown]
 # ### YL object counts in training data
