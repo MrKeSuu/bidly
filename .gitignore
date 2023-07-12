@@ -5,3 +5,5 @@ dtd-r1.0.1.tar.gz
 
 __pycache__
 .venv/
+
+solver/install/dds/src/*.o
