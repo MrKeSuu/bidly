@@ -162,7 +162,10 @@ class Evaluator:
         subset_mean_ap = self.report_mean_ap(DEFAULT_MIN_IOU, self.DIFFICULT_CLASSES)
 
         clf_metrics = self.report_clf_metrics(DEFAULT_MIN_IOU, thresh=0.5)
-        fn_count = pd.DataFrame(clf_metrics).fn_upper.fillna(0).astype(int).sum()
+        try:
+            fn_count = pd.DataFrame(clf_metrics).fn_upper.fillna(0).astype(int).sum()
+        except AttributeError:
+            fn_count = 0
 
         return {f'mAP{int(DEFAULT_MIN_IOU*100)}': mean_ap,
                 f'subset_mAP{int(DEFAULT_MIN_IOU*100)}': subset_mean_ap,
@@ -322,8 +325,6 @@ def plot_misclf(pairs, img_filepath, thresh=0.5, classes=None):
 def _list_gold_paths():
     img_paths = _list_gold_image_paths()
     lbl_paths = _list_gold_label_paths()
-    print(*img_paths, sep='\n')
-    print(*lbl_paths, sep='\n')
     return img_paths, lbl_paths
 
 
