@@ -435,9 +435,9 @@ class DealConverter:
 
 
 class Yolo4Reader(IPredReader):
-    def read(self, path):
-        log.info("Reading from yolov4 pred: %s", path)
-        with open(path, 'r') as f:
+    def read(self, src):
+        log.info("Reading from yolov4 pred: %s", src)
+        with open(src, 'r') as f:
             yolo_json = json.load(f)
 
         return (
@@ -449,12 +449,19 @@ class Yolo4Reader(IPredReader):
         )
 
 class Yolo5Reader(IPredReader):
-    def read(self, path):
-        pass
+    def read(self, src):
+        """Read from `src`, records of detection."""
+        return (
+            pd.DataFrame(src)
+                .assign(name=lambda df: df.class_id.map(CARD_CLASSES[::-1].__getitem__))  # dev
+                .rename(columns={'x': 'center_x',
+                                 'y': 'center_y',
+                                 'w': 'width',
+                                 'h': 'height'})
+        )
 
 
-def get_deal_converter() -> DealConverter:
-    reader = Yolo4Reader()
+def get_deal_converter(reader=Yolo4Reader()) -> DealConverter:
     dbscan = strategy.CoreFinderDbscan()
     single_linkage = strategy.SingleLinkage()
     deal_converter = DealConverter(reader, dbscan, single_linkage)

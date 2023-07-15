@@ -30,7 +30,7 @@ def solve_hand(hand: PbnHand):
     return result
 
 
-def calc_par(result, vul):
+def calc_par(result, vul=hands.VUL_NONE):
     par_result = _init_par_result()
     dds.Par(result, par_result, vul)
     return par_result
