@@ -1,7 +1,7 @@
 import argparse
 
-import pythondds_min.adapter as dds_adapter
-import converter
+import solver.pythondds_min.adapter as dds_adapter
+from solver import converter
 
 
 def main():
@@ -10,7 +10,7 @@ def main():
     args = parser.parse_args()
 
     deal_converter = converter.get_deal_converter()
-    deal_converter.read_yolo4(args.yolo_path)
+    deal_converter.read(args.yolo_path)
     deal_converter.dedup(smart=True)
     deal_converter.assign()
     pbn_hand = deal_converter.format_pbn()

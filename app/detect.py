@@ -16,12 +16,12 @@ lgr = logging
 
 # Abstract #
 
+CardDetection = typing.List[typing.Dict]  # detection records
+
+
 @dataclasses.dataclass
 class ImageInput:
     data: np.ndarray
-
-
-CardDetection = typing.List[typing.Dict]  # detection records
 
 
 class IYoloLoader(abc.ABC):

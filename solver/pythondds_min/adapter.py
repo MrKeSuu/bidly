@@ -7,10 +7,9 @@ import logging as log
 import numpy as np
 import pandas as pd
 
-from pythondds_min import dds
-from pythondds_min import functions
-from pythondds_min import hands
-from pythondds_min.hands import VUL_NONE, VUL_BOTH, VUL_NS, VUL_EW
+from . import dds
+from . import functions
+from . import hands
 
 
 PbnHand = bytes

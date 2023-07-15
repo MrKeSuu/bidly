@@ -3,11 +3,11 @@ import pathlib
 import pandas as pd
 import pytest
 
-from pythondds_min import adapter
-from pythondds_min import calc_ddtable_pbn
-import converter
-import main
-import strategy
+from solver.pythondds_min import adapter
+from solver.pythondds_min import calc_ddtable_pbn
+from . import converter
+from . import main
+from . import strategy
 
 
 @pytest.fixture(scope='module')
@@ -40,6 +40,10 @@ class TestConverter:
     PBN_FILEPATH = pathlib.Path('fixtures/deal3-manual-edit.pbn')
 
     @pytest.fixture
+    def reader(self):
+        return converter.Yolo4Reader()
+
+    @pytest.fixture
     def core_finder(self):
         return strategy.CoreFinderDbscan()
 
@@ -48,9 +52,9 @@ class TestConverter:
         return strategy.SingleLinkage()
 
     @pytest.fixture
-    def deal_converter(self, core_finder: strategy.ICoreFinder, linkage: strategy.ILinkage):
-        deal_converter = converter.DealConverter(core_finder, linkage)
-        deal_converter.read_yolo4(self.DEAL1_YOLO_FILEPATH)
+    def deal_converter(self, reader, core_finder: strategy.ICoreFinder, linkage: strategy.ILinkage):
+        deal_converter = converter.DealConverter(reader, core_finder, linkage)
+        deal_converter.read(self.DEAL1_YOLO_FILEPATH)
         return deal_converter
 
     @pytest.fixture
@@ -98,7 +102,7 @@ class TestConverter:
             "FP cards: ['5c']\n")
 
     def test_assign(self, deal_converter: converter.DealConverter):
-        deal_converter.read_yolo4(self.MANUAL_EDIT_YOLO_FILEPATH)
+        deal_converter.read(self.MANUAL_EDIT_YOLO_FILEPATH)
         deal_converter.dedup(smart=True)
         deal_converter.assign()
 
@@ -189,7 +193,7 @@ class TestConverter:
         assert formatted_suit == ""
 
     def test_build_pbn_deal(self, deal_converter: converter.DealConverter):
-        deal_converter.read_yolo4(self.MANUAL_EDIT_YOLO_FILEPATH)
+        deal_converter.read(self.MANUAL_EDIT_YOLO_FILEPATH)
         deal_converter.dedup(smart=True)
         deal_converter.assign()
 
@@ -200,7 +204,7 @@ class TestConverter:
         assert formatted_deal == expected
 
     def test_write_pbn(self, deal_converter: converter.DealConverter, pbn_hand: bytes):
-        deal_converter.read_yolo4(self.MANUAL_EDIT_YOLO_FILEPATH)
+        deal_converter.read(self.MANUAL_EDIT_YOLO_FILEPATH)
         deal_converter.dedup(smart=True)
         deal_converter.assign()
 

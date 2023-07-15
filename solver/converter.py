@@ -1,4 +1,5 @@
 """Converting .json from yolo into .pbn for pythondds."""
+import abc
 import json
 import logging as log
 import pathlib
@@ -10,8 +11,8 @@ import scipy.spatial
 import sklearn.cluster
 import sympy
 
-import strategy
-import util
+from solver import strategy
+from solver import util
 
 
 CARD_CLASSES = [
@@ -50,33 +51,32 @@ RANKS = ["A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2"]
 util.setup_basic_logging()
 
 
+class IPredReader(abc.ABC):
+    @abc.abstractmethod
+    def read(self, src) -> pd.DataFrame:
+        pass
+
+
 class DealConverter:
     QUADRANT_MARGIN_WIDTH = 0.05
 
     card: pd.DataFrame
     card_: pd.DataFrame
 
-    def __init__(self, core_finder: strategy.ICoreFinder, linkage: strategy.ILinkage):
+    reader = IPredReader
+    core_finder: strategy.ICoreFinder
+    linkage: strategy.ILinkage
+
+    def __init__(self, reader, core_finder, linkage):
         self.card = None
+        self.reader = reader
         self.core_finder = core_finder
         self.linkage = linkage
 
         self.card_ = None
 
-    def read_yolo4(self, path):
-        log.info("Reading from yolo file: %s", path)
-        with open(path, 'r') as f:
-            yolo_json = json.load(f)
-        self.card = (
-            pd.json_normalize(yolo_json[0]['objects'])  # image has one frame only
-                .rename(columns={"relative_coordinates.center_x": "center_x",
-                                 "relative_coordinates.center_y": "center_y",
-                                 "relative_coordinates.width": "width",
-                                 "relative_coordinates.height" :"height"})
-        )
-
-    def read_yolo5(self, path):
-        pass  # TODO
+    def read(self, path):
+        self.card = self.reader.read(path)
 
     def report_missing_and_fp(self):
         # report missing
@@ -434,8 +434,28 @@ class DealConverter:
         return pd.Series(bool_seq, index=subframe.index)
 
 
+class Yolo4Reader(IPredReader):
+    def read(self, path):
+        log.info("Reading from yolov4 pred: %s", path)
+        with open(path, 'r') as f:
+            yolo_json = json.load(f)
+
+        return (
+            pd.json_normalize(yolo_json[0]['objects'])  # image has one frame only
+                .rename(columns={"relative_coordinates.center_x": "center_x",
+                                 "relative_coordinates.center_y": "center_y",
+                                 "relative_coordinates.width": "width",
+                                 "relative_coordinates.height" :"height"})
+        )
+
+class Yolo5Reader(IPredReader):
+    def read(self, path):
+        pass
+
+
 def get_deal_converter() -> DealConverter:
+    reader = Yolo4Reader()
     dbscan = strategy.CoreFinderDbscan()
     single_linkage = strategy.SingleLinkage()
-    deal_converter = DealConverter(dbscan, single_linkage)
+    deal_converter = DealConverter(reader, dbscan, single_linkage)
     return deal_converter

@@ -1,9 +1,9 @@
 #! /usr/bin/python
 import ctypes
 
-import deals
-from pythondds_min import dds
-from pythondds_min import functions
+from solver import deals
+from solver.pythondds_min import dds
+from solver.pythondds_min import functions
 
 
 HANDS = [
