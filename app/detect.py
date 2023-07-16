@@ -39,7 +39,7 @@ class YoloModel(abc.ABC):
         self.loader = loader
 
     def load(self, src):
-        self._model = self.loader.load(src)
+        self._model = self.loader.load(str(src))
 
     @abc.abstractmethod
     def detect(self, image: ImageInput) -> CardDetection:
@@ -81,7 +81,7 @@ class ImageHandlerBase(abc.ABC):
         self.preprocessors = preprocesssors
 
     def read(self, src):
-        self._image = self.reader.read(src)
+        self._image = self.reader.read(str(src))
 
     def validate(self):
         for validator in self.validators:

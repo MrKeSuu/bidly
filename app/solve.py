@@ -52,7 +52,7 @@ class BridgeSolverBase(abc.ABC):
         pass
 
     def present(self):
-        self.presenter.present(self.solution_)
+        return self.presenter.present(self.solution_)
 
 
 # Impl. #
@@ -84,7 +84,15 @@ class BridgeSolver(BridgeSolverBase):
         )
 
 
-class PrintPresenter(IPresenter):
+class StringPresenter(IPresenter):
+    def present(self, solution: Solution):
+        formatted_hand = dds_adapter.format_hand(solution.hand)
+
+        formatted_dd_result = dds_adapter.format_result(solution.dds_result)
+        return formatted_hand, formatted_dd_result
+
+
+class PrintPresenter(IPresenter):  # TODO ideally have another separate `View` and this only transforms
     def present(self, solution: Solution):
         formatted_hand = dds_adapter.format_hand(solution.hand)
         print(formatted_hand)
