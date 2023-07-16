@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 import scipy.spatial
 import sklearn.cluster
-import sympy
 
 from solver import strategy
 from solver import util
@@ -396,12 +395,13 @@ class DealConverter:
 
         OK to ignore the top-left positioned origin, due to symmetricity.
         """
-        line_up = sympy.Line((0, 0), (1, 1))
-        line_dn = sympy.Line((0, 1), (1, 0))
+        bottom_l, top_r = (0, 0), (1, 1)
+        bottom_r, top_l = (1, 0), (0, 1)
 
         def _calc_dist_to_border(row: pd.Series):
-            dist1 = float(line_up.distance((row.center_x, row.center_y)).evalf())
-            dist2 = float(line_dn.distance((row.center_x, row.center_y)).evalf())
+            p = (row.center_x, row.center_y)
+            dist1 = util.point_line_dist(p, bottom_l, top_r)
+            dist2 = util.point_line_dist(p, bottom_r, top_l)
             return min(dist1, dist2)
 
         return (card.assign(_dist_to_border=card.apply(_calc_dist_to_border, axis=1))
