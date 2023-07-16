@@ -11,6 +11,8 @@ import detect
 import solve
 
 
+__version__ = '0.1.0'
+
 FILEPATH = pathlib.Path(__file__)
 
 
