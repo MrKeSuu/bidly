@@ -13,17 +13,17 @@ import solve
 
 __version__ = '0.1.0'
 
-FILEPATH = pathlib.Path(__file__)
+ROOT_DIRPATH = pathlib.Path(__file__).parent
 
 
 class BidlyApp(App):
     def build(self):
         image_handler = detect.get_image_handler()
-        image_handler.read(FILEPATH.parent/'deal5-md-sq.jpg')
+        image_handler.read(ROOT_DIRPATH/'detector/evaluation/test-deals/deal5-md-sq.jpg')
         image_handler.validate()
         image_input = image_handler.preprocess()
 
-        ONNX_MODEL_PATH = FILEPATH.parent.parent/'detector/yolov5/runs/train/r3/weights/best.onnx'
+        ONNX_MODEL_PATH = ROOT_DIRPATH/'detector/best.onnx'
         yolo5 = detect.Yolo5Opencv(detect.OpencvOnnxLoader())
         yolo5.load(ONNX_MODEL_PATH)
         detection = yolo5.detect(image_input)
