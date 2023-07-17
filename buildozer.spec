@@ -13,7 +13,7 @@ package.domain = io.github.lyiqian
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas,so
+source.include_exts = py,png,jpg,kv,atlas,so,onnx
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
@@ -22,11 +22,11 @@ source.include_exts = py,png,jpg,kv,atlas,so
 #source.exclude_exts = spec
 
 # (list) List of directory to exclude (let empty to not exclude anything)
-#source.exclude_dirs = tests, bin, venv
+source.exclude_dirs = tests, bin, .venv, rawdata, detector/yolov5, detector/datasets, kivyvenv, app
 
 # (list) List of exclusions using pattern matching
 # Do not prefix with './'
-#source.exclude_patterns = license,images/*/*.jpg
+source.exclude_patterns = LICENSE,detector/yolov4_retrain.py,*/notebook.py
 
 # (str) Application versioning (method 1)
 # version = 0.1
@@ -37,7 +37,7 @@ version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy
+requirements = python3==3.8.16,Kivy==2.2.1,numpy,opencv-python,pandas,scikit-learn
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
