@@ -1,3 +1,4 @@
+import logging
 import pathlib
 
 from kivy.app import App
@@ -15,25 +16,31 @@ __version__ = '0.1.0'
 
 ROOT_DIRPATH = pathlib.Path(__file__).parent
 
+lgr = logging
+
 
 class BidlyApp(App):
     def build(self):
+        lgr.info("Handling image..")
         image_handler = detect.get_image_handler()
         image_handler.read(ROOT_DIRPATH/'detector/evaluation/test-deals/deal5-md-sq.jpg')
         image_handler.validate()
         image_input = image_handler.preprocess()
 
+        lgr.info("Loading yolo5 model and detecting..")
         ONNX_MODEL_PATH = ROOT_DIRPATH/'detector/best.onnx'
         yolo5 = detect.Yolo5Opencv(detect.OpencvOnnxLoader())
         yolo5.load(ONNX_MODEL_PATH)
         detection = yolo5.detect(image_input)
 
+        lgr.info("Solving deal..")
         solver = solve.BridgeSolver(detection, presenter=solve.StringPresenter())
         solver.transform()
         solver.assign()
         solver.solve()
         hand, table = solver.present()
 
+        lgr.info("Presenting solution..")
         solution = Solution()
         solution.view(hand=hand, table=table)
         return solution
