@@ -22,7 +22,7 @@ source.include_exts = py,png,jpg,kv,atlas,so,onnx
 #source.exclude_exts = spec
 
 # (list) List of directory to exclude (let empty to not exclude anything)
-source.exclude_dirs = tests, bin, .venv, rawdata, detector/yolov5, detector/datasets, kivyvenv, app
+source.exclude_dirs = tests, bin, .venv, rawdata, detector/yolov5, detector/datasets, detector/evaluation, kivyvenv, app
 
 # (list) List of exclusions using pattern matching
 # Do not prefix with './'
@@ -37,7 +37,8 @@ version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3==3.8.16,Kivy==2.2.1,numpy,opencv-python,pandas,scikit-learn
+#requirements = python3==3.8.16,hostpython3==3.8.16,kivy,numpy,opencv==4.5.4.58,pandas,scikit-learn
+requirements = python3==3.8.16,hostpython3==3.8.16,kivy,numpy,opencv,pandas
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -283,7 +284,7 @@ fullscreen = 0
 
 # (list) The Android archs to build for, choices: armeabi-v7a, arm64-v8a, x86, x86_64
 # In past, was `android.arch` as we weren't supporting builds for multiple archs at the same time.
-android.archs = arm64-v8a, armeabi-v7a
+android.archs = arm64-v8a
 
 # (int) overrides automatic versionCode computation (used in build.gradle)
 # this is not the same as app version and should only be edited if you know what you're doing
