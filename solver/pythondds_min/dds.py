@@ -21,7 +21,11 @@ import pathlib
 
 
 DDS_DIR = str(pathlib.Path(__file__).parent/'libdds.so')
-dds = cdll.LoadLibrary(DDS_DIR)
+DDS_DIR_LINUX = str(pathlib.Path(__file__).parent/'libdds-linux.so')
+try:
+    dds = cdll.LoadLibrary(DDS_DIR)
+except OSError:
+    dds = cdll.LoadLibrary(DDS_DIR_LINUX)
 print('Loaded lib {0}'.format(dds))
 
 DDS_VERSION = 20700    
