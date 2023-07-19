@@ -8,6 +8,7 @@ deploy-log:
 
 complete:
 	export LEGACY_NDK=~/.buildozer/android/platform/android-ndk-r21e
+	buildozer android clean
 	buildozer -v android debug deploy run logcat
 
 log:
