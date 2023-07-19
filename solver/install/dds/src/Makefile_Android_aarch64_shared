@@ -20,7 +20,7 @@ THR_OPENMP	= -DDDS_THREADS_OPENMP
 THR_WINAPI	= -DDDS_THREADS_WINAPI
 THR_STL		= -DDDS_THREADS_STL
 
-THREADING	= $(THR_BOOST) $(THR_OPENMP) $(THR_STL)
+THREADING	= $(THR_BOOST) $(THR_STL)
 
 # If you need to add something for a threading system, this is
 # the place.
@@ -79,9 +79,9 @@ WARN_FLAGS	= 		\
 	-Wno-long-long		\
 	-Wno-format
 
-COMPILE_FLAGS	= -fPIC -O3 -flto -fopenmp -static-openmp -std=c++11 --sysroot=$(TOOLCHAIN)/sysroot \
+COMPILE_FLAGS	= -fPIC -O3 -flto -std=c++11 --sysroot=$(TOOLCHAIN)/sysroot \
 		$(WARN_FLAGS) \
-		$(DDS_BEHAVIOR) $(THREAD_COMPILE) $(THREADING)
+		$(DDS_BEHAVIOR) $(THREADING)
 
 DLLBASE		= dds
 SHARED_LIB	= lib$(DLLBASE).so
@@ -97,7 +97,6 @@ LINK_FLAGS      =               \
         -Wl,--as-needed         \
         -Wl,-z                  \
         -Wl,relro               \
-        # $(THREAD_LINK)          \
 
 
 linux:	$(O_FILES)
