@@ -3,6 +3,8 @@ dtd-r1.0.1.tar.gz
 .ipynb_checkpoints/
 *.pck
 
+*.log
+
 __pycache__
 .venv/
 
