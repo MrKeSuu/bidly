@@ -23,7 +23,7 @@ class BidlyApp(App):
     def build(self):
         lgr.info("Handling image..")
         image_handler = detect.get_image_handler()
-        image_handler.read(ROOT_DIRPATH/'detector/evaluation/test-deals/deal5-md-sq.jpg')
+        image_handler.read(ROOT_DIRPATH/'deal5-md-sq.jpg')  # DEBUG
         image_handler.validate()
         image_input = image_handler.preprocess()
 

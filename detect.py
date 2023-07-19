@@ -186,7 +186,12 @@ class FsImageReader(IImageReader):
 
     @staticmethod
     def read(src):
-        return cv2.imread(src, cv2.IMREAD_UNCHANGED)
+        image = cv2.imread(src, cv2.IMREAD_UNCHANGED)
+
+        if image is None:
+            raise ValueError(f"Can't load image at: {src}")
+
+        return image
 
 
 class MinSizeValidator(IImageValidator):
