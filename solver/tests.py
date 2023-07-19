@@ -45,7 +45,7 @@ class TestConverter:
 
     @pytest.fixture
     def core_finder(self):
-        return strategy.CoreFinderDbscan()
+        return strategy.CoreFinderDbscanPy()
 
     @pytest.fixture
     def linkage(self):

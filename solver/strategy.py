@@ -1,8 +1,10 @@
 import abc
 from typing import Iterable, Tuple
 
+import numpy as np
 import scipy.spatial
-import sklearn
+
+from solver import dbscan
 
 
 Coord = Tuple[float, float]
@@ -16,23 +18,16 @@ class ICoreFinder(abc.ABC):
         pass
 
 
-class CoreFinderDbscan(ICoreFinder):
-    """CoreFinder with DBSCAN clutering."""
+class CoreFinderDbscanPy(ICoreFinder):
+    """CoreFinder with pure-python DBSCAN clutering."""
     EPS = 0.1  # assumes records in relative coords valued in (0, 1)
     MIN_SAMPLES = 3
 
-    DBSCAN_NOISY_LABEL = -1
-
-    def __init__(self):
-        self.dbscan = sklearn.cluster.DBSCAN(
-            eps=self.EPS,
-            min_samples=self.MIN_SAMPLES,
-        )
+    DBSCAN_NOISY_LABEL = None
 
     def find_core(self, coords: Iterable[Coord]):
-        self.dbscan.fit(list(coords))
-
-        _labels = self.dbscan.labels_
+        X = np.asarray(list(coords)).T  # transpose required by the pure-py dbscan code
+        _labels = dbscan.dbscan(X, eps=self.EPS, min_points=self.MIN_SAMPLES)
         is_core = [label != self.DBSCAN_NOISY_LABEL for label in _labels]
         return is_core
 

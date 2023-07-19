@@ -8,8 +8,8 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 import scipy.spatial
-import sklearn.cluster
 
+from solver import dbscan
 from solver import strategy
 from solver import util
 
@@ -353,14 +353,13 @@ class DealConverter:
 
         - `eps` tuned for dist between two symbols on the same card
         - only works for 1-d array currently"""
-        X = np.array(X).reshape(-1, 1)
-        dbscan = sklearn.cluster.DBSCAN(eps=0.01, min_samples=min_size)
-        clt_id = dbscan.fit(X).labels_
+        X = np.array(X).reshape(1, -1)
+        clt_id = dbscan.dbscan(X, eps=0.01, min_points=min_size)
 
         clustered = pd.DataFrame(dict(dist_=X.ravel(), clt_id_=clt_id))
-        if clustered.clt_id_.max() > 0:
+        if clustered.clt_id_.max() > 1:
             print("WARNING: more than one cluster found")
-        densest = clustered.loc[clustered.clt_id_ == 0, 'dist_']
+        densest = clustered.loc[clustered.clt_id_ == 1, 'dist_']
         return densest
 
     @staticmethod
@@ -462,7 +461,7 @@ class Yolo5Reader(IPredReader):
 
 
 def get_deal_converter(reader=Yolo4Reader()) -> DealConverter:
-    dbscan = strategy.CoreFinderDbscan()
+    dbscan = strategy.CoreFinderDbscanPy()
     single_linkage = strategy.SingleLinkage()
     deal_converter = DealConverter(reader, dbscan, single_linkage)
     return deal_converter
