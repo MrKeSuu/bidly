@@ -7,6 +7,8 @@ dtd-r1.0.1.tar.gz
 
 __pycache__
 .venv/
+.vscode/
+.buildozer/
 
 solver/install/dds/src/*.o
 bin/
