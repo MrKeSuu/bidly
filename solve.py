@@ -74,6 +74,7 @@ class BridgeSolver(BridgeSolverBase):
 
     def solve(self):
         pbn_hand = self.converter.format_pbn()
+        lgr.debug("Formatted pbn hand: %s", pbn_hand)
 
         dds_result = dds_adapter.solve_hand(pbn_hand)
         lgr.debug("DDS result: %s", dds_result)

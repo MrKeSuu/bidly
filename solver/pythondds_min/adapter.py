@@ -16,10 +16,13 @@ PbnHand = bytes
 
 
 def solve_hand(hand: PbnHand):
+    log.debug("Initiating deal..")
     deal = _init_deal(hand)
+    log.debug("Initiating result..")
     result = _init_result()
 
     # call CalcDDtablePBN
+    log.debug("Calculating DDTable..")
     ret_code = dds.CalcDDtablePBN(deal, result)
 
     if ret_code != dds.RETURN_NO_FAULT:
@@ -57,6 +60,7 @@ def format_par(par_result: dds.parResults):
 
 
 def format_result(result: dds.ddTableResults):
+    log.debug("Formating DDS result..")
     # Possible TODO, let result be Union of pd.DF and pythondds_min.dds.ddTableResults
     with io.StringIO() as buf, contextlib.redirect_stdout(buf):
         functions.PrintTable(result)
