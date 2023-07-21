@@ -195,7 +195,7 @@ bool ABsearch0(
     {
 #ifdef DDS_AB_HITS
       DumpRetrieved(thrp->fileRetrieved.GetStream(), 
-        * posPoint, cardsP, target, depth);
+        * posPoint, * cardsP, target, depth);
 #endif
 
       for (int ss = 0; ss < DDS_SUITS; ss++)
