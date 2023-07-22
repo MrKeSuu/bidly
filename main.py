@@ -8,8 +8,8 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
 
-# import detect
-# import solve
+import detect
+import solve
 
 
 __version__ = '0.1.0'
@@ -45,11 +45,6 @@ class BidlyApp(App):
         solution.view(hand=hand, table=table)
         return solution
 
-    def build(self):
-        pyddsmin = PyDdsMin()
-        pyddsmin.test_pyddsmin()
-        return pyddsmin
-
 
 class Solution(GridLayout):
     hand = StringProperty(None)
@@ -58,13 +53,6 @@ class Solution(GridLayout):
     def view(self, hand, table):
         self.hand = hand
         self.table = table
-
-
-from solver.pythondds_min import calc_ddtable_pbn
-class PyDdsMin(Widget):
-    def test_pyddsmin(self):
-        lgr.info("Running min example for pythondds..")
-        calc_ddtable_pbn.main()
 
 
 class PongGame(Widget):
