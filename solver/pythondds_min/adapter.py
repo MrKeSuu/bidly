@@ -23,6 +23,7 @@ def solve_hand(hand: PbnHand):
 
     # call CalcDDtablePBN
     log.debug("Calculating DDTable..")
+    dds.SetMaxThreads(0)
     ret_code = dds.CalcDDtablePBN(deal, result)
 
     if ret_code != dds.RETURN_NO_FAULT:
