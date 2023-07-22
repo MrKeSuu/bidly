@@ -20,7 +20,7 @@ from ctypes import *
 import pathlib
 
 
-DDS_DIR = str(pathlib.Path(__file__).parent/'libdds.so')
+DDS_DIR = 'libdds.so'
 DDS_DIR_LINUX = str(pathlib.Path(__file__).parent/'libdds-linux.so')
 try:
     dds = cdll.LoadLibrary(DDS_DIR)

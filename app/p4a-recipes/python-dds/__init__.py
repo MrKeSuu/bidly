@@ -3,7 +3,13 @@ import sh
 
 from pythonforandroid.recipe import Recipe, IncludedFilesBehaviour
 from pythonforandroid.util import current_directory
-from pythonforandroid.logger import shprint
+from pythonforandroid.logger import shprint, info
+
+
+ARCH_ALIAS_MAP = {
+    'arm64-v8a': 'aarch64',
+    'armeabi-v7a': 'arm',
+}
 
 
 class PythonDdsRecipe(IncludedFilesBehaviour, Recipe):
@@ -13,6 +19,7 @@ class PythonDdsRecipe(IncludedFilesBehaviour, Recipe):
     # depends = ['libiconv']
 
     src_filename = 'dds'
+    need_stl_shared = True
 
     built_libraries = {'libdds.so': 'src'}
 
@@ -29,6 +36,17 @@ class PythonDdsRecipe(IncludedFilesBehaviour, Recipe):
         makefile_dir = os.path.join(self.get_build_dir(arch.arch), 'src')
         with current_directory(makefile_dir):
             shprint(sh.make, '-f', 'Makefile_Android_aarch64_shared', _env=env)
+
+    def postbuild_arch(self, arch):
+        super().postbuild_arch(arch)
+
+        # OpenMP
+        arch_alias = ARCH_ALIAS_MAP.get(arch.arch, arch.arch)
+        relpath = f'toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/14.0.6/lib/linux/{arch_alias}/libomp.so'
+        libomp = os.path.join(self.ctx.ndk_dir, relpath)
+
+        info("Installing OpenMP lib manually for %s: %s", arch_alias, libomp)
+        self.install_libs(arch, libomp)
 
 
 recipe = PythonDdsRecipe()

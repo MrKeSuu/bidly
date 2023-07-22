@@ -13,7 +13,7 @@ package.domain = io.github.lyiqian
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas,so,onnx
+source.include_exts = py,png,jpg,kv,atlas,onnx
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
@@ -37,8 +37,7 @@ version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-#requirements = python3==3.8.16,hostpython3==3.8.16,kivy==2.2.1,numpy,opencv==4.5.4,pandas,scipy
-requirements = python3==3.8.16,hostpython3==3.8.16,kivy==2.2.1,python-dds
+requirements = python3==3.8.16,hostpython3==3.8.16,kivy==2.2.1,numpy,opencv==4.5.4,pandas,scipy,python-dds
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -102,19 +101,19 @@ fullscreen = 0
 #android.features = android.hardware.usb.host
 
 # (int) Target Android API, should be as high as possible.
-#android.api = 31
+android.api = 33
 
 # (int) Minimum API your APK / AAB will support.
-#android.minapi = 21
+android.minapi = 21
 
 # (int) Android SDK version to use
 #android.sdk = 20
 
 # (str) Android NDK version to use
-#android.ndk = 23b
+android.ndk = 25b
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
-#android.ndk_api = 21
+android.ndk_api = 21
 
 # (bool) Use --private data storage (True) or --dir public storage (False)
 #android.private_storage = True
@@ -350,7 +349,7 @@ p4a.local_recipes = app/p4a-recipes
 #p4a.setup_py = false
 
 # (str) extra command line arguments to pass when invoking pythonforandroid.toolchain
-#p4a.extra_args =
+#p4a.extra_args = --blacklist-requirements=sqlite3
 
 
 
