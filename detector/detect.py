@@ -1,3 +1,4 @@
+"""Detector interfaces/Classes used by app."""
 import abc
 import dataclasses
 import logging

@@ -1,8 +1,9 @@
+"""Solver interfaces/Classes used by app."""
 import abc
 import dataclasses
 import logging
 
-import detect
+from detector import detect
 from solver import converter
 import solver.pythondds_min.adapter as dds_adapter
 

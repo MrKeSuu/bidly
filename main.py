@@ -8,8 +8,8 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
 
-import detect
-import solve
+from detector import detect
+from solver import solve
 
 
 __version__ = '0.1.0'
