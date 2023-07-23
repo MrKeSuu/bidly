@@ -121,6 +121,7 @@ class DealConverter:
         self._write_pbn_deal(deal, path)
 
     def format_pbn(self) -> bytes:
+        log.info("Formatting hand to PBN..")
         hands = self._build_pbn_hands()
         deal = self._build_pbn_deal(hands)
         return deal.encode("ascii")
@@ -145,7 +146,7 @@ class DealConverter:
         densest_dist = self._find_densest(dist.query('0.1 <= dist_ <= 0.3').dist_)
         good_dup = self._get_good_dup(self.card, dist, densest_dist)
 
-        log.info("Found %s 'good' dups: %s", len(good_dup), good_dup[["name"]].to_dict("records"))
+        log.debug("Found %s 'good' dups: %s", len(good_dup), good_dup[["name"]].to_dict("records"))
         # TODO From later experiments, here we might want to replace with mean of each pair.
         return (pd.concat([self._dedup_simple(),
                            good_dup])
@@ -158,8 +159,8 @@ class DealConverter:
                 .pipe(self._mark_marginal, width=self.QUADRANT_MARGIN_WIDTH)
                 .assign(quadrant=lambda df: df.apply(self._calc_quadrant, axis=1))
         )
-        log.info("Divided to quadrants with %s marginal cards.",
-                 self.card_.query("quadrant == 'margin'").shape[0])
+        log.debug("Divided to quadrants with %s marginal cards.",
+                  self.card_.query("quadrant == 'margin'").shape[0])
 
     def _mark_core_objs(self):
         """Find core objects for all four quadrants by adding col 'is_core'."""
@@ -184,10 +185,10 @@ class DealConverter:
         out_core_dups = self.card_[lambda df: (~df.is_core) & (df.name.isin(core.name))]
         self.card_ = self.card_.drop(index=out_core_dups.index)
 
-        log.info("Dropped %s duplicates inside core: %s",
-                 len(in_core_dups), in_core_dups[["name", "quadrant"]].to_dict("records"))
-        log.info("Dropped %s duplicates outside core: %s",
-                 len(out_core_dups), out_core_dups[["name", "quadrant"]].to_dict("records"))
+        log.debug("Dropped %s duplicates inside core: %s",
+                  len(in_core_dups), in_core_dups[["name", "quadrant"]].to_dict("records"))
+        log.debug("Dropped %s duplicates outside core: %s",
+                  len(out_core_dups), out_core_dups[["name", "quadrant"]].to_dict("records"))
 
     def _assign_core_objs(self):
         """Assign each core obj to hand based on quadrant, by adding col 'hand'. """
@@ -229,7 +230,7 @@ class DealConverter:
                     closest_obj_idx = obj_idx
                     closest_hand = hand
 
-        log.info(
+        log.debug(
             "Found a closest obj(%s) to '%s': %s",
             remaining.loc[closest_obj_idx, ["name", "quadrant"]].to_dict(),
             closest_hand,
@@ -246,7 +247,7 @@ class DealConverter:
         _assigned_name = remaining.at[obj_idx, 'name']
         assigned_cards = remaining[remaining.name == _assigned_name]
 
-        log.info(
+        log.debug(
             "Dropping %s assigned cards: %s",
             len(assigned_cards),
             assigned_cards[["name", "quadrant"]].to_dict("records"))

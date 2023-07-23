@@ -16,9 +16,7 @@ PbnHand = bytes
 
 
 def solve_hand(hand: PbnHand):
-    log.debug("Initiating deal..")
     deal = _init_deal(hand)
-    log.debug("Initiating result..")
     result = _init_result()
 
     # call CalcDDtablePBN
