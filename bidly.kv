@@ -1,19 +1,41 @@
 #:kivy 2.2.1
 
-<Solution>:
-    cols: 1
+<Bidly>:
+    orientation: 'vertical'
+    padding: 10
+    spacing: 5
+
+    deal_box: deal_box
+    interaction_box: interaction_box
+
+    DealBox:
+        id: deal_box
+
+    InteractionBox:
+        id: interaction_box
+
+
+<DealBox>:
+    size_hint_y: 0.5
 
     Label:
-        font_size: 30
-        center_x: root.width / 2
-        top: root.top - 50
         text: str(root.hand)
+        font_size: '12sp'
+        # size: self.texture_size
+        text_size: self.size
+        valign: 'top'
+
+
+<InteractionBox>:
 
     Label:
-        font_size: 30
-        center_x: root.width / 2
-        top: root.top - 500
         text: str(root.table)
+        font_size: 30
+
+        # size: self.texture_size
+        text_size: self.size
+        valign: 'bottom'
+
 
 <PongGame>:
     canvas:

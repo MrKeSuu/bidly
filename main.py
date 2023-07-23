@@ -4,7 +4,7 @@ import pathlib
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty, StringProperty
-from kivy.uix.gridlayout import GridLayout
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
 
@@ -41,18 +41,25 @@ class BidlyApp(App):
         hand, table = solver.present()
 
         lgr.info("Presenting solution..")
-        solution = Solution()
-        solution.view(hand=hand, table=table)
-        return solution
+        bidly = Bidly()
+        bidly.view(hand=hand, table=table)
+        return bidly
 
 
-class Solution(GridLayout):
-    hand = StringProperty(None)
-    table = StringProperty(None)
+class Bidly(BoxLayout):
+    deal_box: ObjectProperty(None)
+    interaction_box: ObjectProperty(None)
 
     def view(self, hand, table):
-        self.hand = hand
-        self.table = table
+        self.deal_box.hand = hand
+        self.interaction_box.table = table
+
+class DealBox(BoxLayout):
+    hand = StringProperty(None)
+
+
+class InteractionBox(BoxLayout):
+    table = StringProperty(None)
 
 
 class PongGame(Widget):
