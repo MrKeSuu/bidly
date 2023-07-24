@@ -163,15 +163,6 @@ class PongGame(Widget):
             self.player2.center_y = touch.y
 
 
-class PongBall(Widget):
-    velocity_x = NumericProperty(0)
-    velocity_y = NumericProperty(0)
-    velocity = ReferenceListProperty(velocity_x, velocity_y)
-
-    def move(self):
-        self.pos = Vector(*self.velocity) + self.pos
-
-
 class PongPaddle(Widget):
     score = NumericProperty(0)
 
