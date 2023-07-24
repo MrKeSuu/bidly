@@ -66,6 +66,7 @@ class BridgeSolver(BridgeSolverBase):
     def transform(self):
         self.converter.read(self.cards)
         self.converter.dedup(smart=True)
+        self.converter.report_missing_and_fp()
 
     def assign(self):
         self.converter.assign()

@@ -77,6 +77,10 @@ class DealConverter:
     def read(self, path):
         self.card = self.reader.read(path)
 
+        vcnt = self.card.name.value_counts()
+        msg = ','.join(f"{name} {f'({cnt})' if cnt > 1 else ''}" for name, cnt in vcnt.iteritems())
+        log.info("Read detected objs: %s", msg)
+
     def report_missing_and_fp(self):
         # report missing
         detected_classes = set(self.card.name)
