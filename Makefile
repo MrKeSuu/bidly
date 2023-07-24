@@ -2,7 +2,10 @@ build-debug:
 	LEGACY_NDK=~/.buildozer/android/platform/android-ndk-r21e buildozer -v android debug
 
 deploy-log:
-	LEGACY_NDK=~/.buildozer/android/platform/android-ndk-r21e buildozer android deploy run logcat
+	buildozer android deploy run logcat
+
+android:
+	LEGACY_NDK=~/.buildozer/android/platform/android-ndk-r21e buildozer -v android debug deploy run
 
 complete:
 	buildozer android clean

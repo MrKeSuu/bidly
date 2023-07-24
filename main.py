@@ -14,7 +14,7 @@ from detector import detect
 from solver import solve
 
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 ROOT_DIRPATH = pathlib.Path(__file__).parent
 

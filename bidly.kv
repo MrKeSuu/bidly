@@ -2,7 +2,7 @@
 
 <Bidly>:
     orientation: 'vertical'
-    padding: (0, 100)
+    padding: (0, 10)
     spacing: 5
 
     deal_box: deal_box
@@ -40,6 +40,14 @@
     resolution: (1600, 1200)  # one of the supported
     play: True
     fit_mode: 'cover'
+
+    canvas.before:
+        PushMatrix
+        Rotate:
+            angle: -90
+            origin: self.center
+    canvas.after:
+        PopMatrix
 
 <BgcolorLabel>:
     text: str(self.label_text)
