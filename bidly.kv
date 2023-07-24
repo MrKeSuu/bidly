@@ -2,7 +2,7 @@
 
 <Bidly>:
     orientation: 'vertical'
-    padding: 10
+    padding: (0, 100)
     spacing: 5
 
     deal_box: deal_box
@@ -14,27 +14,57 @@
     InteractionBox:
         id: interaction_box
 
+        Button:
+            id: camera_button
+            text: 'Detect & Solve'
+            size_hint_y: None
+            height: '48dp'
+            on_release: root.detect_solve()
+
 
 <DealBox>:
-    size_hint_y: 0.5
+    size_hint: 1, None
+    size: self.width, self.width
 
-    Label:
-        text: str(root.hand)
-        font_size: '12sp'
-        # size: self.texture_size
-        text_size: self.size
-        valign: 'top'
+    camera: camera
 
+    CameraWidget:
+        id: camera
 
 <InteractionBox>:
+    orientation: 'vertical'
+    spacing: 5
 
-    Label:
-        text: str(root.table)
-        font_size: 30
 
-        # size: self.texture_size
-        text_size: self.size
-        valign: 'bottom'
+<CameraWidget>:
+    resolution: (1184, 1184)
+    play: True
+    fit_mode: 'cover'
+
+<BgcolorLabel>:
+    text: str(self.label_text)
+
+    font_size: '12sp'
+    color: 0, 0, 0, 1
+    text_size: self.size
+    valign: 'top'
+
+# Define your background color Template
+<BackgroundColor@Widget>
+    background_color: 1, 1, 1, 1
+    canvas.before:
+        Color:
+            rgba: root.background_color
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+# Now you can simply Mix the `BackgroundColor` class with almost
+# any other widget... to give it a background.
+<BgcolorLabel@Label+BackgroundColor>
+    # Default the background color for this label
+    # to r 0, g 0, b 0, a 0
+    background_color: 1, 1, 1, 1
 
 
 <PongGame>:
@@ -73,16 +103,3 @@
         x: root.width - self.width
         center_y: root.center_y
 
-<PongBall>:
-    size: 50, 50 
-    canvas:
-        Ellipse:
-            pos: self.pos
-            size: self.size    
-
-<PongPaddle>:
-    size: 25, 200
-    canvas:
-        Rectangle:
-            pos: self.pos
-            size: self.size

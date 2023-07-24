@@ -1,10 +1,12 @@
 import logging
 import pathlib
 
+import numpy as np
 from kivy.app import App
-from kivy.clock import Clock
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.camera import Camera
+from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
 
@@ -21,17 +23,37 @@ lgr = logging
 
 class BidlyApp(App):
     def build(self):
+        bidly = Bidly()
+        return bidly
+
+
+class Bidly(BoxLayout):
+    deal_box: ObjectProperty(None)
+    interaction_box: ObjectProperty(None)
+
+    ONNX_MODEL_PATH = ROOT_DIRPATH/'detector/best1056.onnx'
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        yolo5 = detect.Yolo5Opencv(detect.OpencvOnnxLoader())
+        yolo5.load(self.ONNX_MODEL_PATH)
+        self._model = yolo5
+        lgr.debug("Loaded model from: %s", self.ONNX_MODEL_PATH)
+
+    def detect_solve(self):
+        lgr.info("Taking photo..")
+        img_data = self.deal_box.camera.capture()
+
         lgr.info("Handling image..")
-        image_handler = detect.get_image_handler()
-        image_handler.read(ROOT_DIRPATH/'deal5-md-sq.jpg')  # DEBUG
+        image_handler = detect.get_image_handler(image_reader=detect.BgraReader())
+        image_handler.read(img_data)
         image_handler.validate()
         image_input = image_handler.preprocess()
 
-        lgr.info("Loading yolo5 model and detecting..")
-        ONNX_MODEL_PATH = ROOT_DIRPATH/'detector/best.onnx'
-        yolo5 = detect.Yolo5Opencv(detect.OpencvOnnxLoader())
-        yolo5.load(ONNX_MODEL_PATH)
-        detection = yolo5.detect(image_input)
+        lgr.info("Detecting cards..")
+        detection = self._model.detect(image_input)
+        lgr.debug("Detected %s objs", len(detection))
 
         lgr.info("Solving deal..")
         solver = solve.BridgeSolver(detection, presenter=solve.StringPresenter())
@@ -40,30 +62,55 @@ class BidlyApp(App):
         solver.solve()
         hand, table = solver.present()
 
-        lgr.info("Presenting solution..")
-        bidly = Bidly()
-        bidly.view(hand=hand, table=table)
-        return bidly
+        lgr.info("Displaying solution..")
+        self.display(hand, table)
 
+    def display(self, hand, table):
+        # self.interaction_box.clear_widgets()
 
-class Bidly(BoxLayout):
-    deal_box: ObjectProperty(None)
-    interaction_box: ObjectProperty(None)
+        hand_label = BgcolorLabel(font_size='9sp')
+        hand_label.display(hand)
+        self.interaction_box.add_widget(hand_label, 1)
 
-    def view(self, hand, table):
-        self.deal_box.hand = hand
-        self.interaction_box.table = table
+        table_label = BgcolorLabel()
+        table_label.display(table)
+        self.interaction_box.add_widget(table_label, 1)
+
 
 class DealBox(BoxLayout):
-    hand = StringProperty(None)
+    camera = ObjectProperty(None)
 
 
 class InteractionBox(BoxLayout):
-    table = StringProperty(None)
+    pass
+
+
+class CameraWidget(Camera):
+
+    def capture(self):
+        img = self.export_as_image()
+
+        pixels = img.texture.pixels
+        size = img.texture.size
+        img_data = np.frombuffer(pixels, np.uint8).reshape((size[1], size[0], 4))
+
+        lgr.debug("Capture image from camera, with shape: %s", img_data.shape)
+        return img_data
+
+
+class BackgroundColor(Widget):
+    pass
+
+
+class BgcolorLabel(Label, BackgroundColor):
+    label_text = StringProperty("")
+
+    def display(self, text):
+        self.label_text = text
 
 
 class PongGame(Widget):
-    ball = ObjectProperty(None)  #
+    ball = ObjectProperty(None)
     player1 = ObjectProperty(None)
     player2 = ObjectProperty(None)
 
@@ -90,11 +137,12 @@ class PongGame(Widget):
             self.player1.score += 1
             self.serve_ball(vel=(-4, 0))
 
-    def on_touch_move(self, touch):
+    def on_touch_move(self, touch):  ##
         if touch.x < self.width/3:
             self.player1.center_y = touch.y
         if touch.x > self.width - self.width/3:
             self.player2.center_y = touch.y
+
 
 class PongBall(Widget):
     velocity_x = NumericProperty(0)
@@ -109,7 +157,7 @@ class PongPaddle(Widget):
     score = NumericProperty(0)
 
     def bounce_ball(self, ball):
-        if self.collide_widget(ball):  #
+        if self.collide_widget(ball):  ## or collide_point
             speedup  = 1.1
             offset = 0.02 * Vector(0, ball.center_y-self.center_y)
             ball.velocity =  speedup * (offset - ball.velocity)

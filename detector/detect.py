@@ -196,6 +196,14 @@ class FsImageReader(IImageReader):
         return image
 
 
+class BgraReader(IImageReader):
+
+    @staticmethod
+    def read(src):
+        image = cv2.cvtColor(src, cv2.COLOR_BGRA2RGB)
+        return image
+
+
 class MinSizeValidator(IImageValidator):
     MIN_WIDTH = IMAGE_WIDTH
     MIN_HEIGHT = IMAGE_HEIGHT
@@ -207,18 +215,17 @@ class MinSizeValidator(IImageValidator):
 
 
 class ImageResize(IImagePreprocessor):
-    TARGET_SIZE = (IMAGE_WIDTH ,IMGAE_HEIGHT)
+    TARGET_SIZE = (IMAGE_WIDTH ,IMAGE_HEIGHT)
 
     def preprocess(cls, image):
         return cv2.resize(image, cls.TARGET_SIZE)
 
 
-def get_image_handler():
-    fs_image_reader = FsImageReader()
+def get_image_handler(image_reader=FsImageReader()):
     min_size = MinSizeValidator()
     resize = ImageResize()
     image_handler = ImageHandler(
-        fs_image_reader,
+        image_reader,
         validators=[min_size],
         preprocesssors=[resize])
     return image_handler
