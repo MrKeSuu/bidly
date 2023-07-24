@@ -211,7 +211,7 @@ class MinSizeValidator(IImageValidator):
     def validate(cls, image):
         img_w, img_h = image.shape[0], image.shape[1]
         if img_w < cls.MIN_WIDTH or img_h < cls.MIN_HEIGHT:
-            raise ValueError("Image resolution %sx%s too low:", img_w, img_h)
+            raise ValueError(f"Image resolution {img_w}x{img_h} too low")
 
 
 class ImageResize(IImagePreprocessor):

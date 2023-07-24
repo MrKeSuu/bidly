@@ -12,9 +12,10 @@ from kivy.vector import Vector
 
 from detector import detect
 from solver import solve
+from app import ui
 
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 ROOT_DIRPATH = pathlib.Path(__file__).parent
 
@@ -33,6 +34,8 @@ class Bidly(BoxLayout):
 
     ONNX_MODEL_PATH = ROOT_DIRPATH/'detector/best1056.onnx'
 
+    MIN_OBJS_DETECTED = 50
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -46,35 +49,51 @@ class Bidly(BoxLayout):
         img_data = self.deal_box.camera.capture()
 
         lgr.info("Handling image..")
-        image_handler = detect.get_image_handler(image_reader=detect.BgraReader())
-        image_handler.read(img_data)
-        image_handler.validate()
-        image_input = image_handler.preprocess()
+        try:
+            image_input = self._handle_image(img_data)
+        except Exception as e:
+            lgr.exception("Image handling failure")
+            ui.show_msg("Image handling failure", msg=repr(e))
+            return
 
         lgr.info("Detecting cards..")
         detection = self._model.detect(image_input)
-        lgr.debug("Detected %s objs", len(detection))
+        if len(detection) < self.MIN_OBJS_DETECTED:
+            ui.show_msg("Too few cards", msg="Too few cards detected; please retry")
+            return
 
         lgr.info("Solving deal..")
-        solver = solve.BridgeSolver(detection, presenter=solve.StringPresenter())
-        solver.transform()
-        solver.assign()
-        solver.solve()
-        hand, table = solver.present()
+        solution = self._solve(detection)
 
         lgr.info("Displaying solution..")
-        self.display(hand, table)
+        self.display(solution)
 
-    def display(self, hand, table):
+    def display(self, solution):
+        hand, table = solution
+
         # self.interaction_box.clear_widgets()
 
         hand_label = BgcolorLabel(font_size='9sp')
         hand_label.display(hand)
-        self.interaction_box.add_widget(hand_label, 1)
+        self.interaction_box.add_widget(hand_label, index=1)
 
         table_label = BgcolorLabel()
         table_label.display(table)
-        self.interaction_box.add_widget(table_label, 1)
+        self.interaction_box.add_widget(table_label, index=1)
+
+    def _handle_image(self, img_data) -> detect.ImageInput:
+        image_handler = detect.get_image_handler(image_reader=detect.BgraReader())
+        image_handler.read(img_data)
+        image_handler.validate()
+        image_input = image_handler.preprocess()
+        return image_input
+
+    def _solve(self, detection: detect.CardDetection):
+        solver = solve.BridgeSolver(detection, presenter=solve.StringPresenter())
+        solver.transform()
+        solver.assign()
+        solver.solve()
+        return solver.present()
 
 
 class DealBox(BoxLayout):

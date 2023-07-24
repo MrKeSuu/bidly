@@ -79,7 +79,7 @@ class DealConverter:
 
         vcnt = self.card.name.value_counts()
         msg = ','.join(f"{name} {f'({cnt})' if cnt > 1 else ''}" for name, cnt in vcnt.iteritems())
-        log.info("Read detected objs: %s", msg)
+        log.info("Read %s detected objs: %s", len(self.card), msg)
 
     def report_missing_and_fp(self):
         # report missing

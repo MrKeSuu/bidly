@@ -22,7 +22,7 @@ source.include_exts = py,png,jpg,kv,atlas,onnx
 #source.exclude_exts = spec
 
 # (list) List of directory to exclude (let empty to not exclude anything)
-source.exclude_dirs = tests, bin, .venv, rawdata, detector/yolov5, detector/datasets, detector/evaluation, kivyvenv, app
+source.exclude_dirs = tests, bin, rawdata, detector/yolov5, detector/datasets, detector/evaluation, app/p4a-recipes
 
 # (list) List of exclusions using pattern matching
 # Do not prefix with './'
