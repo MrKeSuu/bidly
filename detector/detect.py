@@ -8,8 +8,8 @@ import cv2
 import numpy as np
 
 
-IMAGE_WIDTH = 1184
-IMGAE_HEIGHT = 1184
+IMAGE_WIDTH = 1056
+IMAGE_HEIGHT = 1056
 MIN_CONFIDENCE = 0.3
 
 lgr = logging
@@ -82,7 +82,8 @@ class ImageHandlerBase(abc.ABC):
         self.preprocessors = preprocesssors
 
     def read(self, src):
-        self._image = self.reader.read(str(src))
+        self._image = self.reader.read(src)
+        lgr.info("Read image with shape: %s", self._image.shape)
 
     def validate(self):
         for validator in self.validators:
@@ -113,7 +114,7 @@ class Yolo5Opencv(YoloModel):
         image_blob = cv2.dnn.blobFromImage(
             image.data,
             scalefactor=1/255,
-            size=(IMAGE_WIDTH, IMGAE_HEIGHT),
+            size=(IMAGE_WIDTH, IMAGE_HEIGHT),
             mean=[0,0,0],
             swapRB=True,
             crop=False,
@@ -178,7 +179,6 @@ class OpencvOnnxLoader(IYoloLoader):
     @staticmethod
     def load(src):
         model = cv2.dnn.readNetFromONNX(src)
-        lgr.debug("Loaded ONNX model: %s", model)
         return model
 
 
@@ -187,17 +187,18 @@ class FsImageReader(IImageReader):
 
     @staticmethod
     def read(src):
-        image = cv2.imread(src, cv2.IMREAD_UNCHANGED)
+        path = str(src)
+        image = cv2.imread(path, cv2.IMREAD_UNCHANGED)
 
         if image is None:
-            raise ValueError(f"Can't load image at: {src}")
+            raise ValueError(f"Can't load image at: {path}")
 
         return image
 
 
 class MinSizeValidator(IImageValidator):
     MIN_WIDTH = IMAGE_WIDTH
-    MIN_HEIGHT = IMGAE_HEIGHT
+    MIN_HEIGHT = IMAGE_HEIGHT
 
     def validate(cls, image):
         img_w, img_h = image.shape[0], image.shape[1]
