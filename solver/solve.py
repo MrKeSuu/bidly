@@ -74,7 +74,7 @@ class BridgeSolver(BridgeSolverBase):
         self.converter.assign()
 
     def list_unsure(self):
-        pass  # TODO like bidly found %s only; would you like to fill in the remaining %s or redetect? 
+        pass  # TODO like 'bidly found %s only; would you like to fill in the remaining %s or redetect?'
 
     def solve(self):
         pbn_hand = self.converter.format_pbn()

@@ -82,7 +82,7 @@ class Bidly(BoxLayout):
 
         n_buttons = len(self.interaction_box.children)  # so results are above buttons
 
-        hand_label = BgcolorLabel(font_size='9sp')
+        hand_label = BgcolorLabel(font_size='9dp')
         hand_label.display(hand)
         self.interaction_box.add_widget(hand_label, index=n_buttons)
 

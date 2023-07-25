@@ -35,7 +35,7 @@ def solve_hand(hand: PbnHand):
     return result
 
 
-def calc_par(result, vul=hands.VUL_NONE):
+def calc_par(result: dds.ddTableResults, vul=hands.VUL_NONE):
     par_result = _init_par_result()
     dds.Par(result, par_result, vul)
     return par_result
@@ -90,7 +90,7 @@ def _init_par_result():
 
 
 ## Util-like
-def result_to_df(result) -> pd.DataFrame:
+def result_to_df(result: dds.ddTableResults) -> pd.DataFrame:
     """Convert result to a DataFrame indexed by (player, suit).
 
     `resTable` doc: Encodes the solution of a deal for combinations of denomination and declarer.
