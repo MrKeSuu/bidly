@@ -10,6 +10,9 @@ from . import main
 from . import strategy
 
 
+TEST_ROOT_DIR = pathlib.Path(__file__).parent
+
+
 @pytest.fixture(scope='module')
 def pbn_hand() -> bytes:
     return b'W:9432.AT72.K98.JT KQ65.KJ.A52.9632 7.Q86.QJ763.AK84 AJT8.9543.T4.Q75'
@@ -34,10 +37,10 @@ class TestBasic:
 
 
 class TestConverter:
-    DEAL1_YOLO_FILEPATH = pathlib.Path('fixtures/deal1-result-md.json')
-    MANUAL_EDIT_YOLO_FILEPATH = pathlib.Path('fixtures/deal3-manual-edit.json')
+    DEAL1_YOLO_FILEPATH = TEST_ROOT_DIR/'fixtures'/'deal1-result-md.json'
+    MANUAL_EDIT_YOLO_FILEPATH = TEST_ROOT_DIR/'fixtures'/'deal3-manual-edit.json'
 
-    PBN_FILEPATH = pathlib.Path('fixtures/deal3-manual-edit.pbn')
+    PBN_FILEPATH = TEST_ROOT_DIR/'fixtures'/'deal3-manual-edit.pbn'
 
     @pytest.fixture
     def reader(self):
@@ -154,10 +157,10 @@ class TestConverter:
         deal_converter._drop_core_duplicates()
 
         card = deal_converter.card_
-        assert card.shape == (44, 10)
+        assert card.shape == (46, 10)
         assert card.query("name == '6d' and is_core == True").shape[0] == 1
         assert card.query("name == 'Qc'").shape[0] == 1
-        assert card.query("name == 'Js' and quadrant == 'margin'").empty
+        assert card.query("name == 'Qc' and is_core == False").empty
 
     def test_assign_core_objs(self, deal_converter: converter.DealConverter):
         deal_converter.dedup(smart=True)

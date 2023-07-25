@@ -160,7 +160,9 @@ class DealConverter:
 
     def _divide_to_quadrants(self):
         """Divide cards to four quadrants before finding the core objs in each."""
-        self.card_ = self.card_ or self.card.copy()  # in case no dedup
+        if self.card_ is None:  # in case no dedup
+            self.card_ = self.card.copy()
+
         self.card_ = (
             self.card_
                 .pipe(self._mark_marginal, width=self.QUADRANT_MARGIN_WIDTH)
@@ -440,12 +442,16 @@ class DealConverter:
 
     def _find_quadrant_core_objs(self, quadrant) -> pd.Series:
         """Find core objects for a specific quadrant"""
-        subframe = self.card_.loc[lambda df: df.quadrant == quadrant, ["center_x", "center_y"]]
+        quadrant_card = self.card_[lambda df: df.quadrant == quadrant]
 
-        _obj_coords = subframe.itertuples(index=False)
-        bool_seq = self.core_finder.find_core(_obj_coords)
+        _obj_coords = quadrant_card[["center_x", "center_y"]].itertuples(index=False)
+        core_bool_seq = self.core_finder.find_core(_obj_coords)
 
-        return pd.Series(bool_seq, index=subframe.index)
+        # Unmark core if dup exists outside its quadrant
+        outside_card = self.card_[lambda df: df.quadrant != quadrant]
+        no_dup_bool_seq = ~quadrant_card.name.isin(outside_card.name.values)
+
+        return pd.Series(core_bool_seq & no_dup_bool_seq, index=quadrant_card.index)
 
 
 class Yolo4Reader(IPredReader):
