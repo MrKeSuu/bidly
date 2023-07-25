@@ -91,6 +91,8 @@ class DealConverter:
         fp_classes = self.card.name.value_counts()[lambda s: s > 2].index.tolist()
         print("FP cards:", fp_classes)
 
+        return missing_classes, fp_classes
+
     def dedup(self, smart=False):
         log.info("Running dedup (smart=%s) ..", smart)
         if smart:
@@ -114,6 +116,8 @@ class DealConverter:
 
             self._assign_one_obj(obj_idx, hand)
             remaining = self._drop_assigned(obj_idx, remaining)
+
+        assert self.card_.hand.value_counts().eq(13).all(), "Not all hands had 13 cards"
 
     def infer_missing(self):
         """Case 2: missing cards -> attempt to infer"""
@@ -158,6 +162,7 @@ class DealConverter:
 
     def _divide_to_quadrants(self):
         """Divide cards to four quadrants before finding the core objs in each."""
+        self.card_ = self.card_ or self.card.copy()  # in case no dedup
         self.card_ = (
             self.card_
                 .pipe(self._mark_marginal, width=self.QUADRANT_MARGIN_WIDTH)
@@ -186,7 +191,7 @@ class DealConverter:
         in_core_dups = core[core.duplicated("name")]
         self.card_ = self.card_.drop(index=in_core_dups.index)
 
-        out_core_dups = self.card_[lambda df: (~df.is_core) & (df.name.isin(core.name))]
+        out_core_dups = self.card_[lambda df: (~df.is_core) & (df.name.isin(core.name.values))]
         self.card_ = self.card_.drop(index=out_core_dups.index)
 
         log.debug("Dropped %s duplicates inside core: %s",
@@ -200,10 +205,15 @@ class DealConverter:
             if not row.is_core:
                 return None
 
-            assert row.quadrant != MARGIN, f"Unexpected 'margin' core card: {row.name}"
+            assert row.quadrant != MARGIN, f"Unexpected 'margin' core card: {row['name']}"
             return HAND_MAP[row.quadrant]
 
         self.card_["hand"] = self.card_.apply(_to_hand, axis=1)
+        log.debug("N core cards: %s", self.card_.query(f"hand == '{HAND_N}'").name.tolist())
+        log.debug("E core cards: %s", self.card_.query(f"hand == '{HAND_E}'").name.tolist())
+        log.debug("S core cards: %s", self.card_.query(f"hand == '{HAND_S}'").name.tolist())
+        log.debug("W core cards: %s", self.card_.query(f"hand == '{HAND_W}'").name.tolist())
+
 
     def _list_remaining_objs(self) -> pd.DataFrame:
         """Return a df containing unassigned objs."""

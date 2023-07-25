@@ -65,8 +65,10 @@ class BridgeSolver(BridgeSolverBase):
 
     def transform(self):
         self.converter.read(self.cards)
-        self.converter.dedup(smart=True)
-        self.converter.report_missing_and_fp()
+        # self.converter.dedup(smart=True)  # yolo5 does not seem needing this
+        missings, fps = self.converter.report_missing_and_fp()
+        return missings, fps
+
 
     def assign(self):
         self.converter.assign()

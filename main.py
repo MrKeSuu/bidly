@@ -15,7 +15,7 @@ from solver import solve
 from app import ui
 
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 ROOT_DIRPATH = pathlib.Path(__file__).parent
 
@@ -52,18 +52,26 @@ class Bidly(BoxLayout):
         try:
             image_input = self._handle_image(img_data)
         except Exception as e:
-            lgr.exception("Image handling failure")
-            ui.show_msg("Image handling failure", msg=repr(e))
+            lgr.exception("Image handler failure")
+            ui.show_msg("Image handler failure", msg=repr(e))
+            self.deal_box.camera.play = True
             return
 
         lgr.info("Detecting cards..")
         detection = self._model.detect(image_input)
         if len(detection) < self.MIN_OBJS_DETECTED:
             ui.show_msg("Too few cards", msg="Too few cards detected; please retry")
+            self.deal_box.camera.play = True
             return
 
         lgr.info("Solving deal..")
-        solution = self._solve(detection)
+        try:
+            solution = self._solve(detection)
+        except Exception as e:
+            lgr.exception("Solver failure")
+            ui.show_msg("Solver failure", msg=repr(e))
+            self.deal_box.camera.play = True
+            return
 
         lgr.info("Displaying solution..")
         self.display(solution)
@@ -90,7 +98,10 @@ class Bidly(BoxLayout):
 
     def _solve(self, detection: detect.CardDetection):
         solver = solve.BridgeSolver(detection, presenter=solve.StringPresenter())
-        solver.transform()
+        missing, fp = solver.transform()
+        if missing:
+            raise ValueError(f"Missing cards: {', '.join(ui.display_name(n) for n in missing)}")
+
         solver.assign()
         solver.solve()
         return solver.present()
