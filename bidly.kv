@@ -1,8 +1,9 @@
 #:kivy 2.2.1
+#:import ui app.ui
 
 <Bidly>:
     orientation: 'vertical'
-    padding: (0, 10)
+    padding: (0, 0, 0, 10)
     spacing: 5
 
     deal_box: deal_box
@@ -14,14 +15,17 @@
     InteractionBox:
         id: interaction_box
 
+        camera_button: camera_button
+        restart_button: restart_button
+
         Button:
             id: camera_button
             text: 'Detect & Solve'
             size_hint_y: None
             height: '48dp'
             on_release:
-                deal_box.camera.play = False; root.detect_solve(); \
-                self.disabled = True; restart_button.disabled = False;
+                deal_box.camera.play = False; self.disabled = True; restart_button.disabled = False;\
+                root.detect_solve()
 
         Button:
             id: restart_button
@@ -29,9 +33,7 @@
             size_hint_y: None
             height: '48dp'
             disabled: True
-            on_release:
-                deal_box.camera.play = True; root.restart(); \
-                self.disabled = True; camera_button.disabled = False;
+            on_release: root.restart()
 
 
 <DealBox>:

@@ -55,7 +55,8 @@ class Bidly(BoxLayout):
             image_input = self._handle_image(img_data)
         except Exception as e:
             lgr.exception("Image handler failure")
-            ui.show_msg("Image handler failure", msg=repr(e))
+            pp = ui.show_msg("Image handler failure", msg=repr(e))
+            pp.bind(on_dismiss=lambda _: self.restart())
             return
 
         lgr.info("Detecting cards..")
@@ -95,6 +96,9 @@ class Bidly(BoxLayout):
             if not isinstance(widget, Button):
                 self.interaction_box.remove_widget(widget)
 
+        self.deal_box.camera.play = True
+        self.interaction_box.restart()
+
     def _handle_image(self, img_data) -> detect.ImageInput:
         image_handler = detect.get_image_handler(image_reader=detect.BgraReader())
         image_handler.read(img_data)
@@ -118,7 +122,12 @@ class DealBox(FloatLayout):
 
 
 class InteractionBox(BoxLayout):
-    pass
+    camera_button: ObjectProperty(None)
+    restart_button: ObjectProperty(None)
+
+    def restart(self):
+        self.camera_button.disabled = False
+        self.restart_button.disabled = True
 
 
 class CameraWidget(Camera):
