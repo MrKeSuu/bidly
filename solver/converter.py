@@ -117,8 +117,6 @@ class DealConverter:
             self._assign_one_obj(obj_idx, hand)
             remaining = self._drop_assigned(obj_idx, remaining)
 
-        assert self.card_.hand.value_counts().eq(13).all(), "Not all hands had 13 cards"
-
     def infer_missing(self):
         """Case 2: missing cards -> attempt to infer"""
         pass  # *lower priority
@@ -267,7 +265,7 @@ class DealConverter:
             assigned_cards[["name", "quadrant"]].to_dict("records"))
         return remaining.drop(index=assigned_cards.index)
 
-    def _build_pbn_hands(self) -> tuple:
+    def _build_pbn_hands(self):
         """Build four hands according to pbn format. (See deals.py)
 
         Now only supports a 4-tuple of (W, N, E, S)."""
@@ -281,6 +279,8 @@ class DealConverter:
 
     def _build_pbn_hand(self, hand_name):
         card_names = self.card_[self.card_.hand == hand_name].name.copy()
+        if len(card_names) != 13:
+            raise ValueError(f"{hand_name.upper()} did not have 13 cards")
 
         suits = (
             self._build_pbn_suit(card_names, SUIT_S),
