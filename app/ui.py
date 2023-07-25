@@ -5,20 +5,24 @@ from kivy.uix.popup import Popup
 from kivy.uix.boxlayout import BoxLayout
 
 
-def show_msg(title, msg):
+def show_msg(title, msg, auto_dismiss=False, add_button=False):
     content = BoxLayout(orientation='vertical')
 
     label = Label(text=msg, text_size=(800, None))
     label.bind(size=lambda ins: ins.texture_size)
     content.add_widget(Label(text=msg))
 
-    button = Button(text='Close')
-    content.add_widget(button)
+    if add_button:
+        button = Button(text='Close')
+        content.add_widget(button)
 
-    popup = Popup(title=title, content=content, size_hint=(0.9, None), height=400)
+    popup = Popup(
+        title=title, content=content,
+        size_hint=(0.9, None), height=400, auto_dismiss=auto_dismiss)
     popup.open()
 
-    button.bind(on_release=popup.dismiss)
+    if add_button:
+        button.bind(on_release=popup.dismiss)
 
     return popup
 

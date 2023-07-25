@@ -3,6 +3,7 @@ import pathlib
 
 import numpy as np
 from kivy.app import App
+from kivy.clock import Clock
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -17,7 +18,7 @@ from solver import solve
 from app import ui
 
 
-__version__ = '0.2.3'
+__version__ = '0.3.0'
 
 ROOT_DIRPATH = pathlib.Path(__file__).parent
 
@@ -47,6 +48,11 @@ class Bidly(BoxLayout):
         lgr.debug("Loaded model from: %s", self.ONNX_MODEL_PATH)
 
     def detect_solve(self):
+        pp = ui.show_msg("Detectin & Solving", "This could take a minute")
+        Clock.schedule_once(lambda dt: self._detect_solve())
+        pp.dismiss()
+
+    def _detect_solve(self):
         lgr.info("Taking photo..")
         img_data = self.deal_box.camera.capture()
 
@@ -55,14 +61,14 @@ class Bidly(BoxLayout):
             image_input = self._handle_image(img_data)
         except Exception as e:
             lgr.exception("Image handler failure")
-            pp = ui.show_msg("Image handler failure", msg=repr(e))
+            pp = ui.show_msg("Image handler failure", msg=repr(e), add_button=True)
             pp.bind(on_dismiss=lambda _: self.restart())
             return
 
         lgr.info("Detecting cards..")
         detection = self._model.detect(image_input)
         if len(detection) < self.MIN_OBJS_DETECTED:
-            ui.show_msg("Too few cards", msg="Too few cards detected; please retry")
+            ui.show_msg("Too few cards", msg="Too few cards detected; please retry", add_button=True)
             return
 
         lgr.info("Solving deal..")
@@ -70,7 +76,7 @@ class Bidly(BoxLayout):
             solution = self._solve(detection)
         except Exception as e:
             lgr.exception("Solver failure")
-            ui.show_msg("Solver failure", msg=repr(e))
+            ui.show_msg("Solver failure", msg=repr(e), add_button=True)
             return
 
         lgr.info("Displaying solution..")
