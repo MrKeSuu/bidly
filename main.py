@@ -5,8 +5,9 @@ import numpy as np
 from kivy.app import App
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.button import Button
 from kivy.uix.camera import Camera
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
@@ -55,14 +56,12 @@ class Bidly(BoxLayout):
         except Exception as e:
             lgr.exception("Image handler failure")
             ui.show_msg("Image handler failure", msg=repr(e))
-            self.deal_box.camera.play = True
             return
 
         lgr.info("Detecting cards..")
         detection = self._model.detect(image_input)
         if len(detection) < self.MIN_OBJS_DETECTED:
             ui.show_msg("Too few cards", msg="Too few cards detected; please retry")
-            self.deal_box.camera.play = True
             return
 
         lgr.info("Solving deal..")
@@ -71,7 +70,6 @@ class Bidly(BoxLayout):
         except Exception as e:
             lgr.exception("Solver failure")
             ui.show_msg("Solver failure", msg=repr(e))
-            self.deal_box.camera.play = True
             return
 
         lgr.info("Displaying solution..")
@@ -82,13 +80,20 @@ class Bidly(BoxLayout):
 
         # self.interaction_box.clear_widgets()
 
+        n_buttons = len(self.interaction_box.children)  # so results are above buttons
+
         hand_label = BgcolorLabel(font_size='9sp')
         hand_label.display(hand)
-        self.interaction_box.add_widget(hand_label, index=1)
+        self.interaction_box.add_widget(hand_label, index=n_buttons)
 
-        table_label = BgcolorLabel()
+        table_label = BgcolorLabel(size_hint_y=0.7)
         table_label.display(table)
-        self.interaction_box.add_widget(table_label, index=1)
+        self.interaction_box.add_widget(table_label, index=n_buttons)
+
+    def restart(self):
+        for widget in self.interaction_box.children[:]:
+            if not isinstance(widget, Button):
+                self.interaction_box.remove_widget(widget)
 
     def _handle_image(self, img_data) -> detect.ImageInput:
         image_handler = detect.get_image_handler(image_reader=detect.BgraReader())

@@ -19,7 +19,19 @@
             text: 'Detect & Solve'
             size_hint_y: None
             height: '48dp'
-            on_release: deal_box.camera.play = False; root.detect_solve()
+            on_release:
+                deal_box.camera.play = False; root.detect_solve(); \
+                self.disabled = True; restart_button.disabled = False;
+
+        Button:
+            id: restart_button
+            text: 'Restart'
+            size_hint_y: None
+            height: '48dp'
+            disabled: True
+            on_release:
+                deal_box.camera.play = True; root.restart(); \
+                self.disabled = True; camera_button.disabled = False;
 
 
 <DealBox>:
