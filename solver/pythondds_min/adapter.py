@@ -12,6 +12,9 @@ from . import functions
 from . import hands
 
 
+THREADS_EQUAL_TO_CORES = 0
+
+
 PbnHand = bytes
 
 
@@ -21,7 +24,7 @@ def solve_hand(hand: PbnHand):
 
     # call CalcDDtablePBN
     log.debug("Calculating DDTable..")
-    dds.SetMaxThreads(0)
+    dds.SetMaxThreads(THREADS_EQUAL_TO_CORES)
     ret_code = dds.CalcDDtablePBN(deal, result)
 
     if ret_code != dds.RETURN_NO_FAULT:
