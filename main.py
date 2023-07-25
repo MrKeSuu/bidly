@@ -5,6 +5,7 @@ import numpy as np
 from kivy.app import App
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.camera import Camera
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
@@ -107,7 +108,7 @@ class Bidly(BoxLayout):
         return solver.present()
 
 
-class DealBox(BoxLayout):
+class DealBox(FloatLayout):
     camera = ObjectProperty(None)
 
 

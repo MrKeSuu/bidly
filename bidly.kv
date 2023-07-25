@@ -30,6 +30,30 @@
 
     CameraWidget:
         id: camera
+        pos: root.pos
+
+    Label:
+        pos: camera.pos
+        size: camera.size
+
+        text: 'N'
+        color: 1, 1, 1, 0.5
+        font_size: '50dp'
+        text_size: self.size
+        valign: 'top'
+        halign: 'center'
+
+        canvas:
+            Color:
+                rgba: 1, 1, 1, 1
+            Line:
+                points: 0, self.center_y + self.height/2, self.width, self.center_y - self.height/2
+                dash_length: 10
+                dash_offset: 10
+            Line:
+                points: 0, self.center_y - self.height/2, self.width, self.center_y + self.height/2
+                dash_length: 10
+                dash_offset: 10
 
 <InteractionBox>:
     orientation: 'vertical'
