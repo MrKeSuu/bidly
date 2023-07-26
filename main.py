@@ -18,7 +18,7 @@ from solver import solve
 from app import ui
 
 
-__version__ = '0.3.2'
+__version__ = '0.3.3'
 
 ROOT_DIRPATH = pathlib.Path(__file__).parent
 
@@ -48,7 +48,7 @@ class Bidly(BoxLayout):
         lgr.debug("Loaded model from: %s", self.ONNX_MODEL_PATH)
 
     def detect_solve(self):
-        pp = ui.popup("Detectin & Solving", "This could take a minute")
+        pp = ui.popup("Detecting & Solving", "This could take a minute..")
         Clock.schedule_once(lambda dt: self._detect_solve())  # so that popup is instantly shown
         pp.dismiss()
 
