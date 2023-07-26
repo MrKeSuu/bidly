@@ -24,8 +24,8 @@
             size_hint_y: None
             height: '48dp'
             on_release:
-                deal_box.camera.play = False; self.disabled = True; restart_button.disabled = False;\
-                root.detect_solve()
+                deal_box.camera.play = False; self.disabled = True; \
+                root.detect_solve(); restart_button.disabled = False
 
         Button:
             id: restart_button
