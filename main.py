@@ -8,6 +8,7 @@ from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProper
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.camera import Camera
+from kivy.uix.carousel import Carousel
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
@@ -54,7 +55,7 @@ class Bidly(BoxLayout):
 
     def _detect_solve(self):
         lgr.info("Taking photo..")
-        img_data = self.deal_box.camera.capture()
+        img_data = self.deal_box.camera_square.camera.capture()
 
         lgr.info("Handling image..")
         try:
@@ -102,7 +103,7 @@ class Bidly(BoxLayout):
             if not isinstance(widget, Button):
                 self.interaction_box.remove_widget(widget)
 
-        self.deal_box.camera.play = True
+        self.deal_box.camera_square.camera.play = True
         self.interaction_box.restart()
 
     def _handle_image(self, img_data) -> detect.ImageInput:
@@ -123,8 +124,8 @@ class Bidly(BoxLayout):
         return solver.present()
 
 
-class DealBox(FloatLayout):
-    camera = ObjectProperty(None)
+class DealBox(FloatLayout, Carousel):
+    camera_sqaure = ObjectProperty(None)
 
 
 class InteractionBox(BoxLayout):
@@ -136,7 +137,7 @@ class InteractionBox(BoxLayout):
         self.restart_button.disabled = True
 
 
-class CameraWidget(Camera):
+class CameraView(Camera):
 
     def capture(self):
         img = self.export_as_image()

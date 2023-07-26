@@ -24,7 +24,7 @@
             size_hint_y: None
             height: '48dp'
             on_release:
-                deal_box.camera.play = False; self.disabled = True; \
+                deal_box.camera_square.camera.play = False; self.disabled = True; \
                 root.detect_solve(); restart_button.disabled = False
 
         Button:
@@ -40,9 +40,20 @@
     size_hint: 1, None
     size: self.width, self.width
 
+    camera_square: camera_square
+
+    CameraSquare:
+        id: camera_square
+
+<InteractionBox>:
+    orientation: 'vertical'
+    spacing: 5
+
+
+<CameraSquare@FloatLayout>:
     camera: camera
 
-    CameraWidget:
+    CameraView:
         id: camera
         pos: root.pos
 
@@ -69,12 +80,7 @@
                 dash_length: 10
                 dash_offset: 10
 
-<InteractionBox>:
-    orientation: 'vertical'
-    spacing: 5
-
-
-<CameraWidget>:
+<CameraView>:
     resolution: (1600, 1200)  # one of the supported
     play: True
     fit_mode: 'cover'
