@@ -111,6 +111,21 @@ def result_to_df(result: dds.ddTableResults) -> pd.DataFrame:
     return result_df
 
 
+def result_to_records(result: dds.ddTableResults) -> list:
+    result_records = []
+    orig_table = result.contents.resTable
+    for p in range(len(hands.dcardHand)):
+        result_records.append({
+            'player': hands.dcardHand[p],
+            'ss': orig_table[0][p],
+            'hs': orig_table[1][p],
+            'ds': orig_table[2][p],
+            'cs': orig_table[3][p],
+            'ns': orig_table[4][p],
+        })
+    return result_records
+
+
 def tricks_to_level(tricks: int):
     assert 0 <= tricks <= 13
     return max(0, tricks - 6)

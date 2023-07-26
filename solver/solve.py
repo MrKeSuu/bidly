@@ -119,7 +119,7 @@ class MonoStringPresenter(IPresenter):
     def present(self, solution: Solution):
         formatted_hand = self._format_hand(solution.hand_dict)
 
-        formatted_dd_result = dds_adapter.format_result(solution.dds_result)
+        formatted_dd_result = self._format_result(solution.dds_result)
         return formatted_hand, formatted_dd_result
 
     def _format_hand(self, hand: CardAssignment) -> str:
@@ -198,8 +198,22 @@ class MonoStringPresenter(IPresenter):
 
         return '\n'.join(rows)
 
-    def _format_result(self, _) -> str:
-        pass
+    def _format_result(self, dds_result) -> str:
+        records = dds_adapter.result_to_records(dds_result)
+        sorted_records = sorted(records, key=lambda d: ['N', 'S', 'W', 'E'].index(d['player']))
+
+        rows = []
+        rows.append(f"  {self.C:<2}{self.D:<2}{self.H:<2}{self.S:<2}NT")
+        for rec in sorted_records:
+            clvl = dds_adapter.tricks_to_level(rec['cs']) or '-'
+            dlvl = dds_adapter.tricks_to_level(rec['ds']) or '-'
+            hlvl = dds_adapter.tricks_to_level(rec['hs']) or '-'
+            slvl = dds_adapter.tricks_to_level(rec['ss']) or '-'
+            nlvl = dds_adapter.tricks_to_level(rec['ns']) or '-'
+            row = f"{rec['player']} {clvl:<2}{dlvl:<2}{hlvl:<2}{slvl:<2}{nlvl:<2}"
+            rows.append(row)
+
+        return '\n'.join(rows)
 
     def _longest_len(self, suit_map, player):
         player_suits = (suit for pc, suit in suit_map.items() if pc.startswith(player))
