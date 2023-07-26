@@ -12,13 +12,15 @@ import solver.pythondds_min.adapter as dds_adapter
 
 lgr = logging
 
+CardAssignment = T.List[T.Dict]
+
 
 # Abstract #
 
 @dataclasses.dataclass
 class Solution():
     hand: object
-    hand_dict: T.List[T.Dict]
+    hand_dict: CardAssignment
     dds_result: object
 
 
@@ -111,8 +113,8 @@ class MonoStringPresenter(IPresenter):
     HORI, VERT = '\u2500', '\u2502'
     TL, TR, BL, BR = '\u250c', '\u2510', '\u2514', '\u2518'
 
-    MIN_WIDTH = 22  # 14 + 14 - square_width, for N having 13 cards in a suit
     SQUARE_WIDTH = 6
+    MIN_WIDTH = (13+1)*2 - SQUARE_WIDTH  # for N or S having 13 cards in a suit
 
     def present(self, solution: Solution):
         formatted_hand = self._format_hand(solution.hand_dict)
@@ -120,17 +122,39 @@ class MonoStringPresenter(IPresenter):
         formatted_dd_result = dds_adapter.format_result(solution.dds_result)
         return formatted_hand, formatted_dd_result
 
-    def _format_hand(self, hand) -> str:
+    def _format_hand(self, hand: CardAssignment) -> str:
+        """Formatted example:
+
+              ♠-             
+              ♡K52           
+              ♢KJ97432       
+              ♣973           
+
+        ♠85   ┌────┐ ♠QJT9742
+        ♡AQJ3 │    │ ♡98     
+        ♢AQT6 │    │ ♢5      
+        ♣A42  └────┘ ♣J85    
+
+              ♠AK63          
+              ♡T764          
+              ♢8             
+              ♣KQT6          
+
+        Leading & trailing spaces are important to ensure nice display in center-aligned text boxes.
+        See method `_align_l_r()` below."""
         assert len(hand) == 52
 
+        # Extract cards
         suit_map = collections.defaultdict(list)  # 'northd' -> list of cards
         for card in hand:
             player = card['hand']
             color, rank = card['name'][-1], card['name'][:-1]
             suit_map[player+color].append(rank)
 
-        e_longest = self._longest_len(suit_map, converter.HAND_E) + 1  # for symbols
-        w_longest = self._longest_len(suit_map, converter.HAND_W) + 1  # for symbols
+        # Calc widths
+        e_longest = self._longest_len(suit_map, converter.HAND_E) + 1  # for symbol
+        w_longest = self._longest_len(suit_map, converter.HAND_W) + 1  # for symbol
+
         ew_min_width = max(e_longest, w_longest)
         ew_row_min_width = ew_min_width*2 + self.SQUARE_WIDTH + 2  # padding
         width = max(ew_row_min_width, self.MIN_WIDTH)
@@ -138,6 +162,7 @@ class MonoStringPresenter(IPresenter):
         ew_suit_width = (width-self.SQUARE_WIDTH-2) // 2
         ns_suit_width = self.SQUARE_WIDTH + 1 + ew_suit_width
 
+        # Format hand row by row
         rows = []
         rows.append(self._format_align_suit(suit_map, 'north', 's', ns_suit_width, width))
         rows.append(self._format_align_suit(suit_map, 'north', 'h', ns_suit_width, width))
@@ -148,7 +173,7 @@ class MonoStringPresenter(IPresenter):
         h_bar = self.VERT+' '*4+self.VERT
         b_bar = self.BL+self.HORI*4+self.BR
 
-        rows.append('')
+        rows.append('')  # padding
         ws = self._format_align_suit(suit_map, 'west', 's', w_longest, ew_suit_width)
         es = self._format_align_suit(suit_map, 'east', 's', ew_suit_width, ew_suit_width)
         rows.append(' '.join([ws, t_bar, es]))
@@ -164,7 +189,7 @@ class MonoStringPresenter(IPresenter):
         wc = self._format_align_suit(suit_map, 'west', 'c', w_longest, ew_suit_width)
         ec = self._format_align_suit(suit_map, 'east', 'c', ew_suit_width, ew_suit_width)
         rows.append(' '.join([wc, b_bar, ec]))
-        rows.append('')
+        rows.append('')  # padding
 
         rows.append(self._format_align_suit(suit_map, 'south', 's', ns_suit_width, width))
         rows.append(self._format_align_suit(suit_map, 'south', 'h', ns_suit_width, width))
