@@ -89,11 +89,11 @@ class Bidly(BoxLayout):
 
         n_buttons = len(self.interaction_box.children)  # so results are above buttons
 
-        hand_label = BgcolorLabel(font_size='9dp')
+        hand_label = BgcolorLabel()
         hand_label.display(hand)
         self.interaction_box.add_widget(hand_label, index=n_buttons)
 
-        table_label = BgcolorLabel(size_hint_y=0.7)
+        table_label = BgcolorLabel(size_hint_y=0.6)
         table_label.display(table)
         self.interaction_box.add_widget(table_label, index=n_buttons)
 
@@ -113,7 +113,7 @@ class Bidly(BoxLayout):
         return image_input
 
     def _solve(self, detection: detect.CardDetection):
-        solver = solve.BridgeSolver(detection, presenter=solve.StringPresenter())
+        solver = solve.BridgeSolver(detection, presenter=solve.MonoStringPresenter())
         missing, fp = solver.transform()
         if missing:
             raise ValueError(f"Missing cards: {', '.join(ui.display_name(n) for n in missing)}")

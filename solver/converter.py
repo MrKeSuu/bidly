@@ -132,6 +132,9 @@ class DealConverter:
         deal = self._build_pbn_deal(hands)
         return deal.encode("ascii")
 
+    def list_assigned_cards(self):
+        return self.card_[["name", "hand"]].dropna(subset=["hand"]).to_dict('records')
+
     def _dedup_simple(self):
         """Dedup in a simple way, only keeping the one with highest confidence."""
         return (self.card
