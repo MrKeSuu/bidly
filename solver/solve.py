@@ -139,37 +139,37 @@ class MonoStringPresenter(IPresenter):
         ns_suit_width = self.SQUARE_WIDTH + 1 + ew_suit_width
 
         rows = []
-        rows.append(self._align_l_r(self._format_suit(suit_map, 'north', 's'), ns_suit_width, width))
-        rows.append(self._align_l_r(self._format_suit(suit_map, 'north', 'h'), ns_suit_width, width))
-        rows.append(self._align_l_r(self._format_suit(suit_map, 'north', 'd'), ns_suit_width, width))
-        rows.append(self._align_l_r(self._format_suit(suit_map, 'north', 'c'), ns_suit_width, width))
+        rows.append(self._format_align_suit(suit_map, 'north', 's', ns_suit_width, width))
+        rows.append(self._format_align_suit(suit_map, 'north', 'h', ns_suit_width, width))
+        rows.append(self._format_align_suit(suit_map, 'north', 'd', ns_suit_width, width))
+        rows.append(self._format_align_suit(suit_map, 'north', 'c', ns_suit_width, width))
 
         t_bar = self.TL+self.HORI*4+self.TR
         h_bar = self.VERT+' '*4+self.VERT
         b_bar = self.BL+self.HORI*4+self.BR
 
         rows.append('')
-        ws = self._align_l_r(self._format_suit(suit_map, 'west', 's'), w_longest, ew_suit_width)
-        es = self._align_l_r(self._format_suit(suit_map, 'east', 's'), ew_suit_width, ew_suit_width)
+        ws = self._format_align_suit(suit_map, 'west', 's', w_longest, ew_suit_width)
+        es = self._format_align_suit(suit_map, 'east', 's', ew_suit_width, ew_suit_width)
         rows.append(' '.join([ws, t_bar, es]))
 
-        wh = self._align_l_r(self._format_suit(suit_map, 'west', 'h'), w_longest, ew_suit_width)
-        eh = self._align_l_r(self._format_suit(suit_map, 'east', 'h'), ew_suit_width, ew_suit_width)
+        wh = self._format_align_suit(suit_map, 'west', 'h', w_longest, ew_suit_width)
+        eh = self._format_align_suit(suit_map, 'east', 'h', ew_suit_width, ew_suit_width)
         rows.append(' '.join([wh, h_bar, eh]))
 
-        wd = self._align_l_r(self._format_suit(suit_map, 'west', 'd'), w_longest, ew_suit_width)
-        ed = self._align_l_r(self._format_suit(suit_map, 'east', 'd'), ew_suit_width, ew_suit_width)
+        wd = self._format_align_suit(suit_map, 'west', 'd', w_longest, ew_suit_width)
+        ed = self._format_align_suit(suit_map, 'east', 'd', ew_suit_width, ew_suit_width)
         rows.append(' '.join([wd, h_bar, ed]))
 
-        wc = self._align_l_r(self._format_suit(suit_map, 'west', 'c'), w_longest, ew_suit_width)
-        ec = self._align_l_r(self._format_suit(suit_map, 'east', 'c'), ew_suit_width, ew_suit_width)
+        wc = self._format_align_suit(suit_map, 'west', 'c', w_longest, ew_suit_width)
+        ec = self._format_align_suit(suit_map, 'east', 'c', ew_suit_width, ew_suit_width)
         rows.append(' '.join([wc, b_bar, ec]))
         rows.append('')
 
-        rows.append(self._align_l_r(self._format_suit(suit_map, 'south', 's'), ns_suit_width, width))
-        rows.append(self._align_l_r(self._format_suit(suit_map, 'south', 'h'), ns_suit_width, width))
-        rows.append(self._align_l_r(self._format_suit(suit_map, 'south', 'd'), ns_suit_width, width))
-        rows.append(self._align_l_r(self._format_suit(suit_map, 'south', 'c'), ns_suit_width, width))
+        rows.append(self._format_align_suit(suit_map, 'south', 's', ns_suit_width, width))
+        rows.append(self._format_align_suit(suit_map, 'south', 'h', ns_suit_width, width))
+        rows.append(self._format_align_suit(suit_map, 'south', 'd', ns_suit_width, width))
+        rows.append(self._format_align_suit(suit_map, 'south', 'c', ns_suit_width, width))
 
         return '\n'.join(rows)
 
@@ -180,6 +180,11 @@ class MonoStringPresenter(IPresenter):
         player_suits = (suit for pc, suit in suit_map.items() if pc.startswith(player))
         return max(len(s) for s in player_suits)
 
+    def _format_align_suit(self, suit_map, player, color, suit_width, total_width):
+        formatted_suit = self._format_suit(suit_map, player, color)
+        aligned_suit = self._align_l_r(formatted_suit, suit_width, total_width)
+        return aligned_suit
+
     def _format_suit(self, suit_map, player, color):
         cards = suit_map[player+color]
         sorted_cards = sorted(cards, key=converter.RANKS.index)
@@ -188,7 +193,7 @@ class MonoStringPresenter(IPresenter):
         return formatted_suit
 
     def _align_l_r(self, text, self_width, total_width):
-        """Align left then right, to ensure center-aligned by adding trailing and leading spaces."""
+        """Align left then right, to ensure nice display for center-aligned text box."""
         left_aligned = f'{{:<{self_width}}}'.format(text)
         left_right_aligned = f'{{:>{total_width}}}'.format(left_aligned)
         return left_right_aligned
