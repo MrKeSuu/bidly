@@ -124,7 +124,8 @@ class Yolo5Opencv(YoloModel):
         outputs = self._model.forward(self._model.getUnconnectedOutLayersNames())
 
         detection = self._postprocess(outputs)
-        lgr.debug("Detection with min confid: %s", min(detection, key=lambda d: d['confidence']))
+        lgr.debug("Detection with min confid: %s",
+                  min(detection, key=lambda d: d['confidence'], default=None))
 
         return detection
 

@@ -18,7 +18,7 @@ from solver import solve
 from app import ui
 
 
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 ROOT_DIRPATH = pathlib.Path(__file__).parent
 
