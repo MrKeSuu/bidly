@@ -52,6 +52,7 @@ class Bidly(BoxLayout):
         pp = ui.popup("Detecting & Solving", "This could take a minute..")
         Clock.schedule_once(lambda dt: self._detect_solve())  # so that popup is instantly shown
         pp.dismiss()
+        Clock.schedule_once(lambda dt: self.deal_box.load_next())
 
     def _detect_solve(self):
         lgr.info("Taking photo..")
@@ -86,24 +87,17 @@ class Bidly(BoxLayout):
     def display(self, solution):
         hand, table = solution
 
-        # self.interaction_box.clear_widgets()
-
-        n_buttons = len(self.interaction_box.children)  # so results are above buttons
-
         hand_label = BgcolorLabel()
         hand_label.display(hand)
-        self.interaction_box.add_widget(hand_label, index=n_buttons)
+        self.deal_box.add_widget(hand_label)
 
-        table_label = BgcolorLabel(size_hint_y=0.6)
+        n_buttons = len(self.interaction_box.children)  # so results are above buttons
+        table_label = BgcolorLabel()
         table_label.display(table)
         self.interaction_box.add_widget(table_label, index=n_buttons)
 
     def restart(self):
-        for widget in self.interaction_box.children[:]:
-            if not isinstance(widget, Button):
-                self.interaction_box.remove_widget(widget)
-
-        self.deal_box.camera_square.camera.play = True
+        self.deal_box.restart()
         self.interaction_box.restart()
 
     def _handle_image(self, img_data) -> detect.ImageInput:
@@ -124,8 +118,15 @@ class Bidly(BoxLayout):
         return solver.present()
 
 
-class DealBox(FloatLayout, Carousel):
-    camera_sqaure = ObjectProperty(None)
+class DealBox(Carousel):
+    camera_square = ObjectProperty(None)
+
+    def restart(self):
+        if len(self.slides) == 2:
+            self.load_previous()
+            Clock.schedule_once(lambda dt: self.remove_widget(self.slides[-1]), 0.5)
+
+        self.camera_square.camera.play = True
 
 
 class InteractionBox(BoxLayout):
@@ -133,6 +134,10 @@ class InteractionBox(BoxLayout):
     restart_button: ObjectProperty(None)
 
     def restart(self):
+        for widget in self.children[:]:
+            if not isinstance(widget, Button):
+                self.remove_widget(widget)
+
         self.camera_button.disabled = False
         self.restart_button.disabled = True
 
