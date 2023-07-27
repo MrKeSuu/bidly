@@ -195,6 +195,7 @@ class MonoStringPresenter(IPresenter):
         rows.append(self._format_align_suit(suit_map, 'south', 'h', ns_suit_width, width))
         rows.append(self._format_align_suit(suit_map, 'south', 'd', ns_suit_width, width))
         rows.append(self._format_align_suit(suit_map, 'south', 'c', ns_suit_width, width))
+        rows.append('')  # avoid newline issue
 
         return '\n'.join(rows)
 
@@ -212,6 +213,7 @@ class MonoStringPresenter(IPresenter):
             nlvl = dds_adapter.tricks_to_level(rec['ns']) or '-'
             row = f"{rec['player']} {clvl:<2}{dlvl:<2}{hlvl:<2}{slvl:<2}{nlvl:<2}"
             rows.append(row)
+        rows.append('')  # avoid newline issue
 
         return '\n'.join(rows)
 

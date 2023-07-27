@@ -9,7 +9,6 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.camera import Camera
 from kivy.uix.carousel import Carousel
-from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
@@ -19,7 +18,7 @@ from solver import solve
 from app import ui
 
 
-__version__ = '0.3.3'
+__version__ = '0.4.0'
 
 ROOT_DIRPATH = pathlib.Path(__file__).parent
 
@@ -92,7 +91,7 @@ class Bidly(BoxLayout):
         self.deal_box.add_widget(hand_label)
 
         n_buttons = len(self.interaction_box.children)  # so results are above buttons
-        table_label = BgcolorLabel()
+        table_label = BgcolorLabel(font_size='21dp')
         table_label.display(table)
         self.interaction_box.add_widget(table_label, index=n_buttons)
 
