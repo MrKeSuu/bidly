@@ -16,9 +16,10 @@ from kivy.vector import Vector
 from detector import detect
 from solver import solve
 from app import ui
+from app import androidperm
 
 
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 
 ROOT_DIRPATH = pathlib.Path(__file__).parent
 
@@ -29,6 +30,12 @@ class BidlyApp(App):
     def build(self):
         bidly = Bidly()
         return bidly
+
+    def on_start(self):
+        self.dont_gc = androidperm.AndroidPermissions(self.start_app)
+
+    def start_app(self):
+        self.dont_gc = None
 
 
 class Bidly(BoxLayout):
