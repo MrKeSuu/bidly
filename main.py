@@ -1,6 +1,7 @@
 import logging
 import os
 import pathlib
+import time
 
 # https://github.com/Android-for-Python/camera4kivy#camera-provider
 from kivy import kivy_options
@@ -52,7 +53,9 @@ class BidlyApp(App):
         Clock.schedule_once(self.connect_camera)
 
     def connect_camera(self, dt):
-        self.bidly.deal_box.camera_square.camera.connect_camera()
+        self.bidly.deal_box.camera_square.camera.connect_camera(
+            sensor_resolution=(1600, 1200),
+        )
 
 
 class Bidly(BoxLayout):
@@ -79,8 +82,14 @@ class Bidly(BoxLayout):
         Clock.schedule_once(lambda dt: self.deal_box.load_next())
 
     def _detect_solve(self):
-        lgr.info("Taking photo..")
-        img_src = self.deal_box.camera_square.camera.capture()
+        lgr.info("Capturing photo..")
+        try:
+            img_src = self.deal_box.camera_square.camera.capture()
+        except Exception:
+            lgr.exception("Camera failure")
+            pp = ui.popup("Camera failure", msg=repr(e), close_btn=True)
+            pp.bind(on_dismiss=lambda _: self.restart())
+            return
 
         lgr.info("Handling image..")
         try:
@@ -185,21 +194,35 @@ class C4KCameraView(Preview):
 
     def capture(self):
         if DEBUG:
-            location = 'private'
+            capture_location = 'private'
         elif platform == 'android':
             from android.storage import app_storage_path
-            location = f'{app_storage_path()}/DCIM'
+            capture_location = f'{app_storage_path()}/DCIM'
         else:
             raise ValueError(f"Unsupported platform: {platform}")
 
-        capture_path = pathlib.Path(location)/self.CAPTURE_SUBDIR/self.CAPTURE_NAME
+        capture_path = pathlib.Path(capture_location)/self.CAPTURE_SUBDIR/self.CAPTURE_NAME
 
         if capture_path.exists():
             capture_path.unlink()
 
         self.capture_photo(location='private', subdir=self.CAPTURE_SUBDIR, name=self.CAPTURE_NAME)
 
+        # Ugly, but checking filesize to see if capture_photo is done on another thread
+        filesize = self._filesize(capture_path)
+        while filesize == 0 or filesize < self._filesize(capture_path):
+            filesize =self._filesize(capture_path)
+            time.sleep(0.1)
+        lgr.debug("Capture completed")
+
         return capture_path
+
+    @staticmethod
+    def _filesize(path):
+        try:
+            return path.stat().st_size
+        except FileNotFoundError:
+            return 0
 
 
 class BackgroundColor(Widget):
