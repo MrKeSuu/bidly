@@ -172,33 +172,10 @@ class BgcolorLabel(Label, BackgroundColor):
         self.label_text = text
 
 
+### Reference only ###
 class PongGame(Widget):
-    ball = ObjectProperty(None)
     player1 = ObjectProperty(None)
     player2 = ObjectProperty(None)
-
-    def serve_ball(self, vel=(4, 0)):
-        self.ball.center = self.center
-        self.ball.velocity = vel
-
-    def update(self, dt):
-        self.ball.move()
-
-        # bounce off paddles
-        self.player1.bounce_ball(self.ball)
-        self.player2.bounce_ball(self.ball)
-
-        # bounce off top and bottom
-        if (self.ball.y < 0) or (self.ball.top > self.height):
-            self.ball.velocity_y *= -1
-
-        # went off to a side to score point?
-        if self.ball.x < self.x:
-            self.player2.score += 1
-            self.serve_ball(vel=(4, 0))
-        if self.ball.right > self.width:
-            self.player1.score += 1
-            self.serve_ball(vel=(-4, 0))
 
     def on_touch_move(self, touch):  ##
         if touch.x < self.width/3:
@@ -208,8 +185,6 @@ class PongGame(Widget):
 
 
 class PongPaddle(Widget):
-    score = NumericProperty(0)
-
     def bounce_ball(self, ball):
         if self.collide_widget(ball):  ## or collide_point
             speedup  = 1.1
