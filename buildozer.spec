@@ -1,13 +1,3 @@
-[app:requirements]
-python3==3.8.16
-hostpython3==3.8.16
-kivy==2.2.1
-numpy
-opencv==4.5.4
-pandas
-scipy
-python-dds
-
 # (list) List of directory to exclude (let empty to not exclude anything)
 [app:source.exclude_dirs]
 tests
@@ -51,6 +41,10 @@ source.exclude_patterns = LICENSE,detector/yolov4_retrain.py,*/notebook.py
 # (str) Application versioning (method 2)
 version.regex = __version__ = ['"](.*)['"]
 version.filename = %(source.dir)s/main.py
+
+# (list) Application requirements
+# comma separated e.g. requirements = sqlite3,kivy
+requirements = python3==3.8.16,hostpython3==3.8.16,kivy==2.2.1,numpy,opencv==4.5.4,pandas,scipy,python-dds
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
