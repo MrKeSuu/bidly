@@ -217,6 +217,33 @@ class MinSizeValidator(IImageValidator):
             raise ValueError(f"Image resolution {img_w}x{img_h} too low")
 
 
+class ImageCrop(IImagePreprocessor):
+    """Crop image to 1:1"""
+
+    def preprocess(cls, image):
+        height, width = image.shape[0], image.shape[1]
+
+        # Make dimensions even for easier centered cropping
+        if height % 2 != 0:
+            image = image[:-1, :]
+            height -= 1
+        if width % 2 != 0:
+            image = image[:, :-1]
+            width -= 1
+
+        margin = abs(height - width) // 2
+        if height > width:
+            cropped = image[margin:-margin, :]
+        elif height < width:
+            cropped = image[:, margin:-margin]
+        else:
+            cropped = image
+
+        assert cropped.shape[0] == cropped.shape[1], "1-1 cropped image is not sqaure"
+
+        return cropped
+
+
 class ImageResize(IImagePreprocessor):
     TARGET_SIZE = (IMAGE_WIDTH ,IMAGE_HEIGHT)
 
@@ -227,8 +254,9 @@ class ImageResize(IImagePreprocessor):
 def get_image_handler(image_reader=FsImageReader()):
     min_size = MinSizeValidator()
     resize = ImageResize()
+    crop = ImageCrop()
     image_handler = ImageHandler(
         image_reader,
         validators=[min_size],
-        preprocesssors=[resize])
+        preprocesssors=[resize, crop])
     return image_handler

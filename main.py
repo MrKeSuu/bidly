@@ -9,6 +9,7 @@ providers.remove('opencv')
 kivy_options['camera'] = tuple(providers)
 
 import numpy as np
+from camera4kivy import Preview
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty, StringProperty
@@ -18,6 +19,7 @@ from kivy.uix.camera import Camera
 from kivy.uix.carousel import Carousel
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
+from kivy.utils import platform
 from kivy.vector import Vector
 
 from detector import detect
@@ -36,14 +38,21 @@ lgr = logging
 
 class BidlyApp(App):
     def build(self):
-        bidly = Bidly()
-        return bidly
+        self.bidly = Bidly()
+        return self.bidly
 
     def on_start(self):
         self.dont_gc = androidperm.AndroidPermissions(self.start_app)
 
+    def on_stop(self):
+        self.bidly.deal_box.camera_square.camera.disconnect_camera()
+
     def start_app(self):
         self.dont_gc = None
+        Clock.schedule_once(self.connect_camera)
+
+    def connect_camera(self, dt):
+        self.bidly.deal_box.camera_square.camera.connect_camera()
 
 
 class Bidly(BoxLayout):
@@ -71,11 +80,11 @@ class Bidly(BoxLayout):
 
     def _detect_solve(self):
         lgr.info("Taking photo..")
-        img_data = self.deal_box.camera_square.camera.capture()
+        img_src = self.deal_box.camera_square.camera.capture()
 
         lgr.info("Handling image..")
         try:
-            image_input = self._handle_image(img_data)
+            image_input = self._handle_image(img_src)
         except Exception as e:
             lgr.exception("Image handler failure")
             pp = ui.popup("Image handler failure", msg=repr(e), close_btn=True)
@@ -115,9 +124,9 @@ class Bidly(BoxLayout):
         self.deal_box.restart()
         self.interaction_box.restart()
 
-    def _handle_image(self, img_data) -> detect.ImageInput:
-        image_handler = detect.get_image_handler(image_reader=detect.BgraReader())
-        image_handler.read(img_data)
+    def _handle_image(self, img_src) -> detect.ImageInput:
+        image_handler = detect.get_image_handler(image_reader=detect.FsImageReader())
+        image_handler.read(img_src)
         image_handler.validate()
         image_input = image_handler.preprocess()
         return image_input
@@ -168,6 +177,29 @@ class CameraView(Camera):
 
         lgr.debug("Capture image from camera, with shape: %s", img_data.shape)
         return img_data
+
+
+class C4KCameraView(Preview):
+    CAPTURE_SUBDIR = 'temp'
+    CAPTURE_NAME = 'captured.jpg'
+
+    def capture(self):
+        if DEBUG:
+            location = 'private'
+        elif platform == 'android':
+            from android.storage import app_storage_path
+            location = f'{app_storage_path()}/DCIM'
+        else:
+            raise ValueError(f"Unsupported platform: {platform}")
+
+        capture_path = pathlib.Path(location)/self.CAPTURE_SUBDIR/self.CAPTURE_NAME
+
+        if capture_path.exists():
+            capture_path.unlink()
+
+        self.capture_photo(location='private', subdir=self.CAPTURE_SUBDIR, name=self.CAPTURE_NAME)
+
+        return capture_path
 
 
 class BackgroundColor(Widget):

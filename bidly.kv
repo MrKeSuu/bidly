@@ -38,7 +38,7 @@
 
 <DealBox>:
     size_hint: 1, None
-    size: self.width, self.width
+    size: self.width, self.width / 3 * 4
     anim_move_duration: 0.3
 
     camera_square: camera_square
@@ -54,32 +54,44 @@
 <CameraSquare@FloatLayout>:
     camera: camera
 
-    CameraView:
+    C4KCameraView:
         id: camera
         pos: root.pos
 
-    Label:
-        pos: camera.pos
-        size: camera.size
+    BoxLayout:
+        orientation: 'vertical'
 
-        text: 'N'
-        color: 1, 1, 1, 0.5
-        font_size: '50dp'
-        text_size: self.size
-        valign: 'top'
-        halign: 'center'
+        BgcolorLabel:
+            size: (camera.width, camera.height / 8)  # ensure square frame
+            background_color: 0, 0, 0, 0.5
 
-        canvas:
-            Color:
-                rgba: 1, 1, 1, 1
-            Line:
-                points: 0, self.center_y + self.height/2, self.width, self.center_y - self.height/2
-                dash_length: 10
-                dash_offset: 10
-            Line:
-                points: 0, self.center_y - self.height/2, self.width, self.center_y + self.height/2
-                dash_length: 10
-                dash_offset: 10
+        Label:
+            pos: camera.pos
+            size_hint_y: None
+            height: camera.width
+
+            text: 'N'
+            color: 1, 1, 1, 0.5
+            font_size: '50dp'
+            text_size: self.size
+            valign: 'top'
+            halign: 'center'
+
+            canvas:
+                Color:
+                    rgba: 1, 1, 1, 1
+                Line:
+                    points: 0, self.center_y + self.height/2, self.width, self.center_y - self.height/2
+                    dash_length: 10
+                    dash_offset: 10
+                Line:
+                    points: 0, self.center_y - self.height/2, self.width, self.center_y + self.height/2
+                    dash_length: 10
+                    dash_offset: 10
+
+        BgcolorLabel:
+            size: (camera.width, camera.height / 8)  # ensure square frame
+            background_color: 0, 0, 0, 0.5
 
 <CameraView>:
     resolution: (1600, 1200)  # one of the supported
@@ -93,6 +105,9 @@
             origin: self.center
     canvas.after:
         PopMatrix
+
+<C4KCameraView>:
+    aspect_ratio: '4:3'
 
 <BgcolorLabel>:
     text: str(self.label_text)
