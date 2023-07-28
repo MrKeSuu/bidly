@@ -173,7 +173,6 @@ class MonoStringPresenter(IPresenter):
         h_bar = self.VERT+' '*4+self.VERT
         b_bar = self.BL+self.HORI*4+self.BR
 
-        rows.append('')  # padding
         ws = self._format_align_suit(suit_map, 'west', 's', w_longest, ew_suit_width)
         es = self._format_align_suit(suit_map, 'east', 's', ew_suit_width, ew_suit_width)
         rows.append(' '.join([ws, t_bar, es]))
@@ -189,7 +188,6 @@ class MonoStringPresenter(IPresenter):
         wc = self._format_align_suit(suit_map, 'west', 'c', w_longest, ew_suit_width)
         ec = self._format_align_suit(suit_map, 'east', 'c', ew_suit_width, ew_suit_width)
         rows.append(' '.join([wc, b_bar, ec]))
-        rows.append('')  # padding
 
         rows.append(self._format_align_suit(suit_map, 'south', 's', ns_suit_width, width))
         rows.append(self._format_align_suit(suit_map, 'south', 'h', ns_suit_width, width))
