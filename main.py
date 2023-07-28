@@ -1,4 +1,5 @@
 import logging
+import os
 import pathlib
 
 # https://github.com/Android-for-Python/camera4kivy#camera-provider
@@ -27,6 +28,7 @@ from app import androidperm
 
 __version__ = '0.4.1'
 
+DEBUG = os.getenv('DEBUG')
 ROOT_DIRPATH = pathlib.Path(__file__).parent
 
 lgr = logging
@@ -48,7 +50,8 @@ class Bidly(BoxLayout):
     deal_box: ObjectProperty(None)
     interaction_box: ObjectProperty(None)
 
-    ONNX_MODEL_PATH = ROOT_DIRPATH/'detector/best1056.onnx'
+    ONNX_MODEL_FILE = 'best.onnx.1056' if DEBUG else 'best1184.onnx'
+    ONNX_MODEL_PATH = ROOT_DIRPATH/'detector'/ONNX_MODEL_FILE
 
     MIN_OBJS_DETECTED = 50
 

@@ -2,14 +2,15 @@
 import abc
 import dataclasses
 import logging
+import os
 import typing
 
 import cv2
 import numpy as np
 
-
-IMAGE_WIDTH = 1056
-IMAGE_HEIGHT = 1056
+DEBUG = os.getenv('DEBUG')
+IMAGE_WIDTH = 1056 if DEBUG else 1184
+IMAGE_HEIGHT = 1056 if DEBUG else 1184
 MIN_CONFIDENCE = 0.3
 
 lgr = logging
