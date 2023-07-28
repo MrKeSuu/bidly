@@ -12,4 +12,4 @@ complete:
 	LEGACY_NDK=~/.buildozer/android/platform/android-ndk-r21e buildozer -v android debug deploy run logcat
 
 log:
-	buildozer android logcat
+	buildozer android logcat | grep python -a5 -b5
