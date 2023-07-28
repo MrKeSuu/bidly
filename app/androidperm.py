@@ -9,6 +9,11 @@ if platform == 'android':
     from android.permissions import request_permissions, check_permission, \
         Permission
 
+    request_permissions([Permission.CAMERA])
+    if api_version < 29:
+        request_permissions([Permission.READ_EXTERNAL_STORAGE])
+        request_permissions([Permission.WRITE_EXTERNAL_STORAGE])
+
 
 #########################################################################
 #
