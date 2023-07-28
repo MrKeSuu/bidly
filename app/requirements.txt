@@ -8,3 +8,8 @@ buildozer==1.5.0
 colorama
 appdirs
 Cython==0.29.33
+
+# For Linux gstreamer camera provider
+pycairo==1.24.0
+PyGObject==3.44.1
+olefile==0.46

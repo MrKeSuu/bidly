@@ -44,7 +44,7 @@ version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3==3.8.16,hostpython3==3.8.16,kivy==2.2.1,numpy,opencv==4.5.4,pandas,scipy,python-dds
+requirements = python3==3.8.16,hostpython3==3.8.16,kivy==2.2.1,numpy,opencv==4.5.4,pandas,scipy,python-dds,camera4kivy,gestures4kivy
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -341,7 +341,7 @@ android.allow_backup = True
 p4a.local_recipes = app/p4a-recipes
 
 # (str) Filename to the hook for p4a
-#p4a.hook =
+p4a.hook = app/camerax_provider/gradle_options.py
 
 # (str) Bootstrap to use for android builds
 # p4a.bootstrap = sdl2

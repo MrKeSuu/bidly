@@ -1,6 +1,12 @@
 import logging
 import pathlib
 
+# https://github.com/Android-for-Python/camera4kivy#camera-provider
+from kivy import kivy_options
+providers= list(kivy_options['camera'])
+providers.remove('opencv')
+kivy_options['camera'] = tuple(providers)
+
 import numpy as np
 from kivy.app import App
 from kivy.clock import Clock
