@@ -15,7 +15,7 @@ from app import androidperm
 from app.screens.main import MainScreen
 
 
-__version__ = '0.4.1'
+__version__ = '0.4.2'
 
 DEBUG = os.getenv('DEBUG')
 ROOT_DIRPATH = pathlib.Path(__file__).parent
