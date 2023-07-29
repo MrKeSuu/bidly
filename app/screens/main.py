@@ -237,6 +237,12 @@ class MainScreen(BoxLayout, Screen):
         n_buttons = len(self.interaction_box.children)  # so results are above buttons
         self.interaction_box.add_widget(table_label, index=n_buttons)
 
+    def on_enter(self, *args):
+        self.deal_box.camera_square.camera.connect()
+
+    def on_pre_leave(self, *args):
+        self.deal_box.camera_square.camera.disconnect_camera()
+
     def restart(self):
         self.deal_box.restart()
         self.interaction_box.restart()
