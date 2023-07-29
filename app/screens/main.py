@@ -123,19 +123,6 @@ LAYOUT = """
             size: (camera.width, camera.height / 8)  # ensure square frame
             background_color: 0, 0, 0, 0.5
 
-<CameraView>:
-    resolution: (1600, 1200)  # one of the supported
-    play: True
-    fit_mode: 'cover'
-
-    canvas.before:
-        PushMatrix
-        Rotate:
-            angle: -90
-            origin: self.center
-    canvas.after:
-        PopMatrix
-
 <C4KCameraView>:
     aspect_ratio: '4:3'
 
@@ -290,19 +277,6 @@ class InteractionBox(BoxLayout):
 
         self.camera_button.disabled = False
         self.restart_button.disabled = True
-
-
-class CameraView(Camera):
-
-    def capture(self):
-        img = self.export_as_image()
-
-        pixels = img.texture.pixels
-        size = img.texture.size
-        img_data = np.frombuffer(pixels, np.uint8).reshape((size[1], size[0], 4))
-
-        lgr.debug("Capture image from camera, with shape: %s", img_data.shape)
-        return img_data
 
 
 class C4KCameraView(Preview):
