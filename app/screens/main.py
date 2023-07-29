@@ -97,7 +97,7 @@ LAYOUT = """
 
         BgcolorLabel:
             size: (camera.width, camera.height / 8)  # ensure square frame
-            background_color: 0, 0, 0, 0.5
+            background_color: 0, 0, 0, 0.75
 
         Label:
             pos: camera.pos
@@ -112,6 +112,7 @@ LAYOUT = """
             halign: 'center'
 
             canvas:
+                # Player division guide lines
                 Color:
                     rgba: 1, 1, 1, 1
                 Line:
@@ -125,7 +126,7 @@ LAYOUT = """
 
         BgcolorLabel:
             size: (camera.width, camera.height / 8)  # ensure square frame
-            background_color: 0, 0, 0, 0.5
+            background_color: 0, 0, 0, 0.75
 
 <C4KCameraView>:
     aspect_ratio: '4:3'
