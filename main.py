@@ -12,7 +12,7 @@ from kivy.app import App
 from kivy.clock import Clock
 
 from app import androidperm
-from app.screens.main import Bidly
+from app.screens.main import MainScreen
 
 
 __version__ = '0.4.1'
@@ -25,7 +25,7 @@ lgr = logging
 
 class BidlyApp(App):
     def build(self):
-        self.bidly = Bidly()
+        self.bidly = MainScreen()
         return self.bidly
 
     def on_start(self):

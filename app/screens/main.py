@@ -3,16 +3,15 @@ import os
 import pathlib
 import time
 
-import numpy as np
 from camera4kivy import Preview
 from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
-from kivy.uix.camera import Camera
 from kivy.uix.carousel import Carousel
 from kivy.uix.label import Label
+from kivy.uix.screenmanager import Screen
 from kivy.uix.widget import Widget
 from kivy.utils import platform
 from kivy.vector import Vector
@@ -31,7 +30,7 @@ LAYOUT = """
 #:kivy 2.2.1
 #:import ui app.ui
 
-<Bidly>:
+<MainScreen>:
     orientation: 'vertical'
     padding: (0, 0, 0, 10)
     spacing: 5
@@ -54,8 +53,11 @@ LAYOUT = """
             size_hint_y: None
             height: '48dp'
             on_release:
-                deal_box.camera_square.camera.play = False; self.disabled = True; \
-                root.detect_solve(); restart_button.disabled = False
+                # TODO
+                deal_box.camera_square.camera.play = False; \
+                self.disabled = True; \
+                root.detect_solve(); \
+                restart_button.disabled = False
 
         Button:
             id: restart_button
@@ -69,6 +71,7 @@ LAYOUT = """
 <DealBox>:
     size_hint: 1, None
     size: self.width, self.width / 3 * 4
+    pos_hint: {'top': 1}
     anim_move_duration: 0.3
 
     camera_square: camera_square
@@ -77,6 +80,7 @@ LAYOUT = """
         id: camera_square
 
 <InteractionBox>:
+    pos_hint: {'bottom': 0}
     orientation: 'vertical'
     spacing: 5
 
@@ -161,7 +165,7 @@ LAYOUT = """
 """
 
 
-class Bidly(BoxLayout):
+class MainScreen(BoxLayout, Screen):
     deal_box: ObjectProperty(None)
     interaction_box: ObjectProperty(None)
 
