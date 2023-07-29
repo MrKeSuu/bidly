@@ -39,9 +39,7 @@ class BidlyApp(App):
         Clock.schedule_once(self.connect_camera)
 
     def connect_camera(self, dt):
-        self.bidly.deal_box.camera_square.camera.connect_camera(
-            sensor_resolution=(1600, 1200),
-        )
+        self.bidly.deal_box.camera_square.camera.connect()
 
 
 if __name__ == '__main__':

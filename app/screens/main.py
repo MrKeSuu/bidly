@@ -287,6 +287,9 @@ class C4KCameraView(Preview):
     CAPTURE_SUBDIR = 'temp'
     CAPTURE_NAME = 'captured.jpg'
 
+    def connect(self):
+        self.connect_camera(sensor_resolution=(1600, 1200))
+
     def capture(self):
         if DEBUG:
             capture_location = 'private'
