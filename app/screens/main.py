@@ -8,17 +8,14 @@ from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.button import Button
-from kivy.uix.carousel import Carousel
 from kivy.uix.label import Label
-from kivy.uix.screenmanager import Screen
+from kivy.uix.screenmanager import Screen, RiseInTransition
 from kivy.uix.widget import Widget
 from kivy.utils import platform
-from kivy.vector import Vector
 
 from detector import detect
 from solver import solve
-from app import ui
+from app import const, ui
 
 DEBUG = os.getenv('DEBUG')
 DETECTOR_DIRPATH = pathlib.Path(detect.__file__).parent
@@ -35,57 +32,45 @@ LAYOUT = """
     padding: (0, 0, 0, 10)
     spacing: 5
 
-    deal_box: deal_box
-    interaction_box: interaction_box
+    camera_square: camera_square
+    button_box: button_box
 
-    DealBox:
-        id: deal_box
+    on_enter:
+        camera_square.camera.connect(); \
+        button_box.camera_button.disabled = False; \
 
-    InteractionBox:
-        id: interaction_box
+    on_pre_leave:
+        camera_square.camera.disconnect_camera()
+
+    CameraSquare:
+        id: camera_square
+
+    ButtonBox:
+        id: button_box
 
         camera_button: camera_button
-        restart_button: restart_button
 
         Button:
             id: camera_button
             text: 'Detect & Solve'
             size_hint_y: None
             height: '48dp'
+            disabled: True
             on_release:
-                # TODO
-                deal_box.camera_square.camera.play = False; \
                 self.disabled = True; \
                 root.detect_solve(); \
-                restart_button.disabled = False
 
-        Button:
-            id: restart_button
-            text: 'Restart'
-            size_hint_y: None
-            height: '48dp'
-            disabled: True
-            on_release: root.restart()
-
-
-<DealBox>:
-    size_hint: 1, None
-    size: self.width, self.width / 3 * 4
-    pos_hint: {'top': 1}
-    anim_move_duration: 0.3
-
-    camera_square: camera_square
-
-    CameraSquare:
-        id: camera_square
-
-<InteractionBox>:
+<ButtonBox>:
     pos_hint: {'bottom': 0}
     orientation: 'vertical'
     spacing: 5
 
 
 <CameraSquare@FloatLayout>:
+    size_hint: 1, None
+    height: self.width / 3 * 4  # camera aspect ratio
+    pos_hint: {'top': 1}
+
     camera: camera
 
     C4KCameraView:
@@ -94,6 +79,7 @@ LAYOUT = """
 
     BoxLayout:
         orientation: 'vertical'
+        pos: root.pos
 
         BgcolorLabel:
             size: (camera.width, camera.height / 8)  # ensure square frame
@@ -167,8 +153,8 @@ LAYOUT = """
 
 
 class MainScreen(BoxLayout, Screen):
-    deal_box: ObjectProperty(None)
-    interaction_box: ObjectProperty(None)
+    camera_square: ObjectProperty(None)
+    button_box: ObjectProperty(None)
 
     ONNX_MODEL_FILE = 'best.onnx.1056' if DEBUG else 'best1184.onnx'
     ONNX_MODEL_PATH = DETECTOR_DIRPATH/ONNX_MODEL_FILE
@@ -188,16 +174,15 @@ class MainScreen(BoxLayout, Screen):
         pp = ui.popup("Detecting & Solving", "This could take a minute..")
         Clock.schedule_once(lambda dt: self._detect_solve())  # so that popup is instantly shown
         pp.dismiss()
-        Clock.schedule_once(lambda dt: self.deal_box.load_next())
 
     def _detect_solve(self):
         lgr.info("Capturing photo..")
         try:
-            img_src = self.deal_box.camera_square.camera.capture()
+            img_src = self.camera_square.camera.capture()
         except Exception:
             lgr.exception("Camera failure")
-            pp = ui.popup("Camera failure", msg=repr(e), close_btn=True)
-            pp.bind(on_dismiss=lambda _: self.restart())
+            ui.popup("Camera failure", msg=repr(e), close_btn=True)
+            self.restart()
             return
 
         lgr.info("Handling image..")
@@ -205,14 +190,15 @@ class MainScreen(BoxLayout, Screen):
             image_input = self._handle_image(img_src)
         except Exception as e:
             lgr.exception("Image handler failure")
-            pp = ui.popup("Image handler failure", msg=repr(e), close_btn=True)
-            pp.bind(on_dismiss=lambda _: self.restart())
+            ui.popup("Image handler failure", msg=repr(e), close_btn=True)
+            self.restart()
             return
 
         lgr.info("Detecting cards..")
         detection = self._model.detect(image_input)
         if len(detection) < self.MIN_OBJS_DETECTED:
             ui.popup("Too few cards", msg="Too few cards detected; please retry", close_btn=True)
+            self.restart()
             return
 
         lgr.info("Solving deal..")
@@ -220,33 +206,25 @@ class MainScreen(BoxLayout, Screen):
             solution = self._solve(detection)
         except Exception as e:
             lgr.exception("Solver failure")
-            ui.popup("Solver failure", msg=repr(e), close_btn=True)
+            ui.popup("Solver failure", msg=e, close_btn=True)
+            self.restart()
             return
 
         lgr.info("Displaying solution..")
         self.display(solution)
 
     def display(self, solution):
-        hand, table = solution
+        result_screen = self.manager.get_screen(const.RESULT_SCREEN)
 
-        hand_label = BgcolorLabel()
-        hand_label.display(hand)
-        self.deal_box.add_widget(hand_label)
+        result_screen.display(solution)
 
-        table_label = BgcolorLabel(font_size='21dp')
-        table_label.display(table)
-        n_buttons = len(self.interaction_box.children)  # so results are above buttons
-        self.interaction_box.add_widget(table_label, index=n_buttons)
-
-    def on_enter(self, *args):
-        self.deal_box.camera_square.camera.connect()
-
-    def on_pre_leave(self, *args):
-        self.deal_box.camera_square.camera.disconnect_camera()
+        self.manager.switch_to(result_screen, transition=RiseInTransition())
 
     def restart(self):
-        self.deal_box.restart()
-        self.interaction_box.restart()
+        if not self.camera_square.camera.camera_connected:
+            self.camera_square.camera.connect()
+
+        self.button_box.restart()
 
     def _handle_image(self, img_src) -> detect.ImageInput:
         image_handler = detect.get_image_handler(image_reader=detect.FsImageReader())
@@ -266,28 +244,11 @@ class MainScreen(BoxLayout, Screen):
         return solver.present()
 
 
-class DealBox(Carousel):
-    camera_square = ObjectProperty(None)
-
-    def restart(self):
-        if len(self.slides) == 2:
-            self.load_previous()
-            Clock.schedule_once(lambda dt: self.remove_widget(self.slides[-1]), 0.5)
-
-        self.camera_square.camera.play = True
-
-
-class InteractionBox(BoxLayout):
+class ButtonBox(BoxLayout):
     camera_button: ObjectProperty(None)
-    restart_button: ObjectProperty(None)
 
     def restart(self):
-        for widget in self.children[:]:
-            if not isinstance(widget, Button):
-                self.remove_widget(widget)
-
         self.camera_button.disabled = False
-        self.restart_button.disabled = True
 
 
 class C4KCameraView(Preview):
@@ -340,23 +301,3 @@ class BgcolorLabel(Label, BackgroundColor):
 
     def display(self, text):
         self.label_text = text
-
-
-### Reference only ###
-class PongGame(Widget):
-    player1 = ObjectProperty(None)
-    player2 = ObjectProperty(None)
-
-    def on_touch_move(self, touch):  ##
-        if touch.x < self.width/3:
-            self.player1.center_y = touch.y
-        if touch.x > self.width - self.width/3:
-            self.player2.center_y = touch.y
-
-
-class PongPaddle(Widget):
-    def bounce_ball(self, ball):
-        if self.collide_widget(ball):  ## or collide_point
-            speedup  = 1.1
-            offset = 0.02 * Vector(0, ball.center_y-self.center_y)
-            ball.velocity =  speedup * (offset - ball.velocity)

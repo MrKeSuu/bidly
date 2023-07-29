@@ -12,14 +12,14 @@ class PopupLabel(Label):
 def popup(title, msg, close_btn=False, auto_dismiss=False):
     content = BoxLayout(orientation='vertical')
 
-    label = PopupLabel(text=msg, valign='center', halign='center')
+    label = PopupLabel(text=str(msg), valign='center', halign='center')
     content.add_widget(label)
     if close_btn:
         button = Button(text='Close', size_hint=(1, None))
         content.add_widget(button)
 
     popup = Popup(
-        title=title, content=content,
+        title=title.title(), content=content,
         size_hint=(.8, .3), auto_dismiss=auto_dismiss)
     popup.open()
 
