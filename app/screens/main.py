@@ -211,12 +211,12 @@ class MainScreen(BoxLayout, Screen):
             return
 
         lgr.info("Displaying solution..")
-        self.display(solution)
+        self.display(img_src, solution)
 
-    def display(self, solution):
+    def display(self, img_src, solution):
         result_screen = self.manager.get_screen(const.RESULT_SCREEN)
 
-        result_screen.display(solution)
+        result_screen.display(img_src, solution)
 
         self.manager.switch_to(result_screen, transition=RiseInTransition())
 
@@ -259,15 +259,7 @@ class C4KCameraView(Preview):
         self.connect_camera(sensor_resolution=(1600, 1200))
 
     def capture(self):
-        if DEBUG:
-            capture_location = 'private'
-        elif platform == 'android':
-            from android.storage import app_storage_path
-            capture_location = f'{app_storage_path()}/DCIM'
-        else:
-            raise ValueError(f"Unsupported platform: {platform}")
-
-        capture_path = pathlib.Path(capture_location)/self.CAPTURE_SUBDIR/self.CAPTURE_NAME
+        capture_path = self.get_capture_path()
 
         if capture_path.exists():
             capture_path.unlink()
@@ -282,6 +274,18 @@ class C4KCameraView(Preview):
         self.disconnect_camera()
         lgr.debug("Capture completed")
 
+        return capture_path
+
+    def get_capture_path(self):
+        if DEBUG:
+            capture_location = 'private'
+        elif platform == 'android':
+            from android.storage import app_storage_path
+            capture_location = f'{app_storage_path()}/DCIM'
+        else:
+            raise ValueError(f"Unsupported platform: {platform}")
+
+        capture_path = pathlib.Path(capture_location)/self.CAPTURE_SUBDIR/self.CAPTURE_NAME
         return capture_path
 
     @staticmethod

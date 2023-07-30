@@ -3,13 +3,15 @@ import os
 
 from kivy.clock import Clock
 from kivy.lang import Builder
-from kivy.properties import ObjectProperty, StringProperty
+from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.carousel import Carousel
+from kivy.uix.image import AsyncImage
 from kivy.uix.label import Label
 from kivy.uix.screenmanager import Screen, FallOutTransition
 from kivy.uix.widget import Widget
+from kivy.utils import platform
 from kivy.vector import Vector
 
 from app import const, ui
@@ -59,6 +61,17 @@ LAYOUT = """
     orientation: 'vertical'
     spacing: 5
 
+<AndroidAsyncImage>:
+    # Android needs a rotation as kivy image does not read EXIF info.
+    canvas.before:
+        PushMatrix
+        Rotate:
+            angle: -90
+            axis: 0, 0, 1
+            origin: root.center
+    canvas.after:
+        PopMatrix
+
 
 <BgcolorLabel>:
     text: str(self.label_text)
@@ -103,13 +116,12 @@ class ResultScreen(BoxLayout, Screen):
         Builder.load_string(LAYOUT)
         super().__init__(**kwargs)
 
-    def display(self, solution):
+    def display(self, img_path, solution):
         hand, table = solution
 
-        # captured image TODO
-        image_label = BgcolorLabel()
-        image_label.display("IMAGE PLACEHOLDER")
-        self.deal_box.add_widget(image_label)
+        ImageWidget = AndroidAsyncImage if platform == 'android' else AsyncImage
+        captured_image = ImageWidget(source=str(img_path), fit_mode='cover')
+        self.deal_box.add_widget(captured_image)
 
         hand_label = BgcolorLabel()
         hand_label.display(hand)
@@ -149,6 +161,10 @@ class InteractionBox(BoxLayout):
                 self.remove_widget(widget)
 
         self.restart_button.disabled = True
+
+
+class AndroidAsyncImage(AsyncImage):
+    pass
 
 
 class BackgroundColor(Widget):
