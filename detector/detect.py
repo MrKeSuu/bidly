@@ -212,9 +212,9 @@ class MinSizeValidator(IImageValidator):
     MIN_HEIGHT = IMAGE_HEIGHT
 
     def validate(cls, image):
-        img_w, img_h = image.shape[0], image.shape[1]
-        if img_w < cls.MIN_WIDTH or img_h < cls.MIN_HEIGHT:
-            raise ValueError(f"Image resolution {img_w}x{img_h} too low")
+        height, width = image.shape[0], image.shape[1]
+        if height < cls.MIN_WIDTH or width < cls.MIN_HEIGHT:
+            raise ValueError(f"Image resolution {width}x{height} too low")
 
 
 class ImageCrop(IImagePreprocessor):
@@ -239,7 +239,7 @@ class ImageCrop(IImagePreprocessor):
         else:
             cropped = image
 
-        assert cropped.shape[0] == cropped.shape[1], "1-1 cropped image is not sqaure"
+        assert cropped.shape[0] == cropped.shape[1], "1:1 cropped image is not sqaure"
 
         return cropped
 
