@@ -227,7 +227,7 @@ class MainScreen(BoxLayout, Screen):
         self.button_box.restart()
 
     def _handle_image(self, img_src) -> detect.ImageInput:
-        image_handler = detect.get_image_handler(image_reader=detect.FsImageReader())
+        image_handler = detect.get_image_handler(image_reader=detect.FsExifImageReader())
         image_handler.read(img_src)
         image_handler.validate()
         image_input = image_handler.preprocess()

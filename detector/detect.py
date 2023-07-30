@@ -199,6 +199,20 @@ class FsImageReader(IImageReader):
         return image
 
 
+class FsExifImageReader(IImageReader):
+    """Read image from file system considering EXIF info."""
+
+    @staticmethod
+    def read(src):
+        path = str(src)
+        image = cv2.imread(path, cv2.IMREAD_COLOR)
+
+        if image is None:
+            raise ValueError(f"Can't load image at: {path}")
+
+        return image
+
+
 class BgraReader(IImageReader):
 
     @staticmethod
