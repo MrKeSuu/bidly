@@ -114,7 +114,6 @@ class MonoStringPresenter(IPresenter):
     TL, TR, BL, BR = '\u250c', '\u2510', '\u2514', '\u2518'
 
     SQUARE_WIDTH = 6
-    MIN_WIDTH = (13+1)*2 - SQUARE_WIDTH  # for N or S having 13 cards in a suit
 
     def present(self, solution: Solution):
         formatted_hand = self._format_hand(solution.hand_dict)
@@ -154,10 +153,15 @@ class MonoStringPresenter(IPresenter):
         # Calc widths
         e_longest = self._longest_len(suit_map, converter.HAND_E) + 1  # for symbol
         w_longest = self._longest_len(suit_map, converter.HAND_W) + 1  # for symbol
+        ew_longest = max(e_longest, w_longest)
+        ew_row_min_width = ew_longest*2 + self.SQUARE_WIDTH + 2  # padding
 
-        ew_min_width = max(e_longest, w_longest)
-        ew_row_min_width = ew_min_width*2 + self.SQUARE_WIDTH + 2  # padding
-        width = max(ew_row_min_width, self.MIN_WIDTH)
+        n_longest = self._longest_len(suit_map, converter.HAND_N) + 1  # for symbol
+        s_longest = self._longest_len(suit_map, converter.HAND_S) + 1  # for symbol
+        ns_longest = max(n_longest, s_longest)
+        ns_row_min_width = ns_longest*2 - self.SQUARE_WIDTH
+
+        width = max(ew_row_min_width, ns_row_min_width)
 
         ew_suit_width = (width-self.SQUARE_WIDTH-2) // 2
         ns_suit_width = self.SQUARE_WIDTH + 1 + ew_suit_width
@@ -195,6 +199,7 @@ class MonoStringPresenter(IPresenter):
         rows.append(self._format_align_suit(suit_map, 'south', 'c', ns_suit_width, width))
         rows.append('')  # avoid newline issue
 
+        lgr.debug("deal string width to present: %s", len(rows[0]))
         return '\n'.join(rows)
 
     def _format_result(self, dds_result) -> str:
