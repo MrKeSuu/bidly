@@ -117,17 +117,6 @@ LAYOUT = """
 <C4KCameraView>:
     aspect_ratio: '4:3'
 
-<BgcolorLabel>:
-    text: str(self.label_text)
-
-    font_size: '18dp'
-    font_name: 'app/fonts/FreeMono.ttf'
-    color: 0.15, 0.15, 0.15, 1  # from medium.com
-
-    text_size: self.size
-    valign: 'center'
-    halign: 'center'
-
 
 <PopupLabel>:
     # https://stackoverflow.com/questions/66018633/is-there-a-way-to-adjust-the-size-of-content-in-a-kivy-popup
@@ -294,14 +283,3 @@ class C4KCameraView(Preview):
             return path.stat().st_size
         except FileNotFoundError:
             return 0
-
-
-class BackgroundColor(Widget):
-    pass
-
-
-class BgcolorLabel(Label, BackgroundColor):
-    label_text = StringProperty("")
-
-    def display(self, text):
-        self.label_text = text

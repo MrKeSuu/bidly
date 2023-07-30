@@ -18,7 +18,7 @@ from app.screens.results import ResultScreen
 import app.const
 
 
-__version__ = '0.5.0'
+__version__ = '0.5.1'
 
 DEBUG = os.getenv('DEBUG')
 ROOT_DIRPATH = pathlib.Path(__file__).parent

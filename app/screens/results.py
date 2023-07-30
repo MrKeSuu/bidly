@@ -49,6 +49,11 @@ LAYOUT = """
             on_release: root.restart()
 
 
+<PopupLabel>:
+    # https://stackoverflow.com/questions/66018633/is-there-a-way-to-adjust-the-size-of-content-in-a-kivy-popup
+    text_size: self.size
+
+
 <DealBox>:
     size_hint: 1, None
     height: self.width
@@ -61,6 +66,7 @@ LAYOUT = """
     orientation: 'vertical'
     spacing: 5
 
+
 <AndroidAsyncImage>:
     # Android needs a rotation as kivy image does not read EXIF info.
     canvas.before:
@@ -72,11 +78,13 @@ LAYOUT = """
     canvas.after:
         PopMatrix
 
+<AdaptiveBgcolorLabel>:
+    font_size: str(380//self.text_width)+'sp'
 
 <BgcolorLabel>:
     text: str(self.label_text)
 
-    font_size: '18dp'
+    font_size: '25sp'
     font_name: 'app/fonts/FreeMono.ttf'
     color: 0.15, 0.15, 0.15, 1  # from medium.com
 
@@ -84,10 +92,6 @@ LAYOUT = """
     valign: 'center'
     halign: 'center'
 
-
-<PopupLabel>:
-    # https://stackoverflow.com/questions/66018633/is-there-a-way-to-adjust-the-size-of-content-in-a-kivy-popup
-    text_size: self.size
 
 # Define your background color Template
 <BackgroundColor@Widget>
@@ -123,11 +127,11 @@ class ResultScreen(BoxLayout, Screen):
         captured_image = ImageWidget(source=str(img_path), fit_mode='cover')
         self.deal_box.add_widget(captured_image)
 
-        hand_label = BgcolorLabel()
+        hand_label = AdaptiveBgcolorLabel()
         hand_label.display(hand)
         self.deal_box.add_widget(hand_label)
 
-        table_label = BgcolorLabel(font_size='21dp')
+        table_label = BgcolorLabel()
         table_label.display(table)
         n_buttons = len(self.interaction_box.children)  # so results are above buttons
         self.interaction_box.add_widget(table_label, index=n_buttons)
@@ -176,6 +180,16 @@ class BgcolorLabel(Label, BackgroundColor):
 
     def display(self, text):
         self.label_text = text
+
+
+class AdaptiveBgcolorLabel(BgcolorLabel):
+    label_text = StringProperty("")
+    text_width = NumericProperty(24)
+
+    def display(self, text):
+        print(text.split('\n'))
+        super().display(text)
+        self.text_width = len(text.split('\n')[0])
 
 
 ### Reference only ###
