@@ -58,6 +58,7 @@ class IPredReader(abc.ABC):
 
 class DealConverter:
     QUADRANT_MARGIN_WIDTH = 0.05
+    MAX_ASSIGNMENT_DISTANCE = 0.3  # from observations of misassignment, subject to change
 
     card: pd.DataFrame
     card_: pd.DataFrame
@@ -212,11 +213,7 @@ class DealConverter:
             return HAND_MAP[row.quadrant]
 
         self.card_["hand"] = self.card_.apply(_to_hand, axis=1)
-        log.debug("N core cards: %s", self.card_.query(f"hand == '{HAND_N}'").name.tolist())
-        log.debug("E core cards: %s", self.card_.query(f"hand == '{HAND_E}'").name.tolist())
-        log.debug("S core cards: %s", self.card_.query(f"hand == '{HAND_S}'").name.tolist())
-        log.debug("W core cards: %s", self.card_.query(f"hand == '{HAND_W}'").name.tolist())
-
+        log.debug("Core card counts: %s", self.card_.hand.value_counts().to_dict())
 
     def _list_remaining_objs(self) -> pd.DataFrame:
         """Return a df containing unassigned objs."""
@@ -247,11 +244,14 @@ class DealConverter:
                     closest_obj_idx = obj_idx
                     closest_hand = hand
 
+        closest_obj = remaining.loc[closest_obj_idx, ["name", "quadrant"]].to_dict()
         log.debug(
             "Found a closest obj(%s) to '%s': %s",
-            remaining.loc[closest_obj_idx, ["name", "quadrant"]].to_dict(),
-            closest_hand,
-            min_distance)
+            closest_obj, closest_hand, min_distance)
+        if min_distance > self.MAX_ASSIGNMENT_DISTANCE:
+            raise ValueError("Difficulty assigning cards to hands; "
+                             "try separating hands a bit further")
+
         return closest_obj_idx, closest_hand
 
     def _assign_one_obj(self, obj_idx, hand):
@@ -285,7 +285,8 @@ class DealConverter:
     def _build_pbn_hand(self, hand_name):
         card_names = self.card_[self.card_.hand == hand_name].name.copy()
         if len(card_names) != 13:
-            raise ValueError(f"{hand_name.upper()} did not have 13 cards")
+            raise ValueError(f"{hand_name.upper()} did not have 13 cards; "
+                             "could try separating hands a bit further")
 
         suits = (
             self._build_pbn_suit(card_names, SUIT_S),
