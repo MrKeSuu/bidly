@@ -124,7 +124,7 @@ class ResultScreen(BoxLayout, Screen):
         hand, table = solution
 
         ImageWidget = AndroidAsyncImage if platform == 'android' else AsyncImage
-        captured_image = ImageWidget(source=str(img_path), fit_mode='cover')
+        captured_image = ImageWidget(source=str(img_path), fit_mode='cover', nocache=True)
         self.deal_box.add_widget(captured_image)
 
         hand_label = AdaptiveBgcolorLabel()
