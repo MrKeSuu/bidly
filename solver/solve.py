@@ -12,7 +12,10 @@ import solver.pythondds_min.adapter as dds_adapter
 
 lgr = logging
 
+CardName = str
 CardAssignment = T.List[T.Dict]
+TransformedCards = T.List[T.Dict]  # see outputs of converter.IPredReader
+AssignedCards = T.List[T.Dict]
 
 
 # Abstract #
@@ -62,27 +65,39 @@ class BridgeSolverBase(abc.ABC):
 
 
 # Impl. #
+@dataclasses.dataclass
+class TransformationResults:
+    cards: TransformedCards
+    missing: T.List[CardName]  # user can decide to assign
+    fp: T.List[CardName]  # more serious
+
+
+@dataclasses.dataclass
+class AssignmentResults:
+    cards: AssignedCards
+    not_assigned: T.List[CardName]
+
 
 class BridgeSolver(BridgeSolverBase):
     def __init__(self, cards, presenter) -> None:
         super().__init__(cards, presenter)
         self.converter = converter.get_deal_converter(reader=converter.Yolo5Reader())
 
-    def transform(self):
+    def transform(self) -> TransformationResults:
         self.converter.read(self.cards)
         # self.converter.dedup(smart=True)  # yolo5 does not seem needing this
         missings, fps = self.converter.report_missing_and_fp()
-        return missings, fps
+        return missings, fps  # TODO
 
 
-    def assign(self):
-        self.converter.assign()
+    def assign(self, transformed_cards: TransformedCards) -> AssignmentResults:
+        return self.converter.assign(transformed_cards)  # TODO
 
     def list_unsure(self):
         pass  # TODO like 'bidly found %s only; would you like to fill in the remaining %s or redetect?'
 
-    def solve(self):
-        pbn_hand = self.converter.format_pbn()
+    def solve(self, assigned_cards: AssignedCards):
+        pbn_hand = self.converter.format_pbn(assigned_cards)
 
         dds_result = dds_adapter.solve_hand(pbn_hand)
         lgr.debug("Got DDS result for pbn hand: %s", pbn_hand)

@@ -102,7 +102,7 @@ class DealConverter:
             self.card_ = self._dedup_simple()
 
     # two cases after dedup
-    def assign(self):
+    def assign(self):  # TODO arg: transformed_cards
         """Case 1: everything is perfect -> work on assigning cards to four hands"""
         log.info("Assigning cards to hands..")
         self._divide_to_quadrants()
@@ -117,6 +117,7 @@ class DealConverter:
 
             self._assign_one_obj(obj_idx, hand)
             remaining = self._drop_assigned(obj_idx, remaining)
+        # TODO return assigned cards
 
     def infer_missing(self):
         """Case 2: missing cards -> attempt to infer"""
@@ -127,7 +128,7 @@ class DealConverter:
         deal = self._build_pbn_deal(hands)
         self._write_pbn_deal(deal, path)
 
-    def format_pbn(self) -> bytes:
+    def format_pbn(self) -> bytes:  # TODO arg: assigned_cards
         log.info("Formatting hand to PBN..")
         hands = self._build_pbn_hands()
         deal = self._build_pbn_deal(hands)
