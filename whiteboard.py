@@ -59,6 +59,38 @@ solver.present()
 
 # %%
 
+# %% [markdown]
+# ## kivy, vscode launch.json
+# ```python
+# {
+#     // Use IntelliSense to learn about possible attributes.
+#     // Hover to view descriptions of existing attributes.
+#     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+#     "version": "0.2.0",
+#     "configurations": [
+#         {
+#             "name": "Python: bidly",
+#             "type": "python",
+#             "request": "launch",
+#             "program": "/home/yiqian/repos/bidly/main.py",
+#             "args": ["-m", "screen:phone_oneplus_6t,portrait"], 
+#             "env": {"DEBUG": "true"},
+#             "console": "integratedTerminal",
+#             "justMyCode": true,
+#         },
+#         {
+#             "name": "Python: KIVY",
+#             "type": "python",
+#             "request": "launch",
+#             "program": "${file}",
+#             "args": ["-m", "screen:phone_oneplus_6t,portrait"], 
+#             "console": "integratedTerminal",
+#             "justMyCode": true,
+#         }
+#     ]
+# }
+# ```
+
 # %%
 
 # %% [markdown]
