@@ -258,7 +258,8 @@ class C4KCameraView(Preview):
         # Ugly, but checking filesize to see if capture_photo completed which is on another thread
         filesize = self._filesize(capture_path)
         while filesize == 0 or filesize < self._filesize(capture_path):
-            filesize =self._filesize(capture_path)
+            lgr.debug("Waiting for capture done..")
+            filesize = self._filesize(capture_path)
             time.sleep(0.05)
         self.disconnect_camera()
         lgr.debug("Capture completed")
