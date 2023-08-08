@@ -4,6 +4,7 @@ scikit-learn==1.2.2
 matplotlib==3.5.2
 opencv-python==4.5.4.58
 Kivy==2.2.1
+camera4kivy==0.3.0
 buildozer==1.5.0
 colorama
 appdirs
