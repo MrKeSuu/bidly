@@ -187,9 +187,8 @@ class AdaptiveBgcolorLabel(BgcolorLabel):
     text_width = NumericProperty(24)
 
     def display(self, text):
-        print(text.split('\n'))
         super().display(text)
-        self.text_width = len(text.split('\n')[0])
+        self.text_width = len(text.split('\n')[1])
 
 
 ### Reference only ###
