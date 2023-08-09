@@ -153,20 +153,20 @@ class TestAssigner:
     @pytest.fixture
     def assigner(self, transformed_cards):
         assigner = converter._get_assigner()
-        assigner.card_ = pd.DataFrame(transformed_cards)  # not best practice
+        assigner._load(transformed_cards)  # not best practice
         return assigner
 
     def test_divide_to_quadrants_basic(self, assigner):
         assigner._divide_to_quadrants()
 
         expected_north_cards = {'3d', '7c', '5s', '6c', '6h', 'Jh'}
-        actual_quadrants = assigner.card_.loc[
+        actual_quadrants = assigner.objs.loc[
             lambda df: df.name.isin(expected_north_cards),
             'quadrant']
         assert actual_quadrants.to_list() == ['top'] * 6
 
         expected_marginal_cards = {"8c", "Jc"}
-        actual_quadrants = assigner.card_.loc[
+        actual_quadrants = assigner.objs.loc[
             lambda df: df.name.isin(expected_marginal_cards),
             'quadrant']
         assert actual_quadrants.to_list() == ['margin'] * 2
@@ -175,7 +175,7 @@ class TestAssigner:
         assigner._divide_to_quadrants()
         assigner._mark_core_objs()
 
-        card = assigner.card_
+        card = assigner.objs
         assert "is_core" in card.columns
         assert card.is_core.notna().all()
 
@@ -191,7 +191,7 @@ class TestAssigner:
         assigner._mark_core_objs()
         assigner._drop_core_duplicates()
 
-        card = assigner.card_
+        card = assigner.objs
         assert card.shape == (46, 10)
         assert card.query("name == '6d' and is_core == True").shape[0] == 1
         assert card.query("name == 'Qc'").shape[0] == 1
@@ -203,7 +203,7 @@ class TestAssigner:
         assigner._drop_core_duplicates()
         assigner._assign_core_objs()
 
-        card = assigner.card_
+        card = assigner.objs
         assert "hand" in card
         assert card.query("name == 'As'").hand.to_list() == ["west"]
         assert card.query("name == '6h'").hand.to_list() == ["north"]
@@ -219,7 +219,7 @@ class TestAssigner:
         remaining = assigner._list_remaining_objs()
         obj_idx, hand = assigner._find_closest_obj(remaining)
 
-        card_name = assigner.card_.at[obj_idx, 'name']
+        card_name = assigner.objs.at[obj_idx, 'name']
         assert card_name == '10h'
         assert hand == 'south'
 

@@ -133,7 +133,7 @@ class DealConverter:
         return deal.encode("ascii")
 
     def list_assigned_cards(self):
-        return self.assigner.card_[["name", "hand"]].dropna(subset=["hand"]).to_dict('records')
+        return self.assigner.objs[["name", "hand"]].dropna(subset=["hand"]).to_dict('records')
 
     def _dedup_simple(self):
         """Dedup in a simple way, only keeping the one with highest confidence."""
@@ -333,8 +333,7 @@ class Assigner(IAssigner):
     MAX_ASSIGNMENT_DISTANCE = 0.3  # from observations of misassignment, subject to change
 
     def assign(self, transformed_cards) -> List[Dict]:
-        # not best practice, but this was how assignment process worked
-        self.card_ = pd.DataFrame(transformed_cards)
+        self._load(transformed_cards)
 
         self._divide_to_quadrants()
 
@@ -349,19 +348,22 @@ class Assigner(IAssigner):
             self._assign_one_obj(obj_idx, hand)
             remaining = self._drop_assigned(obj_idx, remaining)
 
-        assigned_cards = self.card_.to_dict('records')
+        assigned_cards = self.list_assigned_cards()
         return assigned_cards
 
     #
+    def _load(self, transformed_cards):
+        self.objs = pd.DataFrame(transformed_cards)
+
     def _divide_to_quadrants(self):
         """Divide cards to four quadrants before finding the core objs in each."""
-        self.card_ = (
-            self.card_
+        self.objs = (
+            self.objs
                 .pipe(self._mark_marginal, width=self.QUADRANT_MARGIN_WIDTH)
                 .assign(quadrant=lambda df: df.apply(self._calc_quadrant, axis=1))
         )
         log.debug("Divided to quadrants with %s marginal cards.",
-                  self.card_.query("quadrant == 'margin'").shape[0])
+                  self.objs.query("quadrant == 'margin'").shape[0])
 
     def _mark_core_objs(self):
         """Find core objects for all four quadrants by adding col 'is_core'."""
@@ -370,21 +372,21 @@ class Assigner(IAssigner):
         core_objs_l = self._find_quadrant_core_objs(QUADRANT_LEFT)
         core_objs_r = self._find_quadrant_core_objs(QUADRANT_RIGHT)
 
-        self.card_["is_core"] = (
+        self.objs["is_core"] = (
             pd.concat([core_objs_t, core_objs_b, core_objs_l, core_objs_r])
-                .reindex(self.card_.index, fill_value=False)  # for marginal objs
+                .reindex(self.objs.index, fill_value=False)  # for marginal objs
         )
-        log.info("Marked %s core objs in total", self.card_['is_core'].sum())
+        log.info("Marked %s core objs in total", self.objs['is_core'].sum())
 
     def _drop_core_duplicates(self):
         """Drop objects duplicated with core objects, both inside core and outside core."""
-        core = self.card_[self.card_.is_core]
+        core = self.objs[self.objs.is_core]
 
         in_core_dups = core[core.duplicated("name")]
-        self.card_ = self.card_.drop(index=in_core_dups.index)
+        self.objs = self.objs.drop(index=in_core_dups.index)
 
-        out_core_dups = self.card_[lambda df: (~df.is_core) & (df.name.isin(core.name.values))]
-        self.card_ = self.card_.drop(index=out_core_dups.index)
+        out_core_dups = self.objs[lambda df: (~df.is_core) & (df.name.isin(core.name.values))]
+        self.objs = self.objs.drop(index=out_core_dups.index)
 
         log.debug("Dropped %s duplicates inside core: %s",
                   len(in_core_dups), in_core_dups[["name", "quadrant"]].to_dict("records"))
@@ -400,18 +402,18 @@ class Assigner(IAssigner):
             assert row.quadrant != MARGIN, f"Unexpected 'margin' core card: {row['name']}"
             return HAND_MAP[row.quadrant]
 
-        self.card_["hand"] = self.card_.apply(_to_hand, axis=1)
-        log.debug("Core card counts: %s", self.card_.hand.value_counts().to_dict())
+        self.objs["hand"] = self.objs.apply(_to_hand, axis=1)
+        log.debug("Core card counts: %s", self.objs.hand.value_counts().to_dict())
 
     def _list_remaining_objs(self) -> pd.DataFrame:
         """Return a df containing unassigned objs."""
-        assert 'hand' in self.card_, "Required col 'hand' not in `self.card_`!"
-        remaining = self.card_[self.card_.hand.isna()].copy()
+        assert 'hand' in self.objs, "Required col 'hand' not in `self.card_`!"
+        remaining = self.objs[self.objs.hand.isna()].copy()
         return remaining
 
     def _hands_to_assign(self):
         """Return a list of hands available for assignment (< 13 cards assigned)."""
-        hand_size = self.card_.hand.value_counts()
+        hand_size = self.objs.hand.value_counts()
         return hand_size[hand_size < 13].index.tolist()
 
     def _find_closest_obj(self, remaining: pd.DataFrame) -> Tuple[int, str]:
@@ -422,7 +424,7 @@ class Assigner(IAssigner):
         closest_obj_idx = None
         closest_hand = None
         for hand in self._hands_to_assign():
-            _hand_cards = self.card_[self.card_.hand == hand]
+            _hand_cards = self.objs[self.objs.hand == hand]
             hand_coords = list(_hand_cards[["center_x", "center_y"]].itertuples(index=False))
 
             for obj_idx, x, y in remaining[["center_x", "center_y"]].itertuples():
@@ -444,8 +446,8 @@ class Assigner(IAssigner):
 
     def _assign_one_obj(self, obj_idx, hand):
         """Assign object to `hand`, by updating col 'hand'."""
-        assert obj_idx in self.card_.index, f"{obj_idx} not found in `card_.index`!"
-        self.card_.at[obj_idx, 'hand'] = hand
+        assert obj_idx in self.objs.index, f"{obj_idx} not found in `card_.index`!"
+        self.objs.at[obj_idx, 'hand'] = hand
 
     def _drop_assigned(self, obj_idx, remaining: pd.DataFrame) -> pd.DataFrame:
         """Drop assigned object(s) from `remaining`."""
@@ -457,6 +459,9 @@ class Assigner(IAssigner):
             len(assigned_cards),
             assigned_cards[["name", "quadrant"]].to_dict("records"))
         return remaining.drop(index=assigned_cards.index)
+
+    def list_assigned_cards(self):
+        return self.objs.to_dict('records')
 
     ##
     @staticmethod
@@ -496,13 +501,13 @@ class Assigner(IAssigner):
 
     def _find_quadrant_core_objs(self, quadrant) -> pd.Series:
         """Find core objects for a specific quadrant"""
-        quadrant_card = self.card_[lambda df: df.quadrant == quadrant]
+        quadrant_card = self.objs[lambda df: df.quadrant == quadrant]
 
         _obj_coords = quadrant_card[["center_x", "center_y"]].itertuples(index=False)
         core_bool_seq = self.core_finder.find_core(_obj_coords)
 
         # Unmark core if dup exists outside its quadrant
-        outside_card = self.card_[lambda df: df.quadrant != quadrant]
+        outside_card = self.objs[lambda df: df.quadrant != quadrant]
         no_dup_bool_seq = ~quadrant_card.name.isin(outside_card.name.values)
 
         return pd.Series(core_bool_seq & no_dup_bool_seq, index=quadrant_card.index)
