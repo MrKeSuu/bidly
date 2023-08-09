@@ -12,8 +12,10 @@ def main():
     deal_converter = converter.get_deal_converter()
     deal_converter.read(args.yolo_path)
     deal_converter.dedup(smart=True)
-    deal_converter.assign()
-    pbn_hand = deal_converter.format_pbn()
+
+    transformed_cards = deal_converter.card_.to_dict("records")
+    assigned_cards = deal_converter.assign(transformed_cards)
+    pbn_hand = deal_converter.format_pbn(assigned_cards)
 
     formatted_hand = dds_adapter.format_hand(pbn_hand, title="Example Hand")
     print(formatted_hand)

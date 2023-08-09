@@ -3,7 +3,7 @@ import abc
 import json
 import logging as log
 import pathlib
-from typing import Tuple
+from typing import Tuple, List, Dict
 
 import numpy as np
 import pandas as pd
@@ -56,22 +56,30 @@ class IPredReader(abc.ABC):
         pass
 
 
-class DealConverter:
-    QUADRANT_MARGIN_WIDTH = 0.05
-    MAX_ASSIGNMENT_DISTANCE = 0.3  # from observations of misassignment, subject to change
+class IAssigner(abc.ABC):
+    core_finder: strategy.ICoreFinder
+    linkage: strategy.ILinkage
 
+    def __init__(self, core_finder, linkage) -> None:
+        self.core_finder = core_finder
+        self.linkage = linkage
+
+    @abc.abstractmethod
+    def assign(self, transformed_cards) -> List[Dict]:
+        pass
+
+
+class DealConverter:
     card: pd.DataFrame
     card_: pd.DataFrame
 
     reader = IPredReader
-    core_finder: strategy.ICoreFinder
-    linkage: strategy.ILinkage
+    assigner = IAssigner
 
-    def __init__(self, reader, core_finder, linkage):
+    def __init__(self, reader, assigner):
         self.card = None
         self.reader = reader
-        self.core_finder = core_finder
-        self.linkage = linkage
+        self.assigner = assigner
 
         self.card_ = None
 
@@ -102,22 +110,11 @@ class DealConverter:
             self.card_ = self._dedup_simple()
 
     # two cases after dedup
-    def assign(self):  # TODO arg: transformed_cards
+    def assign(self, transformed_cards):
         """Case 1: everything is perfect -> work on assigning cards to four hands"""
         log.info("Assigning cards to hands..")
-        self._divide_to_quadrants()
-
-        self._mark_core_objs()
-        self._drop_core_duplicates()
-        self._assign_core_objs()
-
-        remaining = self._list_remaining_objs()
-        while not remaining.empty and self._hands_to_assign():
-            obj_idx, hand = self._find_closest_obj(remaining)
-
-            self._assign_one_obj(obj_idx, hand)
-            remaining = self._drop_assigned(obj_idx, remaining)
-        # TODO return assigned cards
+        assigned_cards = self.assigner.assign(transformed_cards)
+        return assigned_cards
 
     def infer_missing(self):
         """Case 2: missing cards -> attempt to infer"""
@@ -128,14 +125,15 @@ class DealConverter:
         deal = self._build_pbn_deal(hands)
         self._write_pbn_deal(deal, path)
 
-    def format_pbn(self) -> bytes:  # TODO arg: assigned_cards
+    def format_pbn(self, assigned_cards) -> bytes:
         log.info("Formatting hand to PBN..")
+        self.card_ = pd.DataFrame(assigned_cards)  # not best practice
         hands = self._build_pbn_hands()
         deal = self._build_pbn_deal(hands)
         return deal.encode("ascii")
 
     def list_assigned_cards(self):
-        return self.card_[["name", "hand"]].dropna(subset=["hand"]).to_dict('records')
+        return self.assigner.card_[["name", "hand"]].dropna(subset=["hand"]).to_dict('records')
 
     def _dedup_simple(self):
         """Dedup in a simple way, only keeping the one with highest confidence."""
@@ -162,114 +160,6 @@ class DealConverter:
         return (pd.concat([self._dedup_simple(),
                            good_dup])
                     .drop_duplicates())
-
-    def _divide_to_quadrants(self):
-        """Divide cards to four quadrants before finding the core objs in each."""
-        if self.card_ is None:  # in case no dedup
-            self.card_ = self.card.copy()
-
-        self.card_ = (
-            self.card_
-                .pipe(self._mark_marginal, width=self.QUADRANT_MARGIN_WIDTH)
-                .assign(quadrant=lambda df: df.apply(self._calc_quadrant, axis=1))
-        )
-        log.debug("Divided to quadrants with %s marginal cards.",
-                  self.card_.query("quadrant == 'margin'").shape[0])
-
-    def _mark_core_objs(self):
-        """Find core objects for all four quadrants by adding col 'is_core'."""
-        core_objs_t = self._find_quadrant_core_objs(QUADRANT_TOP)
-        core_objs_b = self._find_quadrant_core_objs(QUADRANT_BOTTOM)
-        core_objs_l = self._find_quadrant_core_objs(QUADRANT_LEFT)
-        core_objs_r = self._find_quadrant_core_objs(QUADRANT_RIGHT)
-
-        self.card_["is_core"] = (
-            pd.concat([core_objs_t, core_objs_b, core_objs_l, core_objs_r])
-                .reindex(self.card_.index, fill_value=False)  # for marginal objs
-        )
-        log.info("Marked %s core objs in total", self.card_['is_core'].sum())
-
-    def _drop_core_duplicates(self):
-        """Drop objects duplicated with core objects, both inside core and outside core."""
-        core = self.card_[self.card_.is_core]
-
-        in_core_dups = core[core.duplicated("name")]
-        self.card_ = self.card_.drop(index=in_core_dups.index)
-
-        out_core_dups = self.card_[lambda df: (~df.is_core) & (df.name.isin(core.name.values))]
-        self.card_ = self.card_.drop(index=out_core_dups.index)
-
-        log.debug("Dropped %s duplicates inside core: %s",
-                  len(in_core_dups), in_core_dups[["name", "quadrant"]].to_dict("records"))
-        log.debug("Dropped %s duplicates outside core: %s",
-                  len(out_core_dups), out_core_dups[["name", "quadrant"]].to_dict("records"))
-
-    def _assign_core_objs(self):
-        """Assign each core obj to hand based on quadrant, by adding col 'hand'. """
-        def _to_hand(row: pd.Series):
-            if not row.is_core:
-                return None
-
-            assert row.quadrant != MARGIN, f"Unexpected 'margin' core card: {row['name']}"
-            return HAND_MAP[row.quadrant]
-
-        self.card_["hand"] = self.card_.apply(_to_hand, axis=1)
-        log.debug("Core card counts: %s", self.card_.hand.value_counts().to_dict())
-
-    def _list_remaining_objs(self) -> pd.DataFrame:
-        """Return a df containing unassigned objs."""
-        assert 'hand' in self.card_, "Required col 'hand' not in `self.card_`!"
-        remaining = self.card_[self.card_.hand.isna()].copy()
-        return remaining
-
-    def _hands_to_assign(self):
-        """Return a list of hands available for assignment (< 13 cards assigned)."""
-        hand_size = self.card_.hand.value_counts()
-        return hand_size[hand_size < 13].index.tolist()
-
-    def _find_closest_obj(self, remaining: pd.DataFrame) -> Tuple[int, str]:
-        """Find the closest obj to any of the *qualified hands*.
-
-        Qualification: each hand can have 13 objects at most."""
-        min_distance = 2  # large enough assuming coordinates are in (0, 1)
-        closest_obj_idx = None
-        closest_hand = None
-        for hand in self._hands_to_assign():
-            _hand_cards = self.card_[self.card_.hand == hand]
-            hand_coords = list(_hand_cards[["center_x", "center_y"]].itertuples(index=False))
-
-            for obj_idx, x, y in remaining[["center_x", "center_y"]].itertuples():
-                distance = self.linkage.calc_distance(x, y, hand_coords)
-                if distance < min_distance:
-                    min_distance = distance
-                    closest_obj_idx = obj_idx
-                    closest_hand = hand
-
-        closest_obj = remaining.loc[closest_obj_idx, ["name", "quadrant"]].to_dict()
-        log.debug(
-            "Found a closest obj(%s) to '%s': %s",
-            closest_obj, closest_hand, min_distance)
-        if min_distance > self.MAX_ASSIGNMENT_DISTANCE:
-            raise ValueError("Difficulty assigning cards to hands; "
-                             "try separating hands a bit further")
-
-        return closest_obj_idx, closest_hand
-
-    def _assign_one_obj(self, obj_idx, hand):
-        """Assign object to `hand`, by updating col 'hand'."""
-        assert obj_idx in self.card_.index, f"{obj_idx} not found in `card_.index`!"
-        self.card_.at[obj_idx, 'hand'] = hand
-
-    def _drop_assigned(self, obj_idx, remaining: pd.DataFrame) -> pd.DataFrame:
-        """Drop assigned object(s) from `remaining`."""
-        _assigned_name = remaining.at[obj_idx, 'name']
-        assigned_cards = remaining[remaining.name == _assigned_name]
-
-        log.debug(
-            "Dropping %s assigned cards: %s",
-            len(assigned_cards),
-            assigned_cards[["name", "quadrant"]].to_dict("records"))
-        return remaining.drop(index=assigned_cards.index)
 
     def _build_pbn_hands(self):
         """Build four hands according to pbn format. (See deals.py)
@@ -410,6 +300,165 @@ class DealConverter:
         # order doesn't matter -> combination instead of permutation
         return pair.loc[midx[midx.get_level_values(0) < midx.get_level_values(1)]]
 
+
+class Yolo4Reader(IPredReader):
+    def read(self, src):
+        log.info("Reading from yolov4 pred: %s", src)
+        with open(src, 'r') as f:
+            yolo_json = json.load(f)
+
+        return (
+            pd.json_normalize(yolo_json[0]['objects'])  # image has one frame only
+                .rename(columns={"relative_coordinates.center_x": "center_x",
+                                 "relative_coordinates.center_y": "center_y",
+                                 "relative_coordinates.width": "width",
+                                 "relative_coordinates.height" :"height"})
+        )
+
+class Yolo5Reader(IPredReader):
+    def read(self, src):
+        """Read from `src`, records of detection."""
+        return (
+            pd.DataFrame(src)
+                .assign(name=lambda df: df.class_id.map(CARD_CLASSES[::-1].__getitem__))  # dev
+                .rename(columns={'x': 'center_x',
+                                 'y': 'center_y',
+                                 'w': 'width',
+                                 'h': 'height'})
+        )
+
+
+class Assigner(IAssigner):
+    QUADRANT_MARGIN_WIDTH = 0.05
+    MAX_ASSIGNMENT_DISTANCE = 0.3  # from observations of misassignment, subject to change
+
+    def assign(self, transformed_cards) -> List[Dict]:
+        # not best practice, but this was how assignment process worked
+        self.card_ = pd.DataFrame(transformed_cards)
+
+        self._divide_to_quadrants()
+
+        self._mark_core_objs()
+        self._drop_core_duplicates()
+        self._assign_core_objs()
+
+        remaining = self._list_remaining_objs()
+        while not remaining.empty and self._hands_to_assign():
+            obj_idx, hand = self._find_closest_obj(remaining)
+
+            self._assign_one_obj(obj_idx, hand)
+            remaining = self._drop_assigned(obj_idx, remaining)
+
+        assigned_cards = self.card_.to_dict('records')
+        return assigned_cards
+
+    #
+    def _divide_to_quadrants(self):
+        """Divide cards to four quadrants before finding the core objs in each."""
+        self.card_ = (
+            self.card_
+                .pipe(self._mark_marginal, width=self.QUADRANT_MARGIN_WIDTH)
+                .assign(quadrant=lambda df: df.apply(self._calc_quadrant, axis=1))
+        )
+        log.debug("Divided to quadrants with %s marginal cards.",
+                  self.card_.query("quadrant == 'margin'").shape[0])
+
+    def _mark_core_objs(self):
+        """Find core objects for all four quadrants by adding col 'is_core'."""
+        core_objs_t = self._find_quadrant_core_objs(QUADRANT_TOP)
+        core_objs_b = self._find_quadrant_core_objs(QUADRANT_BOTTOM)
+        core_objs_l = self._find_quadrant_core_objs(QUADRANT_LEFT)
+        core_objs_r = self._find_quadrant_core_objs(QUADRANT_RIGHT)
+
+        self.card_["is_core"] = (
+            pd.concat([core_objs_t, core_objs_b, core_objs_l, core_objs_r])
+                .reindex(self.card_.index, fill_value=False)  # for marginal objs
+        )
+        log.info("Marked %s core objs in total", self.card_['is_core'].sum())
+
+    def _drop_core_duplicates(self):
+        """Drop objects duplicated with core objects, both inside core and outside core."""
+        core = self.card_[self.card_.is_core]
+
+        in_core_dups = core[core.duplicated("name")]
+        self.card_ = self.card_.drop(index=in_core_dups.index)
+
+        out_core_dups = self.card_[lambda df: (~df.is_core) & (df.name.isin(core.name.values))]
+        self.card_ = self.card_.drop(index=out_core_dups.index)
+
+        log.debug("Dropped %s duplicates inside core: %s",
+                  len(in_core_dups), in_core_dups[["name", "quadrant"]].to_dict("records"))
+        log.debug("Dropped %s duplicates outside core: %s",
+                  len(out_core_dups), out_core_dups[["name", "quadrant"]].to_dict("records"))
+
+    def _assign_core_objs(self):
+        """Assign each core obj to hand based on quadrant, by adding col 'hand'. """
+        def _to_hand(row: pd.Series):
+            if not row.is_core:
+                return None
+
+            assert row.quadrant != MARGIN, f"Unexpected 'margin' core card: {row['name']}"
+            return HAND_MAP[row.quadrant]
+
+        self.card_["hand"] = self.card_.apply(_to_hand, axis=1)
+        log.debug("Core card counts: %s", self.card_.hand.value_counts().to_dict())
+
+    def _list_remaining_objs(self) -> pd.DataFrame:
+        """Return a df containing unassigned objs."""
+        assert 'hand' in self.card_, "Required col 'hand' not in `self.card_`!"
+        remaining = self.card_[self.card_.hand.isna()].copy()
+        return remaining
+
+    def _hands_to_assign(self):
+        """Return a list of hands available for assignment (< 13 cards assigned)."""
+        hand_size = self.card_.hand.value_counts()
+        return hand_size[hand_size < 13].index.tolist()
+
+    def _find_closest_obj(self, remaining: pd.DataFrame) -> Tuple[int, str]:
+        """Find the closest obj to any of the *qualified hands*.
+
+        Qualification: each hand can have 13 objects at most."""
+        min_distance = 2  # large enough assuming coordinates are in (0, 1)
+        closest_obj_idx = None
+        closest_hand = None
+        for hand in self._hands_to_assign():
+            _hand_cards = self.card_[self.card_.hand == hand]
+            hand_coords = list(_hand_cards[["center_x", "center_y"]].itertuples(index=False))
+
+            for obj_idx, x, y in remaining[["center_x", "center_y"]].itertuples():
+                distance = self.linkage.calc_distance(x, y, hand_coords)
+                if distance < min_distance:
+                    min_distance = distance
+                    closest_obj_idx = obj_idx
+                    closest_hand = hand
+
+        closest_obj = remaining.loc[closest_obj_idx, ["name", "quadrant"]].to_dict()
+        log.debug(
+            "Found a closest obj(%s) to '%s': %s",
+            closest_obj, closest_hand, min_distance)
+        if min_distance > self.MAX_ASSIGNMENT_DISTANCE:
+            raise ValueError("Difficulty assigning cards to hands; "
+                             "try separating hands a bit further")
+
+        return closest_obj_idx, closest_hand
+
+    def _assign_one_obj(self, obj_idx, hand):
+        """Assign object to `hand`, by updating col 'hand'."""
+        assert obj_idx in self.card_.index, f"{obj_idx} not found in `card_.index`!"
+        self.card_.at[obj_idx, 'hand'] = hand
+
+    def _drop_assigned(self, obj_idx, remaining: pd.DataFrame) -> pd.DataFrame:
+        """Drop assigned object(s) from `remaining`."""
+        _assigned_name = remaining.at[obj_idx, 'name']
+        assigned_cards = remaining[remaining.name == _assigned_name]
+
+        log.debug(
+            "Dropping %s assigned cards: %s",
+            len(assigned_cards),
+            assigned_cards[["name", "quadrant"]].to_dict("records"))
+        return remaining.drop(index=assigned_cards.index)
+
+    ##
     @staticmethod
     def _mark_marginal(card: pd.DataFrame, width) -> pd.DataFrame:
         """Mark a card as marginal based on (x, y).
@@ -459,35 +508,14 @@ class DealConverter:
         return pd.Series(core_bool_seq & no_dup_bool_seq, index=quadrant_card.index)
 
 
-class Yolo4Reader(IPredReader):
-    def read(self, src):
-        log.info("Reading from yolov4 pred: %s", src)
-        with open(src, 'r') as f:
-            yolo_json = json.load(f)
-
-        return (
-            pd.json_normalize(yolo_json[0]['objects'])  # image has one frame only
-                .rename(columns={"relative_coordinates.center_x": "center_x",
-                                 "relative_coordinates.center_y": "center_y",
-                                 "relative_coordinates.width": "width",
-                                 "relative_coordinates.height" :"height"})
-        )
-
-class Yolo5Reader(IPredReader):
-    def read(self, src):
-        """Read from `src`, records of detection."""
-        return (
-            pd.DataFrame(src)
-                .assign(name=lambda df: df.class_id.map(CARD_CLASSES[::-1].__getitem__))  # dev
-                .rename(columns={'x': 'center_x',
-                                 'y': 'center_y',
-                                 'w': 'width',
-                                 'h': 'height'})
-        )
-
-
 def get_deal_converter(reader=Yolo4Reader()) -> DealConverter:
+    assigner = _get_assigner()
+    deal_converter = DealConverter(reader, assigner)
+    return deal_converter
+
+
+def _get_assigner() -> IAssigner:
     dbscan = strategy.CoreFinderDbscanPy()
     single_linkage = strategy.SingleLinkage()
-    deal_converter = DealConverter(reader, dbscan, single_linkage)
-    return deal_converter
+    assigner = Assigner(core_finder=dbscan, linkage=single_linkage)
+    return assigner
