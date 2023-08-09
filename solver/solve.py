@@ -30,8 +30,8 @@ class Solution():
 @dataclasses.dataclass
 class TransformationResults:
     cards: TransformedCards
-    missing: T.List[CardName]  # user can decide to assign
-    fp: T.List[CardName]  # more serious
+    missings: T.List[CardName]  # user can decide to assign
+    fps: T.List[CardName]  # more serious
 
 
 @dataclasses.dataclass
@@ -83,10 +83,22 @@ class BridgeSolver(BridgeSolverBase):
         self.converter.read(self.cards)
         # self.converter.dedup(smart=True)  # yolo5 does not seem needing this
         missings, fps = self.converter.report_missing_and_fp()
-        return missings, fps  # TODO
+
+        transformation_results = TransformationResults(
+            cards=self.converter.card.to_dict("records"),
+            missings=missings,
+            fps=fps,
+        )
+        return transformation_results
 
     def assign(self, transformed_cards: TransformedCards) -> AssignmentResults:
-        return self.converter.assign(transformed_cards)  # TODO
+        assigned_cards =  self.converter.assign(transformed_cards)
+
+        assignment_results = AssignmentResults(
+            cards=assigned_cards,
+            not_assigned=None,  # TODO
+        )
+        return assignment_results
 
     def solve(self, assigned_cards: AssignedCards):
         pbn_hand = self.converter.format_pbn(assigned_cards)

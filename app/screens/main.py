@@ -224,12 +224,16 @@ class MainScreen(BoxLayout, Screen):
 
     def _solve(self, detection: detect.CardDetection):
         solver = solve.BridgeSolver(detection, presenter=solve.MonoStringPresenter())
-        missing, fp = solver.transform()
-        if missing:
-            raise ValueError(f"Missing cards: {', '.join(ui.display_name(n) for n in missing)}")
+        transf_results = solver.transform()
+        if transf_results.missings:
+            # TODO let user assign
+            raise ValueError(f"Missing cards: {', '.join(ui.display_name(n) for n in transf_results.missings)}")
 
-        solver.assign()
-        solver.solve()
+        assign_results = solver.assign(transf_results.cards)
+        if assign_results.not_assigned:
+            pass  # TODO let user assign
+
+        solver.solve(assign_results.cards)
         return solver.present()
 
 
