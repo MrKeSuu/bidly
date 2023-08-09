@@ -27,6 +27,19 @@ class Solution():
     dds_result: object
 
 
+@dataclasses.dataclass
+class TransformationResults:
+    cards: TransformedCards
+    missing: T.List[CardName]  # user can decide to assign
+    fp: T.List[CardName]  # more serious
+
+
+@dataclasses.dataclass
+class AssignmentResults:
+    cards: AssignedCards
+    not_assigned: T.List[CardName]
+
+
 class IPresenter(abc.ABC):
 
     @abc.abstractmethod
@@ -45,19 +58,15 @@ class BridgeSolverBase(abc.ABC):
         self.presenter = presenter
 
     @abc.abstractmethod
-    def transform(self):
+    def transform(self) -> TransformationResults:
         pass
 
     @abc.abstractmethod
-    def assign(self):
+    def assign(self, transformed_cards: TransformedCards) -> AssignmentResults:
         pass
 
     @abc.abstractmethod
-    def list_unsure(self):
-        pass
-
-    @abc.abstractmethod
-    def solve(self):
+    def solve(self, assigned_cards: AssignedCards):
         pass
 
     def present(self):
@@ -65,19 +74,6 @@ class BridgeSolverBase(abc.ABC):
 
 
 # Impl. #
-@dataclasses.dataclass
-class TransformationResults:
-    cards: TransformedCards
-    missing: T.List[CardName]  # user can decide to assign
-    fp: T.List[CardName]  # more serious
-
-
-@dataclasses.dataclass
-class AssignmentResults:
-    cards: AssignedCards
-    not_assigned: T.List[CardName]
-
-
 class BridgeSolver(BridgeSolverBase):
     def __init__(self, cards, presenter) -> None:
         super().__init__(cards, presenter)
@@ -89,12 +85,8 @@ class BridgeSolver(BridgeSolverBase):
         missings, fps = self.converter.report_missing_and_fp()
         return missings, fps  # TODO
 
-
     def assign(self, transformed_cards: TransformedCards) -> AssignmentResults:
         return self.converter.assign(transformed_cards)  # TODO
-
-    def list_unsure(self):
-        pass  # TODO like 'bidly found %s only; would you like to fill in the remaining %s or redetect?'
 
     def solve(self, assigned_cards: AssignedCards):
         pbn_hand = self.converter.format_pbn(assigned_cards)
