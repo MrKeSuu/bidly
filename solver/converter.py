@@ -342,7 +342,9 @@ class Assigner(IAssigner):
 
         remaining = self._list_remaining_objs()
         while not remaining.empty and self._hands_to_assign():
-            obj_idx, hand = self._find_closest_obj(remaining)
+            obj_idx, hand, distance = self._find_closest_obj(remaining)
+            if distance > self.MAX_ASSIGNMENT_DISTANCE:
+                break  # stop if card too far away from the assigning hand
 
             self._assign_one_obj(obj_idx, hand)
             remaining = self._drop_assigned(obj_idx, remaining)
@@ -441,11 +443,8 @@ class Assigner(IAssigner):
         log.debug(
             "Found a closest obj(%s) to '%s': %s",
             closest_obj, closest_hand, min_distance)
-        if min_distance > self.MAX_ASSIGNMENT_DISTANCE:
-            raise ValueError("Can't assign cards to hands; "
-                             "try separating hands a bit further")
 
-        return closest_obj_idx, closest_hand
+        return closest_obj_idx, closest_hand, min_distance
 
     def _assign_one_obj(self, obj_idx, hand):
         """Assign object to `hand`, by updating col 'hand'."""
@@ -464,7 +463,8 @@ class Assigner(IAssigner):
         return remaining.drop(index=assigned_cards.index)
 
     def list_assigned_cards(self):
-        return self.objs.to_dict('records')
+        assigned_objs = self.objs.loc[~self.objs.hand.isna()]
+        return assigned_objs.to_dict('records')
 
     ##
     @staticmethod

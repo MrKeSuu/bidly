@@ -217,11 +217,12 @@ class TestAssigner:
         assigner._assign_core_objs()
 
         remaining = assigner._list_remaining_objs()
-        obj_idx, hand = assigner._find_closest_obj(remaining)
+        obj_idx, hand, distance = assigner._find_closest_obj(remaining)
 
         card_name = assigner.objs.at[obj_idx, 'name']
         assert card_name == '10h'
         assert hand == 'south'
+        assert 0.02 < distance < 0.03
 
 class TestDdsAdapter:
 

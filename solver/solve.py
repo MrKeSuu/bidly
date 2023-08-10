@@ -94,9 +94,12 @@ class BridgeSolver(BridgeSolverBase):
     def assign(self, transformed_cards: TransformedCards) -> AssignmentResults:
         assigned_cards =  self.converter.assign(transformed_cards)
 
+        assigned_card_names = (card['name'] for card in assigned_cards)
+        not_assigned_card_names = set(converter.CARD_CLASSES) - set(assigned_card_names)
+
         assignment_results = AssignmentResults(
             cards=assigned_cards,
-            not_assigned=None,  # TODO
+            not_assigned=list(not_assigned_card_names),
         )
         return assignment_results
 

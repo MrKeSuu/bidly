@@ -231,7 +231,8 @@ class MainScreen(BoxLayout, Screen):
 
         assign_results = solver.assign(transf_results.cards)
         if assign_results.not_assigned:
-            pass  # TODO let user assign
+            # TODO let user assign
+            raise ValueError(f"Unassigned cards: {', '.join(ui.display_name(n) for n in assign_results.not_assigned)}")
 
         solver.solve(assign_results.cards)
         return solver.present()
