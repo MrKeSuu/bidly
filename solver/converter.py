@@ -176,8 +176,7 @@ class DealConverter:
     def _build_pbn_hand(self, hand_name):
         card_names = self.card_[self.card_.hand == hand_name].name.copy()
         if len(card_names) != 13:
-            raise ValueError(f"{hand_name.upper()} did not have 13 cards; "
-                             "could try separating hands a bit further")
+            raise ValueError(f"{hand_name.upper()} did not have 13 cards")
 
         suits = (
             self._build_pbn_suit(card_names, SUIT_S),
@@ -403,7 +402,11 @@ class Assigner(IAssigner):
             return HAND_MAP[row.quadrant]
 
         self.objs["hand"] = self.objs.apply(_to_hand, axis=1)
-        log.debug("Core card counts: %s", self.objs.hand.value_counts().to_dict())
+        hand_card_cnts = self.objs.hand.value_counts()
+        log.debug("Core card counts: %s", hand_card_cnts.to_dict())
+        if hand_card_cnts.max() > 13:
+            raise ValueError("Can't assign cards to hands; "
+                             "try aligning hands better with the guide lines")
 
     def _list_remaining_objs(self) -> pd.DataFrame:
         """Return a df containing unassigned objs."""
@@ -439,7 +442,7 @@ class Assigner(IAssigner):
             "Found a closest obj(%s) to '%s': %s",
             closest_obj, closest_hand, min_distance)
         if min_distance > self.MAX_ASSIGNMENT_DISTANCE:
-            raise ValueError("Difficulty assigning cards to hands; "
+            raise ValueError("Can't assign cards to hands; "
                              "try separating hands a bit further")
 
         return closest_obj_idx, closest_hand
