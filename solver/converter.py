@@ -407,8 +407,8 @@ class Assigner(IAssigner):
         hand_card_cnts = self.objs.hand.value_counts()
         log.debug("Core card counts: %s", hand_card_cnts.to_dict())
         if hand_card_cnts.max() > 13:
-            raise ValueError("Can't assign cards to hands; "
-                             "try aligning hands better with the guide lines")
+            raise ValueError(f"{hand_card_cnts.idxmax().upper()} had more than 13 cards;\n"
+                             "try grouping cards better")
 
     def _list_remaining_objs(self) -> pd.DataFrame:
         """Return a df containing unassigned objs."""
