@@ -118,21 +118,23 @@ class ResultScreen(BoxLayout, Screen):
     deal_box: ObjectProperty(None)
     interaction_box: ObjectProperty(None)
 
+    solver: ObjectProperty(None)
+
     def __init__(self, **kwargs):
         Builder.load_string(LAYOUT)
         super().__init__(**kwargs)
 
     def process_detection(self, detection: detect.CardDetection):
-        solver = solve.BridgeSolver(detection, presenter=solve.MonoStringPresenter())
+        self.solver = solve.BridgeSolver(detection, presenter=solve.MonoStringPresenter())
 
         try:
             lgr.info("Assigning cards..")
-            transformed_detection = self._transform_detection(solver)
-            assigned_cards = self._assign_detection(solver, transformed_detection)
+            transformed_detection = self._transform_detection()
+            assigned_cards = self._assign_detection(transformed_detection)
 
             lgr.info("Solving deal..")
-            solver.solve(assigned_cards)
-            solution = solver.present()
+            self.solver.solve(assigned_cards)
+            solution = self.solver.present()
 
         except Exception as e:
             lgr.exception("Solver failure")
@@ -175,15 +177,15 @@ class ResultScreen(BoxLayout, Screen):
         main_screen = self.manager.get_screen(const.MAIN_SCREEN)
         self.manager.switch_to(main_screen, transition=FallOutTransition())
 
-    def _transform_detection(self, solver: solve.BridgeSolverBase):
-        transf_results = solver.transform()
+    def _transform_detection(self):
+        transf_results = self.solver.transform()
         if transf_results.missings:
             # TODO let user assign
             raise ValueError(f"Missing cards: {', '.join(ui.display_name(n) for n in transf_results.missings)}")
         return transf_results.cards
 
-    def _assign_detection(self, solver: solve.BridgeSolverBase, detection: detect.CardDetection):
-        assign_results = solver.assign(detection)
+    def _assign_detection(self, detection: solve.TransformedCards):
+        assign_results = self.solver.assign(detection)
         if assign_results.not_assigned:
             # TODO let user assign
             raise ValueError(f"Unassigned cards: {', '.join(ui.display_name(n) for n in assign_results.not_assigned)}")
