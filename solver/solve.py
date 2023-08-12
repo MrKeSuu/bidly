@@ -48,13 +48,13 @@ class IPresenter(abc.ABC):
 
 
 class BridgeSolverBase(abc.ABC):
-    cards: detect.CardDetection
+    detection: detect.CardDetection
     presenter: IPresenter
 
     solution_: Solution
 
-    def __init__(self, cards, presenter) -> None:
-        self.cards = cards
+    def __init__(self, detection, presenter) -> None:
+        self.detection = detection
         self.presenter = presenter
 
     @abc.abstractmethod
@@ -75,12 +75,12 @@ class BridgeSolverBase(abc.ABC):
 
 # Impl. #
 class BridgeSolver(BridgeSolverBase):
-    def __init__(self, cards, presenter) -> None:
-        super().__init__(cards, presenter)
+    def __init__(self, detection, presenter) -> None:
+        super().__init__(detection, presenter)
         self.converter = converter.get_deal_converter(reader=converter.Yolo5Reader())
 
     def transform(self) -> TransformationResults:
-        self.converter.read(self.cards)
+        self.converter.read(self.detection)
         # self.converter.dedup(smart=True)  # yolo5 does not seem needing this
         missings, fps = self.converter.report_missing_and_fp()
 
