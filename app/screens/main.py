@@ -165,28 +165,15 @@ class MainScreen(BoxLayout, Screen):
         pp.dismiss()
 
     def _detect_solve(self):
-        lgr.info("Capturing photo..")
         try:
-            img_src = self.camera_square.camera.capture()
+            img_src = self._capture()
         except Exception:
-            lgr.exception("Camera failure")
-            ui.popup("Camera failure", msg=repr(e), close_btn=True)
             self.restart()
             return
 
-        lgr.info("Handling image..")
         try:
-            image_input = self._handle_image(img_src)
-        except Exception as e:
-            lgr.exception("Image handler failure")
-            ui.popup("Image handler failure", msg=repr(e), close_btn=True)
-            self.restart()
-            return
-
-        lgr.info("Detecting cards..")
-        detection = self._model.detect(image_input)
-        if len(detection) < self.MIN_OBJS_DETECTED:
-            ui.popup("Too few cards", msg="Too few cards detected; please retry", close_btn=True)
+            detection = self._detect(img_src)
+        except Exception:
             self.restart()
             return
 
@@ -215,12 +202,33 @@ class MainScreen(BoxLayout, Screen):
 
         self.button_box.restart()
 
-    def _handle_image(self, img_src) -> detect.ImageInput:
-        image_handler = detect.get_image_handler(image_reader=detect.FsExifImageReader())
-        image_handler.read(img_src)
-        image_handler.validate()
-        image_input = image_handler.preprocess()
-        return image_input
+    def _capture(self):
+        lgr.info("Capturing photo..")
+        try:
+            img_src = self.camera_square.camera.capture()
+        except Exception as e:
+            lgr.exception("Camera failure")
+            ui.popup("Camera failure", msg=repr(e), close_btn=True)
+            raise
+
+        return img_src
+
+    def _detect(self, img_src):
+        lgr.info("Handling image..")
+        try:
+            image_input = self._handle_image(img_src)
+        except Exception as e:
+            lgr.exception("Image handler failure")
+            ui.popup("Image handler failure", msg=repr(e), close_btn=True)
+            raise
+
+        lgr.info("Detecting cards..")
+        detection = self._model.detect(image_input)
+        if len(detection) < self.MIN_OBJS_DETECTED:
+            ui.popup("Too few cards", msg="Too few cards detected; please retry", close_btn=True)
+            raise ValueError("Too few cards")
+
+        return detection
 
     def _solve(self, detection: detect.CardDetection):
         solver = solve.BridgeSolver(detection, presenter=solve.MonoStringPresenter())
@@ -236,6 +244,13 @@ class MainScreen(BoxLayout, Screen):
 
         solver.solve(assign_results.cards)
         return solver.present()
+
+    def _handle_image(self, img_src) -> detect.ImageInput:
+        image_handler = detect.get_image_handler(image_reader=detect.FsExifImageReader())
+        image_handler.read(img_src)
+        image_handler.validate()
+        image_input = image_handler.preprocess()
+        return image_input
 
 
 class ButtonBox(BoxLayout):
