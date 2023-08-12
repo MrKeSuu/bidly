@@ -176,29 +176,10 @@ class MainScreen(BoxLayout, Screen):
     def _detect_solve(self):
         try:
             img_src = self._capture()
-        except Exception:
-            self.restart()
-            return
-
-        try:
             detection = self._detect(img_src)
+            self._solve(img_src, detection)
         except Exception:
             self.restart()
-            return
-
-        result_screen = self._get_result_screen()
-
-        try:
-            result_screen.display_image(img_src)
-            self.manager.switch_to(result_screen, transition=RiseInTransition())
-        except Exception as e:
-            lgr.exception("Image loading failure")
-            ui.popup("Image loading failure", msg=e, close_btn=True)
-            self.restart()
-
-        pp = ui.popup("Solving", "This could take a minute..")
-        Clock.schedule_once(lambda dt: result_screen.process_detection(detection))
-        pp.dismiss()
 
     def _capture(self):
         lgr.info("Capturing photo..")
@@ -227,6 +208,21 @@ class MainScreen(BoxLayout, Screen):
             raise ValueError("Too few cards")
 
         return detection
+
+    def _solve(self, img_src, detection):
+        result_screen = self._get_result_screen()
+
+        try:
+            result_screen.display_image(img_src)
+            self.manager.switch_to(result_screen, transition=RiseInTransition())
+        except Exception as e:
+            lgr.exception("Image loading failure")
+            ui.popup("Image loading failure", msg=e, close_btn=True)
+            raise
+
+        pp = ui.popup("Solving", "This could take a minute..")
+        Clock.schedule_once(lambda dt: result_screen.process_detection(detection))
+        pp.dismiss()
 
     def _get_result_screen(self):
         result_screen = self.manager.get_screen(const.RESULT_SCREEN)
