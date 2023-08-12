@@ -129,8 +129,8 @@ class ResultScreen(BoxLayout, Screen):
 
         try:
             lgr.info("Assigning cards..")
-            transformed_detection = self._transform_detection()
-            assigned_cards = self._assign_detection(transformed_detection)
+            self._transform_detection()
+            assigned_cards = self._assign_detection()
 
             lgr.info("Solving deal..")
             self.solver.solve(assigned_cards)
@@ -179,16 +179,20 @@ class ResultScreen(BoxLayout, Screen):
 
     def _transform_detection(self):
         transf_results = self.solver.transform()
+
+        self.deal_box.detection_data = transf_results.cards
+
         if transf_results.missings:
             # TODO let user assign
             raise ValueError(f"Missing cards: {', '.join(ui.display_name(n) for n in transf_results.missings)}")
-        return transf_results.cards
 
-    def _assign_detection(self, detection: solve.TransformedCards):
-        assign_results = self.solver.assign(detection)
+    def _assign_detection(self):
+        assign_results = self.solver.assign(self.deal_box.detection_data)
+
         if assign_results.not_assigned:
             # TODO let user assign
             raise ValueError(f"Unassigned cards: {', '.join(ui.display_name(n) for n in assign_results.not_assigned)}")
+
         return assign_results.cards
 
 
