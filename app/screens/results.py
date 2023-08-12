@@ -9,7 +9,7 @@ from kivy.uix.button import Button
 from kivy.uix.carousel import Carousel
 from kivy.uix.image import AsyncImage
 from kivy.uix.label import Label
-from kivy.uix.screenmanager import Screen, RiseInTransition, FallOutTransition
+from kivy.uix.screenmanager import Screen, FallOutTransition
 from kivy.uix.widget import Widget
 from kivy.utils import platform
 from kivy.vector import Vector
@@ -123,24 +123,23 @@ class ResultScreen(BoxLayout, Screen):
         super().__init__(**kwargs)
 
     def process_detection(self, detection: detect.CardDetection):
-        lgr.info("Processing detection..")
         solver = solve.BridgeSolver(detection, presenter=solve.MonoStringPresenter())
 
-        transf_results = solver.transform()
-        if transf_results.missings:
-            # TODO let user assign
-            raise ValueError(f"Missing cards: {', '.join(ui.display_name(n) for n in transf_results.missings)}")
+        try:
+            lgr.info("Assigning cards..")
+            transformed_detection = self._transform_detection(solver)
+            assigned_cards = self._assign_detection(solver, transformed_detection)
 
-        assign_results = solver.assign(transf_results.cards)
-        if assign_results.not_assigned:
-            # TODO let user assign
-            raise ValueError(f"Unassigned cards: {', '.join(ui.display_name(n) for n in assign_results.not_assigned)}")
+            lgr.info("Solving deal..")
+            solver.solve(assigned_cards)
+            solution = solver.present()
 
-        lgr.info("Solving deal..")
-        solver.solve(assign_results.cards)
-        solution = solver.present()
+        except Exception as e:
+            lgr.exception("Solver failure")
+            ui.popup("Solver failure", msg=e, close_btn=True)
+            return
+
         self.display_solution(solution)
-        self.manager.switch_to(self, transition=RiseInTransition())
 
     def display_image(self, img_path):
         ImageWidget = AndroidAsyncImage if platform == 'android' else AsyncImage
@@ -161,6 +160,8 @@ class ResultScreen(BoxLayout, Screen):
         n_buttons = len(self.interaction_box.children)  # so results are above buttons
         self.interaction_box.add_widget(table_label, index=n_buttons)
 
+        self.deal_box.load_next()
+
     def on_enter(self, *args):
         if len(self.deal_box.slides) > 1:
             Clock.schedule_once(lambda dt: self.deal_box.load_next(), 0.2)
@@ -173,6 +174,20 @@ class ResultScreen(BoxLayout, Screen):
 
         main_screen = self.manager.get_screen(const.MAIN_SCREEN)
         self.manager.switch_to(main_screen, transition=FallOutTransition())
+
+    def _transform_detection(self, solver: solve.BridgeSolverBase):
+        transf_results = solver.transform()
+        if transf_results.missings:
+            # TODO let user assign
+            raise ValueError(f"Missing cards: {', '.join(ui.display_name(n) for n in transf_results.missings)}")
+        return transf_results.cards
+
+    def _assign_detection(self, solver: solve.BridgeSolverBase, detection: detect.CardDetection):
+        assign_results = solver.assign(detection)
+        if assign_results.not_assigned:
+            # TODO let user assign
+            raise ValueError(f"Unassigned cards: {', '.join(ui.display_name(n) for n in assign_results.not_assigned)}")
+        return assign_results.cards
 
 
 class DealBox(Carousel):

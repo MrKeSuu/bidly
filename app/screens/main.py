@@ -1,6 +1,7 @@
 import logging
 import os
 import pathlib
+import random
 import time
 
 from camera4kivy import Preview
@@ -157,9 +158,20 @@ class MainScreen(BoxLayout, Screen):
         lgr.debug("Loaded model from: %s", self.ONNX_MODEL_PATH)
 
     def detect_solve(self):
-        pp = ui.popup("Detecting & Solving", "This could take a minute..")
+        pp = ui.popup("Detecting", f"Tip: {self._random_tip()}")
         Clock.schedule_once(lambda dt: self._detect_solve())  # so that popup is instantly shown
         pp.dismiss()
+
+    def restart(self):
+        if not self.camera_square.camera.camera_connected:
+            self.camera_square.camera.connect()
+
+        self.button_box.restart()
+
+    def _random_tip(self):
+        return random.choice([
+            "Move phone closer to cards while ensure capturing all card symbols.",
+        ])
 
     def _detect_solve(self):
         try:
@@ -174,27 +186,19 @@ class MainScreen(BoxLayout, Screen):
             self.restart()
             return
 
-        try:
-            result_screen = self._get_result_screen()
-            result_screen.display_image(img_src)
-            result_screen.process_detection(detection)
-        except Exception as e:
-            lgr.exception("Solver failure")
-            ui.popup("Solver failure", msg=e, close_btn=True)
-            self.restart()
-
-    def display(self, img_src, solution):
         result_screen = self._get_result_screen()
 
-        result_screen.display(img_src, solution)
+        try:
+            result_screen.display_image(img_src)
+            self.manager.switch_to(result_screen, transition=RiseInTransition())
+        except Exception as e:
+            lgr.exception("Image loading failure")
+            ui.popup("Image loading failure", msg=e, close_btn=True)
+            self.restart()
 
-        self.manager.switch_to(result_screen, transition=RiseInTransition())
-
-    def restart(self):
-        if not self.camera_square.camera.camera_connected:
-            self.camera_square.camera.connect()
-
-        self.button_box.restart()
+        pp = ui.popup("Solving", "This could take a minute..")
+        Clock.schedule_once(lambda dt: result_screen.process_detection(detection))
+        pp.dismiss()
 
     def _capture(self):
         lgr.info("Capturing photo..")
