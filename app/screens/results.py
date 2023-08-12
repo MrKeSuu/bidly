@@ -128,13 +128,11 @@ class ResultScreen(BoxLayout, Screen):
         self.solver = solve.BridgeSolver(detection, presenter=solve.MonoStringPresenter())
 
         try:
-            lgr.info("Assigning cards..")
             self._transform_detection()
+
             assigned_cards = self._assign_detection()
 
-            lgr.info("Solving deal..")
-            self.solver.solve(assigned_cards)
-            solution = self.solver.present()
+            solution = self._solve(assigned_cards)
 
         except Exception as e:
             lgr.exception("Solver failure")
@@ -187,6 +185,7 @@ class ResultScreen(BoxLayout, Screen):
             raise ValueError(f"Missing cards: {', '.join(ui.display_name(n) for n in transf_results.missings)}")
 
     def _assign_detection(self):
+        lgr.info("Assigning cards..")
         assign_results = self.solver.assign(self.deal_box.detection_data)
 
         if assign_results.not_assigned:
@@ -194,6 +193,13 @@ class ResultScreen(BoxLayout, Screen):
             raise ValueError(f"Unassigned cards: {', '.join(ui.display_name(n) for n in assign_results.not_assigned)}")
 
         return assign_results.cards
+
+    def _solve(self, assigned_cards):
+        lgr.info("Solving deal..")
+        self.solver.solve(assigned_cards)
+
+        solution = self.solver.present()
+        return solution
 
 
 class DealBox(Carousel):
