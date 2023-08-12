@@ -9,12 +9,14 @@ from kivy.uix.button import Button
 from kivy.uix.carousel import Carousel
 from kivy.uix.image import AsyncImage
 from kivy.uix.label import Label
-from kivy.uix.screenmanager import Screen, FallOutTransition
+from kivy.uix.screenmanager import Screen, RiseInTransition, FallOutTransition
 from kivy.uix.widget import Widget
 from kivy.utils import platform
 from kivy.vector import Vector
 
 from app import const, ui
+from detector import detect
+from solver import solve
 
 DEBUG = os.getenv('DEBUG')
 
@@ -120,12 +122,35 @@ class ResultScreen(BoxLayout, Screen):
         Builder.load_string(LAYOUT)
         super().__init__(**kwargs)
 
-    def display(self, img_path, solution):
-        hand, table = solution
+    def process_detection(self, detection: detect.CardDetection):
+        lgr.info("Processing detection..")
+        solver = solve.BridgeSolver(detection, presenter=solve.MonoStringPresenter())
 
+        transf_results = solver.transform()
+        if transf_results.missings:
+            # TODO let user assign
+            raise ValueError(f"Missing cards: {', '.join(ui.display_name(n) for n in transf_results.missings)}")
+
+        assign_results = solver.assign(transf_results.cards)
+        if assign_results.not_assigned:
+            # TODO let user assign
+            raise ValueError(f"Unassigned cards: {', '.join(ui.display_name(n) for n in assign_results.not_assigned)}")
+
+        lgr.info("Solving deal..")
+        solver.solve(assign_results.cards)
+        solution = solver.present()
+        self.display_solution(solution)
+        self.manager.switch_to(self, transition=RiseInTransition())
+
+    def display_image(self, img_path):
         ImageWidget = AndroidAsyncImage if platform == 'android' else AsyncImage
         captured_image = ImageWidget(source=str(img_path), fit_mode='cover', nocache=True)
+        captured_image.reload()  # to ensure no cache
         self.deal_box.add_widget(captured_image)
+
+    def display_solution(self, solution):
+        lgr.info("Displaying solution..")
+        hand, table = solution
 
         hand_label = AdaptiveBgcolorLabel()
         hand_label.display(hand)

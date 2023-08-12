@@ -6,15 +6,12 @@ import time
 from camera4kivy import Preview
 from kivy.clock import Clock
 from kivy.lang import Builder
-from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty, StringProperty
+from kivy.properties import ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.label import Label
 from kivy.uix.screenmanager import Screen, RiseInTransition
-from kivy.uix.widget import Widget
 from kivy.utils import platform
 
 from detector import detect
-from solver import solve
 from app import const, ui
 
 DEBUG = os.getenv('DEBUG')
@@ -172,22 +169,19 @@ class MainScreen(BoxLayout, Screen):
             return
 
         try:
-            self._detect(img_src)
+            detection = self._detect(img_src)
         except Exception:
             self.restart()
             return
 
-        lgr.info("Solving deal..")
         try:
-            solution = self._solve()
+            result_screen = self._get_result_screen()
+            result_screen.display_image(img_src)
+            result_screen.process_detection(detection)
         except Exception as e:
             lgr.exception("Solver failure")
             ui.popup("Solver failure", msg=e, close_btn=True)
             self.restart()
-            return
-
-        lgr.info("Displaying solution..")
-        self.display(img_src, solution)
 
     def display(self, img_src, solution):
         result_screen = self._get_result_screen()
@@ -228,25 +222,11 @@ class MainScreen(BoxLayout, Screen):
             ui.popup("Too few cards", msg="Too few cards detected; please retry", close_btn=True)
             raise ValueError("Too few cards")
 
-        result_screen = self._get_result_screen()
-        result_screen.deal_box.detection_data = detection
+        return detection
 
-    def _solve(self):
-        result_screen = self._get_result_screen()
-        detection: detect.CardDetection = result_screen.deal_box.detection_data
-        solver = solve.BridgeSolver(detection, presenter=solve.MonoStringPresenter())
-        transf_results = solver.transform()
-        if transf_results.missings:
-            # TODO let user assign
-            raise ValueError(f"Missing cards: {', '.join(ui.display_name(n) for n in transf_results.missings)}")
-
-        assign_results = solver.assign(transf_results.cards)
-        if assign_results.not_assigned:
-            # TODO let user assign
-            raise ValueError(f"Unassigned cards: {', '.join(ui.display_name(n) for n in assign_results.not_assigned)}")
-
-        solver.solve(assign_results.cards)
-        return solver.present()
+    def _get_result_screen(self):
+        result_screen = self.manager.get_screen(const.RESULT_SCREEN)
+        return result_screen
 
     def _handle_image(self, img_src) -> detect.ImageInput:
         image_handler = detect.get_image_handler(image_reader=detect.FsExifImageReader())
@@ -254,10 +234,6 @@ class MainScreen(BoxLayout, Screen):
         image_handler.validate()
         image_input = image_handler.preprocess()
         return image_input
-
-    def _get_result_screen(self):
-        result_screen = self.manager.get_screen(const.RESULT_SCREEN)
-        return result_screen
 
 
 class ButtonBox(BoxLayout):
