@@ -312,6 +312,7 @@ class Yolo4Reader(IPredReader):
                                  "relative_coordinates.center_y": "center_y",
                                  "relative_coordinates.width": "width",
                                  "relative_coordinates.height" :"height"})
+                .drop(columns=['class_id'])
         )
 
 class Yolo5Reader(IPredReader):
@@ -324,6 +325,7 @@ class Yolo5Reader(IPredReader):
                                  'y': 'center_y',
                                  'w': 'width',
                                  'h': 'height'})
+                .drop(columns=['class_id'])
         )
 
 

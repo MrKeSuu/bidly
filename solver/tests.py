@@ -56,11 +56,11 @@ class TestConverter:
 
     def test_read_yolo(self, deal_converter):
         assert isinstance(deal_converter.card, pd.DataFrame)
-        assert deal_converter.card.shape == (51, 7)
+        assert deal_converter.card.shape == (51, 6)
         assert set(deal_converter.card.columns) == {
             'center_x', 'center_y',
             'height', 'width',
-            'class_id', 'name',
+            'name',
             'confidence',
         }
 
@@ -68,7 +68,7 @@ class TestConverter:
         deal_converter.dedup()
 
         assert isinstance(deal_converter.card_, pd.DataFrame)
-        assert deal_converter.card_.shape == (41, 7)
+        assert deal_converter.card_.shape == (41, 6)
         assert deal_converter.card_.name.value_counts().max() == 1
         assert deal_converter.card_.query('name == "5c"').confidence.iloc[0] == 0.999394
 
@@ -76,7 +76,7 @@ class TestConverter:
         deal_converter.dedup(smart=True)
 
         assert isinstance(deal_converter.card_, pd.DataFrame)
-        assert deal_converter.card_.shape == (48, 7)
+        assert deal_converter.card_.shape == (48, 6)
         assert deal_converter.card_.name.value_counts().max() == 2
         assert deal_converter.card_.query('name == "5h"').shape[0] == 1  # bad dup dropped
         assert deal_converter.card_.query('name == "5c"').shape[0] == 2  # good dup appended back
@@ -192,7 +192,7 @@ class TestAssigner:
         assigner._drop_core_duplicates()
 
         card = assigner.objs
-        assert card.shape == (46, 10)
+        assert card.shape == (46, 9)
         assert card.query("name == '6d' and is_core == True").shape[0] == 1
         assert card.query("name == 'Qc'").shape[0] == 1
         assert card.query("name == 'Qc' and is_core == False").empty
