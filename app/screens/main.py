@@ -172,14 +172,14 @@ class MainScreen(BoxLayout, Screen):
             return
 
         try:
-            detection = self._detect(img_src)
+            self._detect(img_src)
         except Exception:
             self.restart()
             return
 
         lgr.info("Solving deal..")
         try:
-            solution = self._solve(detection)
+            solution = self._solve()
         except Exception as e:
             lgr.exception("Solver failure")
             ui.popup("Solver failure", msg=e, close_btn=True)
@@ -190,7 +190,7 @@ class MainScreen(BoxLayout, Screen):
         self.display(img_src, solution)
 
     def display(self, img_src, solution):
-        result_screen = self.manager.get_screen(const.RESULT_SCREEN)
+        result_screen = self._get_result_screen()
 
         result_screen.display(img_src, solution)
 
@@ -228,9 +228,12 @@ class MainScreen(BoxLayout, Screen):
             ui.popup("Too few cards", msg="Too few cards detected; please retry", close_btn=True)
             raise ValueError("Too few cards")
 
-        return detection
+        result_screen = self._get_result_screen()
+        result_screen.deal_box.detection_data = detection
 
-    def _solve(self, detection: detect.CardDetection):
+    def _solve(self):
+        result_screen = self._get_result_screen()
+        detection: detect.CardDetection = result_screen.deal_box.detection_data
         solver = solve.BridgeSolver(detection, presenter=solve.MonoStringPresenter())
         transf_results = solver.transform()
         if transf_results.missings:
@@ -251,6 +254,10 @@ class MainScreen(BoxLayout, Screen):
         image_handler.validate()
         image_input = image_handler.preprocess()
         return image_input
+
+    def _get_result_screen(self):
+        result_screen = self.manager.get_screen(const.RESULT_SCREEN)
+        return result_screen
 
 
 class ButtonBox(BoxLayout):

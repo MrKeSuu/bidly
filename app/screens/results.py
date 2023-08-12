@@ -3,7 +3,7 @@ import os
 
 from kivy.clock import Clock
 from kivy.lang import Builder
-from kivy.properties import ObjectProperty, StringProperty, NumericProperty
+from kivy.properties import ObjectProperty, StringProperty, NumericProperty, ListProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.carousel import Carousel
@@ -151,6 +151,7 @@ class ResultScreen(BoxLayout, Screen):
 
 
 class DealBox(Carousel):
+    detection_data: ListProperty()
 
     def restart(self):
         self.clear_widgets()
