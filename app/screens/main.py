@@ -171,6 +171,7 @@ class MainScreen(BoxLayout, Screen):
     def _random_tip(self):
         return random.choice([
             "Move phone closer to cards while ensure capturing all card symbols.",
+            "When detecting, bidly only looks for the symbols in the corners of cards."
         ])
 
     def _detect_solve(self):
