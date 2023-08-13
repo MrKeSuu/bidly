@@ -103,6 +103,7 @@ LAYOUT = """
 
 <AssignmentSlide>:
     card: ''
+    n_remaining: 1
 
     Button:
         text: ''
@@ -130,8 +131,9 @@ LAYOUT = """
         text: 'S'
         on_release: root.assign_to_player('south')
     Button:
-        text: ''
+        text: str(root.n_remaining)+' left to assign'
         disabled: True
+        color: 0.9, 0.9, 0.9, 1
 
 # Define your background color Template
 <BackgroundColor@Widget>
@@ -353,7 +355,8 @@ class UserAssignment(Carousel):
 
     def prepare_slides(self, problematic_cards):
         for card in problematic_cards[:]:
-            self._add_assignment_slide(card)
+            n_remaining = len(problematic_cards) - problematic_cards.index(card)
+            self._add_assignment_slide(card, n_remaining)
 
     def assign_card(self, card, player):
         player_coord_x, player_coord_y = self._get_player_coords(player)
@@ -367,9 +370,10 @@ class UserAssignment(Carousel):
 
         self.parent.parent.problematic_cards.remove(card)
 
-    def _add_assignment_slide(self, card):
+    def _add_assignment_slide(self, card, n_remaining):
         slide = AssignmentSlide(cols=3)
         slide.card = card
+        slide.n_remaining = n_remaining
         self.add_widget(slide)
 
     @staticmethod
@@ -389,6 +393,7 @@ class UserAssignment(Carousel):
 
 class AssignmentSlide(GridLayout):
     card: StringProperty("")
+    n_remaining: NumericProperty(1)
 
     def assign_to_player(self, player):
         # to account for an auto-added relativelayout
