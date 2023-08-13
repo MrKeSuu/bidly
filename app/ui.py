@@ -4,6 +4,13 @@ from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.boxlayout import BoxLayout
 
+SUIT_UNICODE_MAP = {
+    's': '\u2660',
+    'h': '\u2661',
+    'd': '\u2662',
+    'c': '\u2663',
+}
+
 
 class PopupLabel(Label):
     pass
@@ -29,6 +36,7 @@ def popup(title, msg, close_btn=False, auto_dismiss=False):
     return popup
 
 
-def display_name(name):
+def display_name(name, unicode=False):
     rank, suit = name[:-1], name[-1]
-    return f"{suit.upper()}{rank}"
+    suit = SUIT_UNICODE_MAP[suit] if unicode else suit.upper()
+    return f"{suit}{rank}"

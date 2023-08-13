@@ -117,9 +117,8 @@ LAYOUT = """
     Button:
         text: 'W'
         on_release: root.assign_to_player('west')
-    Button:
-        text: ui.display_name(root.card) if root.card else ''
-        disabled: True
+    BgcolorLabel:
+        text: ui.display_name(root.card, unicode=True)+'?' if root.card else ''
     Button:
         text: 'E'
         on_release: root.assign_to_player('east')
@@ -176,9 +175,6 @@ class ResultScreen(BoxLayout, Screen):
                 return
 
             assign_results = self._assign_detection(transf_results.cards)
-            if assign_results.not_assigned:
-                self.show_assignment_widget(assign_results.not_assigned)
-                return
 
             solution = self._solve(assign_results.cards)
 
@@ -248,21 +244,15 @@ class ResultScreen(BoxLayout, Screen):
 
         return transf_results
 
-        if transf_results.missings:
-            # TODO let user assign
-            raise ValueError(f"Missing cards: {', '.join(ui.display_name(n) for n in transf_results.missings)}")
-
     def _assign_detection(self, transformed_cards) -> solve.AssignmentResults:
         lgr.info("Assigning cards..")
         assign_results = self.solver.assign(transformed_cards)
-
-        return assign_results
 
         if assign_results.not_assigned:
             # TODO let user assign
             raise ValueError(f"Unassigned cards: {', '.join(ui.display_name(n) for n in assign_results.not_assigned)}")
 
-        return assign_results.cards
+        return assign_results
 
     def _solve(self, assigned_cards):
         lgr.info("Solving deal..")
@@ -301,11 +291,13 @@ class InteractionBox(BoxLayout):
 
         n_buttons = len(self.children)  # so widget is above buttons
         self.add_widget(assignment_widget, index=n_buttons)
+        self.assignment_widget = assignment_widget
 
     def remove_assignment_widget(self):
         for widget in self.children[:]:
             if isinstance(widget, UserAssignment):
                 self.remove_widget(widget)
+        self.assignment_widget = None
 
 
 class AndroidAsyncImage(AsyncImage):
