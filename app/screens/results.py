@@ -273,8 +273,10 @@ class ResultScreen(BoxLayout, Screen):
         assign_results = self.solver.assign(transformed_cards)
 
         if assign_results.not_assigned:
-            # TODO let user assign
-            raise ValueError(f"Unassigned cards: {', '.join(ui.display_name(n) for n in assign_results.not_assigned)}")
+            lgr.debug("Unassigned cards: %s",
+                      ', '.join(ui.display_name(n) for n in assign_results.not_assigned))
+            raise ValueError(f"Can't assign some cards to players; "
+                             "try separating four hands a bit further")
 
         return assign_results
 
