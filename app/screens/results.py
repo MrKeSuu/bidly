@@ -228,10 +228,10 @@ class ResultScreen(BoxLayout, Screen):
         # no problematic cards left
         if not value:
             instance.interaction_box.remove_assignment_widget()
-            # TODO trigger assignment downstream
-            assign_results = self._assign_detection(self.deal_box.detection_data)
-            solution = self._solve(assign_results.cards)
-            self.display_solution(solution)
+            pp = ui.popup("Solving", "This could take a minute..")
+            transformed_cards = self.deal_box.detection_data
+            Clock.schedule_once(lambda dt: self._run_assign_downstream(transformed_cards))
+            pp.dismiss()
             return
 
         # still some problematic cards remained to assign
@@ -252,6 +252,19 @@ class ResultScreen(BoxLayout, Screen):
         self.deal_box.detection_data = transf_results.cards
 
         return transf_results
+
+    def _run_assign_downstream(self, transformed_cards):
+        try:
+            assign_results = self._assign_detection(transformed_cards)
+
+            solution = self._solve(assign_results.cards)
+
+        except Exception as e:
+            lgr.exception("Solver failure")
+            ui.popup("Solver failure", msg=e, close_btn=True)
+            return
+
+        self.display_solution(solution)
 
     def _assign_detection(self, transformed_cards) -> solve.AssignmentResults:
         lgr.info("Assigning cards..")
