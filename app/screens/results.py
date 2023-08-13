@@ -216,11 +216,17 @@ class ResultScreen(BoxLayout, Screen):
         self.interaction_box.restart_button.disabled = False
 
     def on_problematic_cards(self, instance, value):
+        # for restart
+        if not value and not instance.interaction_box.has_assignment_widget():
+            return
+
+        # for init
         if not instance.interaction_box.has_assignment_widget():
             instance.interaction_box.add_assignment_widget(value)
             return
 
-        if not value:  # no problematic cards left
+        # no problematic cards left
+        if not value:
             instance.interaction_box.remove_assignment_widget()
             # TODO trigger assignment downstream
             assign_results = self._assign_detection(self.deal_box.detection_data)
@@ -228,11 +234,14 @@ class ResultScreen(BoxLayout, Screen):
             self.display_solution(solution)
             return
 
+        # still some problematic cards remained to assign
         instance.interaction_box.assignment_widget.load_next()
 
     def restart(self):
         self.deal_box.restart()
         self.interaction_box.restart()
+
+        self.problematic_cards = []
 
         main_screen = self.manager.get_screen(const.MAIN_SCREEN)
         self.manager.switch_to(main_screen, transition=FallOutTransition())
