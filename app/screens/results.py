@@ -230,7 +230,7 @@ class ResultScreen(BoxLayout, Screen):
         # no problematic cards left
         if not value:
             instance.interaction_box.remove_assignment_widget()
-            pp = ui.popup("Solving", "This could take a minute..")
+            pp = ui.popup("Solving", f"Tip: {ui.random_tip()}")
             transformed_cards = self.deal_box.detection_data
             Clock.schedule_once(lambda dt: self._run_assign_downstream(transformed_cards))
             pp.dismiss()

@@ -158,7 +158,7 @@ class MainScreen(BoxLayout, Screen):
         lgr.debug("Loaded model from: %s", self.ONNX_MODEL_PATH)
 
     def detect_solve(self):
-        pp = ui.popup("Detecting", f"Tip: {self._random_tip()}")
+        pp = ui.popup("Detecting", f"Tip: {ui.random_tip()}")
         Clock.schedule_once(lambda dt: self._detect_solve())  # so that popup is instantly shown
         pp.dismiss()
 
@@ -167,12 +167,6 @@ class MainScreen(BoxLayout, Screen):
             self.camera_square.camera.connect()
 
         self.button_box.restart()
-
-    def _random_tip(self):
-        return random.choice([
-            "Move phone closer to cards while ensure capturing all card symbols.",
-            "When detecting, bidly only looks for the symbols in the corners of cards."
-        ])
 
     def _detect_solve(self):
         try:
@@ -221,7 +215,7 @@ class MainScreen(BoxLayout, Screen):
             ui.popup("Image loading failure", msg=e, close_btn=True)
             raise
 
-        pp = ui.popup("Solving", "This could take a minute..")
+        pp = ui.popup("Solving", f"Tip: {ui.random_tip()}")
         Clock.schedule_once(lambda dt: result_screen.process_detection(detection))
         pp.dismiss()
 

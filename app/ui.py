@@ -1,4 +1,5 @@
 """Some UI helpers"""
+import random
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
@@ -40,3 +41,10 @@ def display_name(name, unicode=False):
     rank, suit = name[:-1], name[-1]
     suit = SUIT_UNICODE_MAP[suit] if unicode else suit.upper()
     return f"{suit}{rank}"
+
+
+def random_tip():
+    return random.choice([
+        "Move phone closer to cards while ensure capturing all card symbols.",
+        "When detecting, bidly only looks for the symbols in the corners of cards.",
+    ])
