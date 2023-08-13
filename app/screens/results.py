@@ -164,6 +164,8 @@ class ResultScreen(BoxLayout, Screen):
         Builder.load_string(LAYOUT)
         super().__init__(**kwargs)
 
+        self.bind(problematic_cards=self.on_problematic_cards)
+
     def process_detection(self, detection: detect.CardDetection):
         self.solver = solve.BridgeSolver(detection, presenter=solve.MonoStringPresenter())
 
@@ -211,15 +213,13 @@ class ResultScreen(BoxLayout, Screen):
     def show_assignment_widget(self, problematic_cards):
         self.problematic_cards = problematic_cards
 
-        self.interaction_box.add_assignment_widget(problematic_cards)
-
     def on_enter(self, *args):
         if len(self.deal_box.slides) > 1:
             Clock.schedule_once(lambda dt: self.deal_box.load_next(), 0.2)
 
         self.interaction_box.restart_button.disabled = False
 
-    def on_problematic_cards(self, instance, value):  # TODO check why not triggered
+    def on_problematic_cards(self, instance, value):
         if not instance.interaction_box.has_assignment_widget():
             instance.interaction_box.add_assignment_widget(value)
             return
@@ -273,7 +273,7 @@ class ResultScreen(BoxLayout, Screen):
 
 
 class DealBox(Carousel):
-    detection_data: ListProperty()
+    detection_data: ListProperty([])
 
     def restart(self):
         self.clear_widgets()
