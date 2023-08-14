@@ -47,4 +47,6 @@ def random_tip():
     return random.choice([
         "Move phone closer to cards while ensure capturing all card symbols.",
         "When detecting, bidly only looks for the symbols in the corners of cards.",
+        "If unsure, bidly might need your help assigning cards to players.",
+        "Solving is much slower than detecting!",
     ])
