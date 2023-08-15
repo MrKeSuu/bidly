@@ -11,7 +11,7 @@ import numpy as np
 DEBUG = os.getenv('DEBUG')
 IMAGE_WIDTH = 1056 if DEBUG else 1184
 IMAGE_HEIGHT = 1056 if DEBUG else 1184
-MIN_CONFIDENCE = 0.3
+MIN_CONFIDENCE = 0.9
 
 lgr = logging
 
