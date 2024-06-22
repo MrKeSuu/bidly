@@ -7,6 +7,7 @@ import time
 from camera4kivy import Preview
 from kivy.clock import Clock
 from kivy.lang import Builder
+import cv2
 from kivy.properties import ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.screenmanager import Screen, RiseInTransition
@@ -152,10 +153,14 @@ class MainScreen(BoxLayout, Screen):
         Builder.load_string(LAYOUT)
         super().__init__(**kwargs)
 
-        yolo5 = detect.Yolo5Opencv(detect.OpencvOnnxLoader())
-        yolo5.load(self.ONNX_MODEL_PATH)
-        self._model = yolo5
-        lgr.debug("Loaded model from: %s", self.ONNX_MODEL_PATH)
+        try:
+            yolo5 = detect.Yolo5Opencv(detect.OpencvOnnxLoader())
+            yolo5.load(self.ONNX_MODEL_PATH)
+            self._model = yolo5
+            lgr.debug("Loaded model from: %s", self.ONNX_MODEL_PATH)
+        except cv2.error as e:
+            lgr.error(f"Failed to load ONNX model: {e}")
+            raise RuntimeError(f"Failed to load ONNX model: {e}")
 
     def detect_solve(self):
         pp = ui.popup("Detecting", f"Tip: {ui.random_tip()}")

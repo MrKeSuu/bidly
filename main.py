@@ -4,7 +4,7 @@ import pathlib
 
 # https://github.com/Android-for-Python/camera4kivy#camera-provider
 from kivy import kivy_options
-providers= list(kivy_options['camera'])
+providers = list(kivy_options['camera'])
 providers.remove('opencv')  # low resolution on Linux
 kivy_options['camera'] = tuple(providers)
 
@@ -17,18 +17,16 @@ from app.screens.main import MainScreen
 from app.screens.results import ResultScreen
 import app.const
 
-
 __version__ = '1.0.0'
 
 DEBUG = os.getenv('DEBUG')
 ROOT_DIRPATH = pathlib.Path(__file__).parent
 
-lgr = logging
-
+logging.basicConfig(level=logging.DEBUG)
 
 class BidlyApp(App):
-
     def build(self):
+        logging.debug('Building application')
         self.bidly = ScreenManager(transition=NoTransition())
         self.main_screen = MainScreen(name=app.const.MAIN_SCREEN)
         self.bidly.add_widget(self.main_screen)
@@ -36,20 +34,25 @@ class BidlyApp(App):
         return self.bidly
 
     def on_start(self):
+        logging.debug('Starting application')
         self.dont_gc = androidperm.AndroidPermissions(self.start_app)
 
     def on_stop(self):
+        logging.debug('Stopping application')
         self.main_screen.camera_square.camera.disconnect_camera()
 
     def start_app(self):
+        logging.debug('Starting app')
         self.dont_gc = None
         Clock.schedule_once(self.connect_camera)
 
     def connect_camera(self, dt):
+        logging.debug('Connecting camera')
         main_screen = self.bidly.get_screen(app.const.MAIN_SCREEN)
         main_screen.camera_square.camera.connect()
         main_screen.button_box.camera_button.disabled = False
 
-
 if __name__ == '__main__':
+    logging.debug('Starting BidlyApp')
     BidlyApp().run()
+    logging.debug('BidlyApp finished')

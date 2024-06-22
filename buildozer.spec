@@ -44,7 +44,7 @@ version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3==3.8.16,hostpython3==3.8.16,kivy==2.2.1,numpy,opencv==4.5.4,pandas,scipy,python-dds,camera4kivy,gestures4kivy
+requirements = python3==3.9.19,hostpython3==3.9.19,kivy==2.2.1,numpy,opencv==4.5.4,pandas,scipy,python-dds,camera4kivy,gestures4kivy
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -102,8 +102,7 @@ android.presplash_color = white
 
 # (list) Permissions
 # (See https://python-for-android.readthedocs.io/en/latest/buildoptions/#build-options-1 for all the supported syntaxes and properties)
-#android.permissions = android.permission.INTERNET, (name=android.permission.WRITE_EXTERNAL_STORAGE;maxSdkVersion=18)
-android.permissions = android.permission.CAMERA
+android.permissions = INTERNET, CAMERA, WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE, ACCESS_FINE_LOCATION
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
